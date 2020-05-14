@@ -135,7 +135,7 @@ void readRC(const char* rcpath)
 	gCausQCut = env.GetValue("CausQCut", 1.5);
 	gCausFriendCut = env.GetValue("CausFriendCut", 2);
 	gTCutTimeWindowNs = env.GetValue("TCutTimeWindow", 50.0);
-	gQCutChi2 = env.GetValue("QCutChi2", 50.0);
+	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
 	gLikelihoodCut = env.GetValue("LikelihoodCut",3.0);

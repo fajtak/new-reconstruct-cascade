@@ -1,0 +1,129 @@
+14.05.2019 - git commit ---
+	* scripts folder re-organized
+	* bash scripts for batch run processing on local as well remote computer added
+	* Qchi2Cut value increased from 50 to 100
+
+11.05.2019 - git commit b98212f28dea09f1e214e06c4f5485df0f79db8f
+	* Initial commit
+
+***********************************************************************************************************************************
+Transition to Reconstruction Software V.2.0
+***********************************************************************************************************************************
+
+12.02.2019 - git commit ---
+	* Changes in the folder paths for VM68 (processExperimental, json, saveHistograms)
+	* 2019 geometry read directly from /home/fajtak/geometry-tmp/
+
+12.02.2019 - git commit aa3740c13ad24331de52754d0e1626afb29f3366
+	* Huge change!!! All inputs (data, MC, MCcascades) are now processed in the same way
+	* standardized UniformEvent was implemented and all different inputs are transformed to this format
+	* DoTheMagicUnified()
+	* EstimatePosition based on the Matrix approach from ANTARES
+	* Caussality filter
+	* In the next commit all functions for individual inputs are going to be removed
+	* QMEstimatoCut decreased from 2000 to 600
+
+
+11.02.2020 - git commit 108c4fbb0d926d85774b8827724a57e1d2fc2842
+	* QCutOverall added with default value 500
+	* QCutHits increased to 10
+	* NCut decreased to 70
+	* logLikelihood return value divided by g_pulses size not 288
+	* Now the first non zero time of the run is found
+
+04.02.2020 - git commit 0414a2e6ba3d8b026c26beb7928e85ab014656d8
+	* minor changes to studyReconstructed(MC)Cascades.C
+	* config.rc: number of hits increased from 60 -> 80 + TDelayCut 400 -> 600
+	* IMPORTANT: MCCascades and all corresponding filters extended for MC noise
+	* h_chargePerEvent histogram added and this property is also used to filter events (overallEventCharge [p.e] > 250)
+	* error in the MCCascade reconstruction corrected
+	* event visualization for MCCascade added
+	* PrintCascadeJSON() added to save jsons that can be visualized by the event viewer
+	* structure of the BARS::DATA::Direcotry and FileName has changed
+	* the "o" switch now can be used to save results to other folder (useful for VM processing)
+	* Estimate initial position again based on the grid approach
+
+28.01.2020 - git commit 13123210d57a882fac10f7d1bbaa1a935139ba62
+	* The nonHit term added to the logLikelihood fitting
+	* the initial position and time estimation again based on the highest Q OM
+	* charge visualization extended to show expected charge on all OMs
+	* initDist and FinalDist added to the nTuples for MC data
+	* time of processing added
+
+07.01.2020 - git commit 41a7cc590aca373748dffa028379057e85b296fe
+	* The first fit is again done with MEstimator
+
+07.01.2020 - git commit 59abf51237727bee7d64a0d359a150a18885dab5
+	* SetFCN(chi2) added before the first fit
+
+06.01.2020 - git commit 5de116f1f39ea6afe1c0239300e9856d28edb4f4
+	* new switch "a" to process Zhan-Arys MC cascades
+	* values in the config.rc changed and branchCut and likelihoodCut values added
+	* in studyReconstructedMCCascades.C script added a new histograms for position mismatch
+	* added config file configDZH.rc for processing of the simulated cascades
+	* logLikelihood fitting CORRECTED!!!
+	* the first fit in the chain is again chi2
+	* to guess initial fitiing time and position a grid of positions around detector are tested and value with smallest chi2 is used.
+	* added all the filters for MCcascades
+	* New file with MCcascade geometry added array2016_phys_kebkal.dat
+
+11.12.2019 - git commit beab71ada52335628d4c038c20800208197f2902
+	* new switch "u" to process MC single up-going atmospheric neutrinos
+	* added two new bash scripts to download and read MC single up-going atmospheric neutrinos (downloadDataNu and readMCNu)
+	* added function OMIDAlreadyInGPulses for MC data
+
+10.12.2019 - git commit 45278b764bf40181994348579a0ee4cec64fa917
+	* Huge extension of the whole program. Now MC atmospheric muon bundles can be read and cascades created on the muon tracks can be studied.
+	* Added switch -m with no argument which enables to process MC data
+	* Now the charge of all the pulses is calibrated -> QCut has to be set in p.e.
+	* Added two bash scripts downloadMCData and readMC that downloads MC data and transforms them from wout to root structure
+	* Added root script studyReconstructedMCCascades.C to study reconstructed MC cascades where all the parameters are known
+	* g_pulses now have MCflag member that tels you the origin of the hit
+	* scattering correction and Log(Q) removed from ExpectedTime -> It will be studied in the future
+	* all the filters has been replicated to be able to work with BEvents from MC simulations
+	* output of the program has been extended for RunInfo. Now the number of entries and time duration of the run is printed
+
+
+04.12.2019 - git commit 3a305382d6f026cf422822e9ddd05ce7a577974a
+	* Minor corrections
+
+03.12.2019 - git commit 9f1a0d6847b07ca5d7a3e7136dba78e313a14401
+
+	* default value of the LikelihoodCut increased from 2 -> 2.5
+	* studyReconstructedCascades.C extended significantly. Now it shows also reconstructed energy and theta and also energy and TFilterHits cuts are used
+	* TMultiGraphs in charge and event visualizations have axis labels now
+	* existence of the 4D logLikelihood table is checked
+
+29.11.2019 - git commit 3249e8e195299ca1276254f504876cef53d3f0fb
+	
+	* Loglikelihood for direction and energy reconstruction added
+	* 4D pdf table is read
+	* 8 string graphs with measured and expected charges are created
+
+22.11.2019 - git commit 47fc8ce4b17b7e12e5ab351a816b852ac311ec7c
+
+	* New switch "-t productionID" (tag) has been added to be able to change the name of the data processing production ID. The default value is "barsv051" other common option is "r01_i01_j01_t01"
+
+20.11.2019 - git commit d0292fc96f7f60b4cb176654feaee6db1f1547dc
+
+	* In downloadJoint and downloadJointAllRuns added also download of the qcalib file from Zhenya's DQM
+	* Qcalib is read from h0XXX.qcalib file and if qcalib constant is -1 it is assumed that the OM is not working
+	* CloseHitsFilter is now based on the qcalib and not on the h_nHitsOM
+	* start time of the run is newly taken from the fifth header entry since there are runs where the first two entries have zero values
+
+19.11.2019 - git commit db5a086f8e6ea6feec34a087b8a9e54c1963ae50
+
+	* src/config.rc is now used as a default option for processAllRuns script
+	* changes in the values of the cut variables saved in src/config.rc
+	* change in the calculation of the closeHits. Now also the first lower layer of OMs is taken into account when the closest OMs are calculated
+
+19.11.2019 - git commit 48cc8136f96c177ecfded97b66ae4aac036d12db
+
+	* New switch "-w eventID" was added which enables to produce only single visualization of the event with given ID without any fitting. Very useful for the verification of the reconstructed cascades by someone else.
+	* The first fit after QFilter was changed from chi2 to MEstimator (ANATERES) which is much more stable for low Qcut values
+	* values returned from chi2 as well as MEstimator are newly divided by NDF
+	* the histogram h_nHitOM which is used for the closeHits filter is newly correctly filled before the main event loop which makes the whole procedure slower but better
+	* the implementation of the gBranchCut was corrected
+	* number of close hits in the closeHitsFilter has been changed from 10 to 6
+	* multiple changes in the values of the cut variables saved in src/config.rc
+	* start time of the run is now extracted from the second header entry since some of the runs have the first entry equal 0
