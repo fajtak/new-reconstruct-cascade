@@ -1895,6 +1895,11 @@ int ProcessExperimentalData()
 	// Sets necessary pointers to access data through TTree 
 	TFile* file = new TFile(filePath,"READ");
     TTree* tree = (TTree*)file->Get("Events");
+    if (!tree || !tree->GetBranch("BJointImpulseTel.") || !tree->GetBranch("BJointHeader."))
+    {
+    	std::cout << "No Events TTree or BJointImpulseTel/BJointHeader branches found!" << endl;
+    	return -2;
+    }
 	BExtractedImpulseTel* impulseTel = NULL;
 	BExtractedHeader* header = NULL;
 	tree->SetBranchAddress("BJointImpulseTel.",&impulseTel);
