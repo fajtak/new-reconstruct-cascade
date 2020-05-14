@@ -1,4 +1,7 @@
 14.05.2019 - git commit ---
+	* slight changes to bash scripts
+
+14.05.2019 - git commit c8504582ec27e7a8aa322c00d08283dc18e234ec
 	* scripts folder re-organized
 	* bash scripts for batch run processing on local as well remote computer added
 	* Qchi2Cut value increased from 50 to 100
