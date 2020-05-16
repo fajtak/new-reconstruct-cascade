@@ -10,6 +10,7 @@
 #include "BARS.h"
 
 int gNEventsProcessed = -1; 
+int gEventID = -1;
 std::string gProductionID = "";
 int gInputType = 0;
 std::string gFileInputFolder = "";
@@ -113,6 +114,17 @@ static const struct App::ProgramOption_t options_list[]{
 			[](char* argv) {gFileInputFolder = argv;},
 			[]() {;}
 		},
+		NOT_REQUIRED
+	},
+	{
+		{
+			"eventID", 'e',
+			required_argument,
+			"set eventID that is going to be processed",
+			[](char* argv) {gEventID = atoi(argv);},
+			[]() {;}
+		},
+
 		NOT_REQUIRED
 	},
   // !!! must be at the end

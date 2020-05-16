@@ -1,4 +1,8 @@
-14.05.219 - git commit ---
+16.05.2019 - git commit ---
+	* new switch -e to process a single event specified by the number behind e
+	* results are saved to the singleRecCascResults_eventID.root file to not overwrite the whole run processing
+
+14.05.219 - git commit af2a8d23dafdb0c4fcff5d3fe7878dd109eafcad
 	* bash script for remote PC corrected. It has to be started from the build folder with ../scripts/bash/processAllRunsRemote Year Cluster
 	* Segmentation fault for runs without TTree or Branches solved out
 

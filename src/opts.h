@@ -79,6 +79,7 @@ struct UnifiedEvent
 };
 
 extern int gNEventsProcessed;
+extern int gEventID;
 extern int gInputType;
 extern std::string gProductionID;
 extern std::string gFileInputFolder;
