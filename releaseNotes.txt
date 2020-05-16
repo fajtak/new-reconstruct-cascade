@@ -1,4 +1,7 @@
-16.05.2019 - git commit ---
+16.05.2019 - git commit
+	* filling QTotal histogram added
+
+16.05.2019 - git commit 5b45010648245a367ece422fdc86bd13411699f8
 	* new switch -e to process a single event specified by the number behind e
 	* results are saved to the singleRecCascResults_eventID.root file to not overwrite the whole run processing
 

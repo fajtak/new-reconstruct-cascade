@@ -1146,6 +1146,7 @@ bool SixThreeFilterPassed()
 bool NFilterPassed(UnifiedEvent &event)
 {
 	h_nHits->Fill(event.nHits);
+	h_totalQ->Fill(event.qTotal);
 	if (event.nHits >= gNCut && event.qTotal > gQTotalCut)
 	{
 		return true;
