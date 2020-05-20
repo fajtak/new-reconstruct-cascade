@@ -1,4 +1,9 @@
-16.05.2019 - git commit
+20.05.2019 - git commit ---
+	* new bash scripts for processing of the new runs only
+	* new root script for the processing of the programOutput.log
+	* new root script DatastudyRecCasc.C
+
+16.05.2019 - git commit 42fa5a7aa10258e521bac102ab191e5bc1bd618f
 	* filling QTotal histogram added
 
 16.05.2019 - git commit 5b45010648245a367ece422fdc86bd13411699f8
