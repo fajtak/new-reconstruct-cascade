@@ -71,6 +71,77 @@ void SaveHistograms()
 	h_nHitsTrack->Write();
 }
 
+int SaveCascadeJSON(int eventID, UnifiedEvent& event)
+{
+	if (gInputType != 0)
+		return 1;
+
+	TString outputFileName;
+	// if (App::Output == "")
+		outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+	// else
+		// outputFileName = Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+	char fname[100];
+	std::sprintf(fname,"cascade_season%d_cluster%d_run%d_evt%d.json",BARS::App::Season, BARS::App::Cluster, BARS::App::Run, eventID);
+	outputFileName += fname;
+	std::ofstream fOutputFile;
+	fOutputFile.open(outputFileName);
+	fOutputFile<<"{"<<std::endl;
+	fOutputFile<<"\t\"eventID\": "<<eventID<<","<<std::endl;
+	fOutputFile<<"\t\"season\": "<<BARS::App::Season<<","<<std::endl;
+	fOutputFile<<"\t\"cluster\": "<<BARS::App::Cluster<<","<<std::endl;
+	fOutputFile<<"\t\"run\": "<<BARS::App::Run<<","<<std::endl;
+	fOutputFile<<"\t\"pulses\": {"<<std::endl;
+
+	Int_t nImpulse = gPulses.size();
+	for (int i = 0; i < nImpulse-1; i++)
+	{
+		fOutputFile<<"\t\t\"" << i << "\": \{ \"mask\": "<< 1 <<
+		  ", \"amplitude\": "<< gPulses[i].charge <<
+		  ", \"charge\": "<< gPulses[i].charge <<
+		  ", \"time\": "<< gPulses[i].time <<
+		  ", \"channelID\": "<< gPulses[i].OMID <<
+		  " },"<<std::endl;
+	}
+	fOutputFile<<"\t\t\"" << nImpulse-1 << "\": \{ \"mask\": "<< 1 <<
+	  ", \"amplitude\": "<< gPulses[nImpulse-1].charge <<
+	  ", \"charge\": "<< gPulses[nImpulse-1].charge <<
+	  ", \"time\": "<< gPulses[nImpulse-1].time <<
+	  ", \"channelID\": "<< gPulses[nImpulse-1].OMID <<
+	  " }"<<std::endl;
+	fOutputFile<<"\t},"<<std::endl;
+	fOutputFile<<"\t\"geometry\": ["<<std::endl;
+	for (int i=0; i<gNOMs-1; i++){
+	 fOutputFile<<"\t\t{\"channelID\": "<<i<<
+	            ", \"x\": "<<gOMpositions[i].X()<<
+	            ", \"y\": "<<gOMpositions[i].Y()<<
+	            ", \"z\": "<<gOMpositions[i].Z()<<"},"<<std::endl;
+	}
+	fOutputFile<<"\t\t{\"channelID\": "<<gNOMs-1<<
+	            ", \"x\": "<<gOMpositions[gNOMs-1].X()<<
+	            ", \"y\": "<<gOMpositions[gNOMs-1].Y()<<
+	            ", \"z\": "<<gOMpositions[gNOMs-1].Z()<<"}"<<std::endl;
+	fOutputFile<<"\t],"<<std::endl;
+	fOutputFile<<"\t\"origins\": {"<<std::endl;
+	fOutputFile<<"\t\t\"cascades\": [{"<<std::endl;
+	fOutputFile<<"\t\t\t\"mc\": false,"<<std::endl;
+	fOutputFile<<"\t\t\t\"title\": \"cascadeFit\","<<std::endl;
+	fOutputFile<<"\t\t\t\"direction\": {"<<std::endl;
+	fOutputFile<<"\t\t\t\t\"theta\": "<<std::right<<event.theta<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"phi\": "<<std::right<<event.phi<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"x\": "<<std::right<<event.position.X()<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"y\": "<<std::right<<event.position.Y()<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"z\": "<<std::right<<event.position.Z()<<""<<std::endl;
+	// fOutputFile<<"\t\t\t\t\"time\": "<<std::right<<time<<std::endl;
+	fOutputFile<<"\t\t\t}"<<std::endl;
+	fOutputFile<<"\t\t}]"<<std::endl;
+	fOutputFile<<"\t}"<<std::endl;
+	fOutputFile<<"}"<<std::endl;
+	fOutputFile.close();
+
+	return 0;
+}
+
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &unifiedEvent)
 {
 	unifiedEvent.hits.clear();
@@ -1857,6 +1928,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nLikelihoodFilter++;
 	EventVisualization(i,event,event.position,event.time);
 	ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
+	SaveCascadeJSON(i,event);
 	ScanLogLikelihoodEnergy(i,event);
 	ScanLogLikelihoodDirectionCircular(i,event);
 	ScanLogLikelihoodDirection(i,event);

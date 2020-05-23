@@ -1,4 +1,7 @@
-23.05.2019 - git commit ---
+23.05.2019 - git commit
+	* JSON output finally added
+
+23.05.2019 - git commit 651200544339b6f6b5ac71e36e7740e2003c88c3
 	* first version of the track filter implemented
 	* output is the histogram h_nHitsTrack in Histograms
 
