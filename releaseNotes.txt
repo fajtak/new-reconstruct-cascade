@@ -1,4 +1,8 @@
-20.05.2019 - git commit ---
+23.05.2019 - git commit ---
+	* first version of the track filter implemented
+	* output is the histogram h_nHitsTrack in Histograms
+
+20.05.2019 - git commit 0d404ae3bac3e239aefbe4ee7334d89f3076ce6d
 	* new bash scripts for processing of the new runs only
 	* new root script for the processing of the programOutput.log
 	* new root script DatastudyRecCasc.C

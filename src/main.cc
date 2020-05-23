@@ -43,7 +43,8 @@ TH1D* h_nHitsTFilter = new TH1D("h_nHitsTFilter","Number of hits per event after
 TH1D* h_nStringsTFilter = new TH1D("h_nStringsTFilter","Number of hit strings per event after TFilter;N_{hits} [#];NoE [#]",10,0,10);
 TH1D* h_chi2TFilter = new TH1D("h_chi2TFilter","#chi^{2} of the position fit after TFilter;#chi^{2} [#];NoE [#]",500,0,500);
 TH1D* h_nHitsChange = new TH1D("h_nHitsChange","Change in the number of hits after TFilter;#delta N_{hits} [#];NoE [#]",200,-50,150);
-TH1D* h_exitStatus = new TH1D("h_exitStatus","Exit status of the event;#Status N_{hits} [#];NoE [#]",20,-10,10);
+TH1D* h_exitStatus = new TH1D("h_exitStatus","Exit status of the event;#Status [#];NoE [#]",20,-10,10);
+TH1D* h_nHitsTrack = new TH1D("h_nHitsTrack","Number of track hits; N_{hits} [#]; NoE [#]",100,0,100);
 
 TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood value; #mathcal{L}; NoE [#]",100,0,100);
 TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000,0,1000);
@@ -67,6 +68,7 @@ void SaveHistograms()
 	h_mcTheta->Write();
 	h_mcPhi->Write();
 	h_exitStatus->Write();
+	h_nHitsTrack->Write();
 }
 
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &unifiedEvent)
@@ -1100,6 +1102,24 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 	return nPulses;
 }
 
+int TrackFilter(UnifiedEvent &event, TVector3 cascPos, double cascTime)
+{
+	int nTrackPulses = 0;
+
+	for(int i = 0; i < event.nHits; i++)
+	{   
+		double distanceToCascade = (cascPos - gOMpositions[event.hits[i].OMID]).Mag();
+        double expectedTime = cascTime + distanceToCascade*gRecCinWater;// + scattering_correction;
+
+        if(TMath::Abs(event.hits[i].time-expectedTime) > 50 && TMath::Abs(event.hits[i].time-expectedTime) <= 100)
+        {
+        	nTrackPulses++;
+        }
+	}
+
+	return nTrackPulses;
+}
+
 int GetNStrings()
 {
 	int nHitStrings = 0;
@@ -1816,6 +1836,8 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	if (event.chi2AfterTFilter > gTCutChi2)
 		return -5;
 	eventStats->nTFilterChi2++;
+
+	h_nHitsTrack->Fill(TrackFilter(event,event.position,event.time));
 
 	event.energy = TMath::Power(10,3.30123+0.0447574*gPulses.size()-0.000135729*gPulses.size()*gPulses.size())/1000;
 
