@@ -77,10 +77,10 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 		return 1;
 
 	TString outputFileName;
-	// if (App::Output == "")
+	if (App::Output == "" || App::Output == "a")
 		outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-	// else
-		// outputFileName = Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+	else
+		outputFileName = Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
 	char fname[100];
 	std::sprintf(fname,"cascade_season%d_cluster%d_run%d_evt%d.json",BARS::App::Season, BARS::App::Cluster, BARS::App::Run, eventID);
 	outputFileName += fname;
@@ -197,13 +197,13 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 		// 	mcEvent->GetMuonTrack(k)->GetShower(j)->GetPosition().Print();
 		// 	cout << k << " " << j << " " << mcEvent->GetMuonTrack(k)->GetShower(j)->GetX() << " " << mcEvent->GetMuonTrack(k)->GetShower(j)->GetY() << " " << mcEvent->GetMuonTrack(k)->GetShower(j)->GetZ() << " " << mcEvent->GetMuonTrack(k)->GetShower(j)->GetE() << endl;
 		// }
-	}		
+	}
 	if (muonID != -1 && cascadeID != -1)
 	{
 		unifiedEvent.mcEnergy = mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetEnergy();
 		unifiedEvent.mcPosition.SetX(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetX());
 		unifiedEvent.mcPosition.SetY(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetY());
-		unifiedEvent.mcPosition.SetZ(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetZ());		
+		unifiedEvent.mcPosition.SetZ(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetZ());
 		unifiedEvent.mcFlagID = (cascadeID+1)*1000+(muonID+1);
 		// cout << muonID << " " << cascadeID << " " << unifiedEvent.mcEnergy << " " << unifiedEvent.mcPosition.X() << " " << unifiedEvent.mcPosition.Y() << " " << unifiedEvent.mcPosition.Z() << endl;
 	}
@@ -259,11 +259,11 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	unifiedEvent.mcEnergy = cascade->showerEnergy;
 	unifiedEvent.mcPosition.SetX(cascade->position[0]);
 	unifiedEvent.mcPosition.SetY(cascade->position[1]);
-	unifiedEvent.mcPosition.SetZ(cascade->position[2]);	
+	unifiedEvent.mcPosition.SetZ(cascade->position[2]);
 }
 
 int GenerateNoise(UnifiedEvent &event)
-{	
+{
 	int nGeneratedNoiseHits = 0;
 	for (int i = 0; i < gNOMs; ++i)
 	{
@@ -284,7 +284,7 @@ int GenerateNoise(UnifiedEvent &event)
 			double noiseTime = gRanGen.Uniform(5120)-2560;
 			event.hits.push_back(UnifiedHit{i,noiseTime,noiseCharge,-1,true,0});
 			nGeneratedNoiseHits++;
-			// cout << "\t" << j << " " << noiseTime << " " << noiseCharge << endl; 
+			// cout << "\t" << j << " " << noiseTime << " " << noiseCharge << endl;
 		}
 	}
 	event.nHits += nGeneratedNoiseHits;
@@ -354,16 +354,16 @@ void PrintRunInfo(TTree* tree, BExtractedHeader* header)
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "Experimental Data" << endl;
 	cout << "Season: " << BARS::App::Season << " Cluster: " << BARS::App::Cluster << " Run: " <<  BARS::App::Run << endl;
-	cout << "! " << tree->GetEntries() << " " << (endTime-startTime)/3600.0 << " " << (endTime-startTime)/3600.0/24.0 << endl; 
+	cout << "! " << tree->GetEntries() << " " << (endTime-startTime)/3600.0 << " " << (endTime-startTime)/3600.0/24.0 << endl;
 	std::cout << std::string(81,'*') << std::endl;
 }
 
 void PrintRunInfo(const char* filePath, TChain* events)
 {
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
-	cout << "MC Data: up-going single muons (" << (gInputType == 2 ? 1 : 0) << ") down-going muon bundles (" << (gInputType == 3 ? 1 : 0) << ")" << endl;  
+	cout << "MC Data: up-going single muons (" << (gInputType == 2 ? 1 : 0) << ") down-going muon bundles (" << (gInputType == 3 ? 1 : 0) << ")" << endl;
 	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  gMCTimeConstant << endl;
-    cout << "! " << events->GetEntries() << " " << (events->GetListOfFiles()->GetEntries()*gMCTimeConstant)/3600.0 << "  " << (events->GetListOfFiles()->GetEntries()*gMCTimeConstant)/3600.0/24.0 << endl; 
+    cout << "! " << events->GetEntries() << " " << (events->GetListOfFiles()->GetEntries()*gMCTimeConstant)/3600.0 << "  " << (events->GetListOfFiles()->GetEntries()*gMCTimeConstant)/3600.0/24.0 << endl;
 
 	std::cout << std::string(81,'*') << std::endl;
 }
@@ -371,9 +371,9 @@ void PrintRunInfo(const char* filePath, TChain* events)
 void PrintRunInfoMCCascades(const char* filePath, TChain* events)
 {
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
-	cout << "MC Data: Zhan-Arys' cascades" << endl;  
+	cout << "MC Data: Zhan-Arys' cascades" << endl;
 	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  0 << endl;
-    cout << "! " << events->GetEntries() << " " << 0 << "  " << 0 << endl; 
+    cout << "! " << events->GetEntries() << " " << 0 << "  " << 0 << endl;
 
 	std::cout << std::string(81,'*') << std::endl;
 }
@@ -410,17 +410,17 @@ void chi2(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag) /
   	double error = 1.0/4; //error is 3 ns - photomultiplier
   	double theChi;
 
-	for (unsigned int i = 0; i < gPulses.size(); ++i) 
-	{       
+	for (unsigned int i = 0; i < gPulses.size(); ++i)
+	{
 		// chi calculation (measured - theoretical)
 		TVector3 cascPos(par[0], par[1], par[2]);
 		theChi = error*(gPulses[i].time - ExpectedTime(cascPos,par[3],gPulses[i].OMID));
-		theChi2 += theChi*theChi;  
+		theChi2 += theChi*theChi;
 	}
 	f = constant*theChi2; // function returns calculated chi2, it is global function which is used in SetFCN()
 }
 
-// Input: calculated parameters R,Z,phi,cosTheta Output: given lower indexes in 4D array 
+// Input: calculated parameters R,Z,phi,cosTheta Output: given lower indexes in 4D array
 int GetIndexes(double* inputs, int* outputs)
 {
 	if (inputs[0] < 0)
@@ -464,7 +464,7 @@ double interpolate(double x, double x1, double x2, double f1, double f2)
 double interpolate4D(double* inputs, int* indexes)
 {
 	double R0Z0Phi0 = interpolate(inputs[3],1-(indexes[3])*0.1,1-(indexes[3]+1)*0.1,gLogTable4D[indexes[0]][indexes[1]][indexes[2]][indexes[3]],gLogTable4D[indexes[0]][indexes[1]][indexes[2]][indexes[3]+1]);
-	double R0Z0Phi1 = interpolate(inputs[3],1-(indexes[3])*0.1,1-(indexes[3]+1)*0.1,gLogTable4D[indexes[0]][indexes[1]][indexes[2]+1][indexes[3]],gLogTable4D[indexes[0]][indexes[1]][indexes[2]+1][indexes[3]+1]); 
+	double R0Z0Phi1 = interpolate(inputs[3],1-(indexes[3])*0.1,1-(indexes[3]+1)*0.1,gLogTable4D[indexes[0]][indexes[1]][indexes[2]+1][indexes[3]],gLogTable4D[indexes[0]][indexes[1]][indexes[2]+1][indexes[3]+1]);
 
 	double R0Z1Phi0 = interpolate(inputs[3],1-(indexes[3])*0.1,1-(indexes[3]+1)*0.1,gLogTable4D[indexes[0]][indexes[1]+1][indexes[2]][indexes[3]],gLogTable4D[indexes[0]][indexes[1]][indexes[2]][indexes[3]+1]);
 	double R0Z1Phi1 = interpolate(inputs[3],1-(indexes[3])*0.1,1-(indexes[3]+1)*0.1,gLogTable4D[indexes[0]][indexes[1]+1][indexes[2]+1][indexes[3]],gLogTable4D[indexes[0]][indexes[1]][indexes[2]][indexes[3]+1]);
@@ -518,7 +518,7 @@ void GetParameters(const Double_t* cascadeParameters,const int OMID, double* tab
 	showerRef.SetPhi((cascadeParameters[6] + TMath::Pi()));
 	// showerRef.Print();
 	// OMpos.Print();
-	
+
 	tableParameters[0] = OMpos.Perp(showerRef);
 	tableParameters[1] = OMpos*showerRef;
 
@@ -572,7 +572,7 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 		// cout << i << " " << tableParameters[0] << " " << tableParameters[1] << " " << tableParameters[2] << " " << tableParameters[3] << endl;
 		double expectedNPE = GetInterpolatedValue(tableParameters);
 		// cout << expectedNPE << " " << expectedNPE*100000000*par[4] << " " << gPulses[i].charge << " " << TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4]) << endl;
-		
+
 		if (TMath::Poisson(gPulses[i].charge,expectedNPE*110000000*par[4]) > 10e-320)
 		{
 			logLike -= TMath::Log10(TMath::Poisson(gPulses[i].charge,expectedNPE*110000000*par[4]));
@@ -652,7 +652,7 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 		gReferencePosition = (bgeom->At(270)->GetPosition() + bgeom->At(271)->GetPosition());
 		gReferencePosition *= 0.5;
 		if (bgeom->At(i)->HasData())
-		{   
+		{
 			gOMpositions[i] = bgeom->At(i)->GetPosition() - gReferencePosition;
 			// cout << i << " " << gOMpositions[i].X() << " " << gOMpositions[i].Y() << endl;
 			if (gVerbose == 2)
@@ -730,26 +730,26 @@ int ReadGeometry(TTree* tree, BExtractedHeader* header) // read dynamic geometry
     	cerr<< "The last accessible detector geometry is used. The time difference: " << (startTime-geometryEndTime)/3600.0/24.0 << " days." << endl;
     	return 0;
   	}
-  	
+
   	Int_t geometryTime = 0;
   	// iterate through all the geometry entries
 	for (int i = 0; i < geometryTree->GetEntries(); ++i)
 	{
-		geometryTree->GetEntry(i);   
+		geometryTree->GetEntry(i);
 
 	    if(telGeometry->GetTime().GetSec() >= startTime)
 	    {
 	    	geometryTime = telGeometry->GetTime().GetSec();
 	    	// cout << "SubRun start: " << telGeometry->GetTime().AsDouble()<<endl;
-	    	int nOKOMs = SetOMsDynamic(telGeometry); 
+	    	int nOKOMs = SetOMsDynamic(telGeometry);
 	    	if (gVerbose == 1)
 	    	{
 	    		cout << endl;
-	    		cout << "Run startTime: " << startTime << " GeometryTime: " << geometryTime << " First geometry: " << geometryStartTime << " Last geometry: " << geometryEndTime << endl; 
+	    		cout << "Run startTime: " << startTime << " GeometryTime: " << geometryTime << " First geometry: " << geometryStartTime << " Last geometry: " << geometryEndTime << endl;
 	    	}
 	    	return 0;
-	    }  
-	} 
+	    }
+	}
 	return -1;
 }
 
@@ -796,7 +796,7 @@ int ReadGeometryMCCascades()
 		inputFile >> OMID >> x >> y >> z >> dummyD >> dummyI;
 		gOMpositions[i] = TVector3(x,y,z);
     }
-    inputFile.close();	
+    inputFile.close();
 
 	return 0;
 }
@@ -859,12 +859,12 @@ void NormalizeTimeCal()
 	{
 		if (gOMtimeCal[i] != -1)
 		{
-			gOMtimeCal[i] -= meanValue;	
-		}	
+			gOMtimeCal[i] -= meanValue;
+		}
 	}
 }
 
-// Both time calibration files (offsets, timecalib_dzh) are read and multiplied by corresponding constant 
+// Both time calibration files (offsets, timecalib_dzh) are read and multiplied by corresponding constant
 int ReadTimeCal()
 {
 	const char* offsetFileName = BARS::Calib::File(BARS::App::Cluster, BARS::App::Season, BARS::Calib::OFFSET, "offsets");
@@ -934,6 +934,7 @@ int ReadQCal(void)
     }
 
     inputFile.close();
+    return 0;
 }
 
 // Function reading the logLikelihood tables for direction and energy reconstruction
@@ -1027,7 +1028,7 @@ int ReadInputParamFiles(TTree* tree, BExtractedHeader* header)
 	if (ReadQCal() == -1)
 	{
 		std::cout << "Problem with charge calibration files!" << std::endl;
-		return -1;	
+		return -1;
 	}
 	cout << "DONE!" << endl;
 	cout << "Reading Log Table ... ";
@@ -1130,7 +1131,7 @@ int CaussalityFilter(UnifiedEvent &event)
 		{
 			double distance = (gOMpositions[event.hits[i].OMID] - gOMpositions[gPulses[j].OMID]).Mag();
 
-			if(abs(gPulses[j].time - event.hits[i].time) >= (distance*gRecCinWater + 50))     
+			if(abs(gPulses[j].time - event.hits[i].time) >= (distance*gRecCinWater + 50))
 			{
 				addPulse = false;
 				break;
@@ -1148,6 +1149,7 @@ int CaussalityFilter(UnifiedEvent &event)
 		if (addPulse && friendFound && !OMIDAlreadyInGPulses(event.hits[i]))
 			gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
 	}
+	return 0;
 }
 
 int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
@@ -1156,7 +1158,7 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 	int nPulses = 0;
 
 	for(int i = 0; i < event.nHits; i++)
-	{   
+	{
 		double distanceToCascade = (cascPos - gOMpositions[event.hits[i].OMID]).Mag();
         double expectedTime = cascTime + distanceToCascade*gRecCinWater;// + scattering_correction;
 
@@ -1178,7 +1180,7 @@ int TrackFilter(UnifiedEvent &event, TVector3 cascPos, double cascTime)
 	int nTrackPulses = 0;
 
 	for(int i = 0; i < event.nHits; i++)
-	{   
+	{
 		double distanceToCascade = (cascPos - gOMpositions[event.hits[i].OMID]).Mag();
         double expectedTime = cascTime + distanceToCascade*gRecCinWater;// + scattering_correction;
 
@@ -1215,7 +1217,7 @@ int GetNTrackHits(UnifiedEvent &event)
 	{
 		if (gPulses[i].MCflag != event.mcFlagID && !gPulses[i].noise)
 			nTrackHits++;
-	}	
+	}
 	return nTrackHits;
 }
 
@@ -1266,7 +1268,7 @@ double EstimateInitialPosMatrix(TVector3 &cascPos, double &cascTime)
 	}
 
 	TMatrixD B(4,gPulses.size()-1);
-	B.Transpose(A); 
+	B.Transpose(A);
 	TMatrixD C = (B*A).Invert();
 	TVectorD D = A.T()*b;
 	TVectorD X = C*D;
@@ -1282,7 +1284,7 @@ double EstimateInitialPosMatrix(TVector3 &cascPos, double &cascTime)
 }
 
 double FitCascPos(TVector3 &cascPos, double &cascTime)
-{ 
+{
 	gMinuit->ReleaseParameter(0);
 	gMinuit->ReleaseParameter(1);
 	gMinuit->ReleaseParameter(2);
@@ -1312,11 +1314,11 @@ double FitCascPos(TVector3 &cascPos, double &cascTime)
 	cascPos.SetZ(gMinuit->GetParameter(2));
 	cascTime = gMinuit->GetParameter(3);
 
-	return chi2;  
+	return chi2;
 }
 
 double FitCascDirection(UnifiedEvent &event, double &energy, double &theta, double &phi, double &eSig, double &tSig, double &pSig)
-{ 
+{
 	// cout << "Fit Matrix direction" << endl;
 	gMinuit->ReleaseParameter(4);
 	gMinuit->ReleaseParameter(5);
@@ -1354,8 +1356,8 @@ double FitCascDirection(UnifiedEvent &event, double &energy, double &theta, doub
 	pSig = gMinuit->GetParError(6);
 
 	// cout << chi2 << " " << gPulses.size() << " " <<  chi2/gPulses.size() << " " << fMinuit->GetParameter(5) << " " << fMinuit->GetParameter(6) << endl;
-	return chi2/gPulses.size();  
-	// return chi2/gNOMs;  
+	return chi2/gPulses.size();
+	// return chi2/gNOMs;
 }
 
 double EstimateInitialDirection(TVector3& cascPos, double& cascTime, double& energy, double &theta, double &phi)
@@ -1530,7 +1532,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		g_QvsL->SetPoint(i,distanceToCascade,gPulses[i].charge);
 	}
 
-	TCanvas *cEvent = new TCanvas(Form("cEvent_%d",eventID),Form("cEvent_%d",eventID),200,10,600,400);  
+	TCanvas *cEvent = new TCanvas(Form("cEvent_%d",eventID),Form("cEvent_%d",eventID),200,10,600,400);
 	cEvent->Divide(3,3);
 	for (int i = 0; i < gNStrings; ++i)
 	{
@@ -1560,7 +1562,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 
 	delete cEvent;
 	delete g_QvsL;
-	
+
 	for (int i = 0; i < gNStrings; ++i)
 	{
 		delete mg_hitsMatrix[i];
@@ -1606,12 +1608,12 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 	{
 		int stringID = i/36;
 		GetParameters(par,i,tableParameters);
-		g_ExpQ[stringID]->SetPoint(i%36,i,GetInterpolatedValue(tableParameters)*110000000*energy);		
+		g_ExpQ[stringID]->SetPoint(i%36,i,GetInterpolatedValue(tableParameters)*110000000*energy);
 		if (gOMqCal[i] == -1)
 			g_DeadOM[stringID]->SetPoint(g_DeadOM[stringID]->GetN(),i,0);
 	}
 
-	TCanvas *cCharge = new TCanvas(Form("cCharge_%d",eventID),Form("cCharge_%d",eventID),200,10,600,400);  
+	TCanvas *cCharge = new TCanvas(Form("cCharge_%d",eventID),Form("cCharge_%d",eventID),200,10,600,400);
 	cCharge->Divide(3,3);
 	for (int i = 0; i < gNStrings; ++i)
 	{
@@ -1631,7 +1633,7 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 	cCharge->Write();
 
 	delete cCharge;
-	
+
 	for (int i = 0; i < gNStrings; ++i)
 	{
 		delete mg_QSum[i];
@@ -1670,13 +1672,13 @@ void ScanLogLikelihoodEnergy(int eventID,UnifiedEvent &event)
 	int nRealPoints = 0;
 	for (int i = 0; i <= nPoints; ++i)
 	{
-		cascadeParameters[4] = event.energy + i - 20; 
+		cascadeParameters[4] = event.energy + i - 20;
 		if (cascadeParameters[4] <= 0)
 			continue;
 		logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 		g_energyLikelihoodScan->SetPoint(nRealPoints,cascadeParameters[4],likelihoodValue-event.likelihood*(gPulses.size()));
 		nRealPoints++;
-	}	
+	}
 	g_energyLikelihoodScan->Draw("AP");
 	g_trueEnergy->Draw("PSAME");
 	c_energyLikelihoodScan->Write();
@@ -1721,8 +1723,8 @@ void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
 	{
 		for (int j = 0; j <= nPoints; ++j)
 		{
-			cascadeParameters[5] = event.theta + (i - nPoints/2)*degInRad; 
-			cascadeParameters[6] = event.phi + (j - nPoints/2)*degInRad; 
+			cascadeParameters[5] = event.theta + (i - nPoints/2)*degInRad;
+			cascadeParameters[6] = event.phi + (j - nPoints/2)*degInRad;
 			logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 			// if (likelihoodValue-event.likelihood*gPulses.size() < 0.5)
 			{
@@ -1730,7 +1732,7 @@ void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
 				pointID++;
 			}
 		}
-	}	
+	}
 	// g_positionLikelihoodScan->Draw("surf7");
 	g_positionLikelihoodScan->Draw("cont1z");
 	g_truePosition->SetMarkerStyle(5);
@@ -1787,8 +1789,8 @@ void ScanLogLikelihoodDirectionCircular(int eventID, UnifiedEvent &event)
 	{
 		for (int j = 0; j <= 360; ++j)
 		{
-			cascadeParameters[5] = (i)*TMath::Pi()/180.0; 
-			cascadeParameters[6] = (j)*2*TMath::Pi()/360.0; 
+			cascadeParameters[5] = (i)*TMath::Pi()/180.0;
+			cascadeParameters[6] = (j)*2*TMath::Pi()/360.0;
 			logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 			// if (likelihoodValue-event.likelihood*gPulses.size() < 0.5)
 			{
@@ -1796,7 +1798,7 @@ void ScanLogLikelihoodDirectionCircular(int eventID, UnifiedEvent &event)
 				pointID++;
 			}
 		}
-	}	
+	}
 	// g_positionLikelihoodScan->Draw("surf7");
 	g_positionLikelihoodScan->Draw("surf1");
 	g_truePosition->SetMarkerStyle(5);
@@ -1837,7 +1839,7 @@ double CalculateDirectionError(UnifiedEvent &event)
 	double step = stepInDegree/180*TMath::Pi();
 
 	int iteration = 1;
-	while(minIterLikelihood < likelihoodLimit) 
+	while(minIterLikelihood < likelihoodLimit)
 	{
     	minIterLikelihood = 10000;
 	    for (int i = -iteration; i <= iteration; ++i)
@@ -1846,13 +1848,13 @@ double CalculateDirectionError(UnifiedEvent &event)
 	    	{
 	    		if (abs(i)-iteration == 0 || abs(j)-iteration == 0)
     			{
-    				cascadeParameters[5] = event.theta + step*i; 
-					cascadeParameters[6] = event.phi + step*j; 
+    				cascadeParameters[5] = event.theta + step*i;
+					cascadeParameters[6] = event.phi + step*j;
 					logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 					// cout << i << " " << j << " " << cascadeParameters[5]/TMath::Pi()*180 << " " << cascadeParameters[6]/TMath::Pi()*180 << " "  << likelihoodValue-event.likelihood*gPulses.size() << endl;
 					if (likelihoodValue-event.likelihood*gPulses.size() < minIterLikelihood)
 					{
-						minIterLikelihood = likelihoodValue-event.likelihood*gPulses.size(); 
+						minIterLikelihood = likelihoodValue-event.likelihood*gPulses.size();
 					}
     			}
 	    	}
@@ -1881,7 +1883,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -2;
 	eventStats->nSixThrees++;
 
-	// TVector3 cascPos(0,0,0); 
+	// TVector3 cascPos(0,0,0);
 	// double cascTime = 0;
 
 	EstimateInitialPosMatrix(event.position,event.time);
@@ -1917,7 +1919,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	else
 	{
 		EstimateInitialDirection(event.position,event.time,event.energy,event.theta,event.phi);
-		LikelihoodFilterPassed(event);		
+		LikelihoodFilterPassed(event);
 	}
 
 	h_likelihood->Fill(event.likelihood);
@@ -1969,7 +1971,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 // required input parameters are seasonID, clusterID, RunID
 // joint.events.root files are found automatically based on the enviroment variables
 int ProcessExperimentalData()
-{	
+{
 	if (!CheckInputParamsExpData()) // Check input parameters
 	{
 		return -1;
@@ -1987,7 +1989,7 @@ int ProcessExperimentalData()
     	return -2;
     }
 
-	// Sets necessary pointers to access data through TTree 
+	// Sets necessary pointers to access data through TTree
 	TFile* file = new TFile(filePath,"READ");
     TTree* tree = (TTree*)file->Get("Events");
     if (!tree || !tree->GetBranch("BJointImpulseTel.") || !tree->GetBranch("BJointHeader."))
@@ -2005,12 +2007,21 @@ int ProcessExperimentalData()
 	if (ReadInputParamFiles(tree,header) == -1)
 		return -3;
 
-    TString outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+	TString outputFileName = "";
+	if (App::Output == "" || App::Output == "a")
+    	outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    else
+    	outputFileName =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
 	if (gEventID == -1)
 		outputFileName += "recCascResults.root";
 	else
 		outputFileName += Form("singleRecCasc_%d.root",gEventID);
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
+	if (!outputFile->IsOpen())
+	{
+		std::cout << "Output File: " << outputFileName << " can not be recreated!" << endl;
+    	return -4;
+	}
 	TDirectory *cdTree = outputFile->mkdir("Tree");
 	UnifiedEvent unifiedEvent;
 	TTree* t_RecCasc = new TTree("t_RecCasc","Reconstructed Cascades");
@@ -2024,7 +2035,7 @@ int ProcessExperimentalData()
 
 	int startEventID = (gEventID == -1)?0:gEventID;
 	int endEventID = (gEventID == -1)?eventStats->nEntries:gEventID+1;
-	
+
 	for (int i = startEventID; i < endEventID; ++i)
 	{
 		if (i%(eventStats->nEntries/10) == 0)
@@ -2067,8 +2078,8 @@ int ProcessMCCascades()
     	return -2;
 	}
 
-	// Sets necessary pointers to access data through TChain 
-	mcCascade* cascade = new mcCascade;    
+	// Sets necessary pointers to access data through TChain
+	mcCascade* cascade = new mcCascade;
 	mcFiles->SetBranchAddress("L0",&cascade->eventID);
 	mcFiles->SetBranchAddress("Esh",&cascade->showerEnergy);
 	mcFiles->SetBranchAddress("cost",&cascade->cosTheta);
@@ -2145,7 +2156,7 @@ int ProcessMCData()
 	if (gInputType == 3)
 		filePath = "/Data/BaikalData/mc/2018may/n_cors_n2m_cl2016_x*.root";
 	if (gInputType == 2)
-		filePath = "/Data/BaikalData/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x*.root";	
+		filePath = "/Data/BaikalData/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x*.root";
 
 	TChain* mcFiles = new TChain("Events");
 	mcFiles->Add(filePath);
@@ -2155,7 +2166,7 @@ int ProcessMCData()
     	return -2;
 	}
 
-	// Sets necessary pointers to access data through TChain 
+	// Sets necessary pointers to access data through TChain
 	BEvent* event = NULL;
     mcFiles->SetBranchAddress("BEvent.",&event);
     BEventMaskMC* eventMask = NULL;
@@ -2174,7 +2185,7 @@ int ProcessMCData()
 	if (gInputType == 3)
 		outputFileName = "/Data/BaikalData/mc/2018may/";
 	if (gInputType == 2)
-		outputFileName = "/Data/BaikalData/mc/nuatm_feb19/";	
+		outputFileName = "/Data/BaikalData/mc/nuatm_feb19/";
 	outputFileName += "recCascResults.root";
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");
@@ -2211,6 +2222,7 @@ int ProcessMCData()
 	cdTree->cd();
 	t_RecCasc->Write();
 	outputFile->Close();
+	return 0;
 }
 
 // Fitter setting
@@ -2227,7 +2239,7 @@ void SetFitter(void)
 // Main processing function
 // It sets things that are common for all data input types (like Fitter)
 // and starts processing of the given input type
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
 	clock_t begin = clock();
     // Init should be called at the beggining of all BARS programms
@@ -2237,7 +2249,7 @@ int main(int argc, char** argv)
     SetFitter();
 
     switch (gInputType) {
-    	case 0: 
+    	case 0:
     		ProcessExperimentalData();
     		break;
     	case 1:
