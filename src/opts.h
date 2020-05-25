@@ -34,7 +34,7 @@ struct mcCascade
 };
 
 // structure holding unified hit
-struct UnifiedHit 
+struct UnifiedHit
 {
   int OMID;
   double time;
@@ -87,7 +87,7 @@ extern std::string gFileInputFolder;
 extern double gLogTable4D[200][351][21][21];
 extern std::vector<double> gNoiseTable;
 extern int gNOMs;
-extern int gNStrings;
+extern const int gNStrings;
 extern std::vector<TVector3> gOMpositions;
 extern std::vector<double> gOMtimeCal;
 extern std::vector<double> gOMqCal;

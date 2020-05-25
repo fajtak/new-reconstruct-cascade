@@ -1,4 +1,7 @@
 25.05.2019 - git commit ---
+	* minor fix
+
+25.05.2019 - git commit cd50f9d4e50ca5fea427abc3d1b89a6077f88f2d
 	* added new bash script to download joint+qclib files
 	* when the -o "/path/to/store/results/" (output) switch is used the results are saved there
 	* if the rootOutputFile is not produced the code stops

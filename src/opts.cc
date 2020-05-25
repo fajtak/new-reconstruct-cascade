@@ -9,7 +9,7 @@
 
 #include "BARS.h"
 
-int gNEventsProcessed = -1; 
+int gNEventsProcessed = -1;
 int gEventID = -1;
 std::string gProductionID = "";
 int gInputType = 0;
@@ -18,7 +18,7 @@ std::string gFileInputFolder = "";
 double gLogTable4D[200][351][21][21]{0};
 std::vector<double> gNoiseTable;
 int gNOMs = 288;
-int gNStrings = 8;
+const int gNStrings = 8;
 std::vector<TVector3> gOMpositions(gNOMs);
 std::vector<double> gOMtimeCal(gNOMs,0);
 std::vector<double> gOMqCal(gNOMs,0);
@@ -135,7 +135,7 @@ static const struct App::ProgramOption_t options_list[]{
 //_____________________________________________________________________
 void readRC(const char* rcpath)
 {
-	TEnv env;    
+	TEnv env;
 	if (-1 == env.ReadFile(App::RCPath, kEnvAll)) {
 		std::cerr << "ERROR: failed to read configuration file at '" << App::RCPath << "'" << std::endl;
 		exit(1);
