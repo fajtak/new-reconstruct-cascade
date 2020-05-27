@@ -1,4 +1,8 @@
-25.05.2019 - git commit ---
+27.05.2019 - git commit ---
+	* new bash scripts added to download results from VM machines to the user computer
+	* slight changes in DatastudyRecCas.C
+
+25.05.2019 - git commit 2bc0c5fbf7382e18e683e447367e58a119068cc7
 	* minor fix
 
 25.05.2019 - git commit cd50f9d4e50ca5fea427abc3d1b89a6077f88f2d

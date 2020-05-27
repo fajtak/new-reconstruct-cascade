@@ -1,0 +1,5 @@
+#!/bin/bash
+# download RecCascResults.root from all processed runs from the Valparaiso
+# arguments: year(16,17,18,19), cluster(from zero/0)
+
+rsync -r -u --include="*/" --include="recCascResults.root" --include="singleRecCasc_*.root" --exclude="*" VM68:/mnt/cephfs/user/fajtak/dataVer2.0/exp20$1/cluster$2/ $CEPH_MNT/dataVM68/exp$1/cluster$2/ --progress

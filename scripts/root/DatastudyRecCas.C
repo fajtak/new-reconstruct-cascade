@@ -26,7 +26,15 @@ void DrawResults()
 	h_theta->Draw();
 }
 
-int DatastudyRecCas(int year, int cluster = -1, bool upGoing = false, bool highEnergy = true)
+bool IsContained(TVector3* position)
+{
+	if (TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2)) < 60 && TMath::Abs(position->Z() < 265))
+		return true;
+	else
+		return false;
+}
+
+int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = false, bool highEnergy = true)
 {
 	TChain reconstructedCascades("Tree/t_RecCasc");
 
@@ -37,11 +45,19 @@ int DatastudyRecCas(int year, int cluster = -1, bool upGoing = false, bool highE
 
 	for (int i = startID; i < endID; ++i)
 	{
-		filesDir = Form("/Data/BaikalData/dataVal/exp%d/cluster%d/",year,i);
+		switch(folder)
+		{
+			case 0:
+				filesDir = Form("/Data/BaikalData/dataVal/exp%d/cluster%d/",year,i);
+				break;
+			case 1:
+				filesDir = Form("/home/fajtak/work/data/baikalData/dataVM240/exp%d/cluster%d/",year,i);
+				break;
+		}
 		cout << filesDir << endl;
 
 		auto dir = gSystem->OpenDirectory(filesDir.Data());
-		while (auto f = gSystem->GetDirEntry(dir)) 
+		while (auto f = gSystem->GetDirEntry(dir))
 		{
 		  	if (!strcmp(f,".") || !strcmp(f,"..")) continue;
 		  	TString fullFilePath = filesDir + f + "/recCascResults.root";
@@ -103,13 +119,13 @@ int DatastudyRecCas(int year, int cluster = -1, bool upGoing = false, bool highE
 		cascDirRec.SetTheta(theta);
 		cascDirRec.SetPhi(phi);
 
-		if (energy > 100 && highEnergy)
+		if (energy > 100 && highEnergy && IsContained(position))
 		{
 			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
 		}
 
-		if (theta/TMath::Pi()*180 < 80 && upGoing)
+		if (theta/TMath::Pi()*180 < 80 && upGoing && IsContained(position))
 		{
 			cout << "Up-going Event - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
