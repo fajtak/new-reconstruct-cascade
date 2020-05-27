@@ -1,4 +1,8 @@
 27.05.2019 - git commit ---
+	* downloadJointVal and downloadJointEos bash scripts edited
+	* structure of the timeCal and qCalib files is now verified
+
+27.05.2019 - git commit 1f16822d0d80312b23760dcf9c4643bb1156848c
 	* new bash scripts added from VM to process runs + make folders
 
 27.05.2019 - git commit 05e39d85e51dca5af2afe884afada1a13168585d

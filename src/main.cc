@@ -827,6 +827,11 @@ int ReadTimeCalFile(const char* fileName, double multConst)
 		    getline(inputFile,dummyLine);
 		}
 		inputFile >> readValue;
+		if (inputFile.fail())
+		{
+			cerr << "Wrong value in the time calibration file: " << fileName << " Try to check it!" << endl;
+			return -2;
+		}
 		if (readValue != -10000 && readValue != -1000)
 			gOMtimeCal[i] += readValue*multConst;
 		else
@@ -868,10 +873,10 @@ void NormalizeTimeCal()
 int ReadTimeCal()
 {
 	const char* offsetFileName = BARS::Calib::File(BARS::App::Cluster, BARS::App::Season, BARS::Calib::OFFSET, "offsets");
-	if (ReadTimeCalFile(offsetFileName,-2.5) == -1)
+	if (ReadTimeCalFile(offsetFileName,-2.5) < 0)
 		return -1;
 	const char* timeCalName = BARS::Calib::File(BARS::App::Cluster, BARS::App::Season, BARS::Calib::TIME, "timecalib_dzh");
-	if (ReadTimeCalFile(timeCalName,1) == -1)
+	if (ReadTimeCalFile(timeCalName,1) < 0)
 		return -1;
 
 	NormalizeTimeCal();
@@ -914,6 +919,11 @@ int ReadQCal(void)
     for (int i = 0; i < gNOMs; ++i)
     {
 		inputFile >> readValue;
+		if (inputFile.fail())
+		{
+			cerr << "Wrong value in the charge calibration file: " << filePath << " Try to check it!" << endl;
+			return -2;
+		}
 		gOMqCal[i] = readValue;
 		if ((i+1)%36 == 0)
 		{
@@ -1025,7 +1035,7 @@ int ReadInputParamFiles(TTree* tree, BExtractedHeader* header)
 	cout << "DONE!" << endl;
 	cout << "Reading Charge Calibration ... ";
 	cout << std::flush;
-	if (ReadQCal() == -1)
+	if (ReadQCal() < 0)
 	{
 		std::cout << "Problem with charge calibration files!" << std::endl;
 		return -1;
