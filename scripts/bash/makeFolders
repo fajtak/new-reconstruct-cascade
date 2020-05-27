@@ -1,0 +1,13 @@
+#!/bin/bash
+# process all joint.event.root files for given year and cluster
+# arguments: year(16,17,18,19), cluster(from zero/0)
+
+for runID in {1..999}
+do
+	command=$(printf "%04d" $runID)
+	echo $command
+
+	# mkdir /afs/jinr.ru/user/f/fajtak/data/exp20$1/cluster$2/${command}
+	# mkdir /mnt/cephfs/user/fajtak/data/exp20$1/cluster$2/${command}
+	mkdir /home/fajtak/data/exp20$1/cluster$2/${command}
+done

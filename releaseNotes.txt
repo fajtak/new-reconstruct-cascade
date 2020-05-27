@@ -1,4 +1,7 @@
 27.05.2019 - git commit ---
+	* new bash scripts added from VM to process runs + make folders
+
+27.05.2019 - git commit 05e39d85e51dca5af2afe884afada1a13168585d
 	* new bash scripts added to download results from VM machines to the user computer
 	* slight changes in DatastudyRecCas.C
 
