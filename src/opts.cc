@@ -26,6 +26,7 @@ std::vector<UnifiedHit> gPulses;
 int gVerbose = 0;
 TVector3 gReferencePosition;
 const double gRecCinWater = 4.57;
+const double gRecC = 3.336;
 TVirtualFitter* gMinuit;
 TRandom2 gRanGen;
 double gMCTimeConstant = 3900; // seconds per MC file

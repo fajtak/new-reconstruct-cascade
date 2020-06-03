@@ -1,4 +1,10 @@
-27.05.2019 - git commit ---
+03.06.2019 - git commit ---
+	* Drawing of the expected muon hits added to the visualization
+	* DataStudyRecCasc.C extended, the XY cascade positions drawn
+	* bash script downloadJoint from eos added
+	* root script for the programOutput_season_cluster.log added with basic statistics
+
+27.05.2019 - git commit 3e0819767f7ba5b355ac2eb9a06329cebae4368c
 	* downloadJointVal and downloadJointEos bash scripts edited
 	* structure of the timeCal and qCalib files is now verified
 

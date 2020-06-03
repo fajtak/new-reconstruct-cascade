@@ -1471,6 +1471,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 	TGraph* g_trackHits[gNStrings];
 	TGraph* g_lowerLimit[gNStrings];
 	TGraph* g_upperLimit[gNStrings];
+	TGraph* g_trackLimit[gNStrings];
 	TMultiGraph* mg_hitsMatrix[gNStrings];
 	TGraph* g_ledMatrix[gNStrings];
 	TGraph* g_QvsL = new TGraph(gPulses.size());
@@ -1497,6 +1498,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		g_trackHits[i] = new TGraph(nTrackHitsPerString[i]);
 		g_lowerLimit[i] = new TGraph(nOMsPerString);
 		g_upperLimit[i] = new TGraph(nOMsPerString);
+		g_trackLimit[i] = new TGraph(nOMsPerString);
 		mg_hitsMatrix[i] = new TMultiGraph(Form("mg_%d",i),Form("String_%d;Calibrated time [ns]; OM Z position [m]",i+1));
 		nHitsPerString[i] = 0;
 		nNoiseHitsPerString[i] = 0;
@@ -1529,12 +1531,24 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		// g_hits[stringID]->SetPoint(nHitsPerString[stringID],event.hits[k].time,gOMpositions[event.hits[k].OMID].Z());
 		// nHitsPerString[stringID]++;
 	}
+
+	TVector3 cascDir(0,0,1);
+	cascDir.SetTheta(event.theta);
+	cascDir.SetPhi(event.phi);
+
 	for (int j = 0; j < gNOMs; ++j)
 	{
 		double distanceToCascade = (cascPos - gOMpositions[j]).Mag();
 	    double expectedTime = cascTime + distanceToCascade*gRecCinWater;
 		g_lowerLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime-gTCutTimeWindowNs,gOMpositions[j].Z());
 		g_upperLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime+gTCutTimeWindowNs,gOMpositions[j].Z());
+
+		double sPerp = (gOMpositions[j]-cascPos).Perp(cascDir);
+		double sLong = (gOMpositions[j]-cascPos)*(cascDir);
+		double lLong = sPerp/TMath::Tan(0.719887);
+		double expTime = cascTime + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
+
+		g_trackLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expTime,gOMpositions[j].Z());
 	}
 	for (int i = 0; i < gPulses.size(); ++i)
 	{
@@ -1553,6 +1567,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		mg_hitsMatrix[i]->Add(g_ledMatrix[i],"P");
 		mg_hitsMatrix[i]->Add(g_lowerLimit[i],"L");
 		mg_hitsMatrix[i]->Add(g_upperLimit[i],"L");
+		mg_hitsMatrix[i]->Add(g_trackLimit[i],"L");
 		mg_hitsMatrix[i]->Draw("AP");
 		// mg_hitsMatrix[i]->SetBit(kCanDelete);
 		g_hits[i]->SetMarkerStyle(20);
@@ -1564,6 +1579,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		g_ledMatrix[i]->SetMarkerColor(kRed);
 		g_lowerLimit[i]->SetLineColor(kGreen);
 		g_upperLimit[i]->SetLineColor(kGreen);
+		g_trackLimit[i]->SetLineColor(kOrange);
 	}
 	cEvent->cd(9);
 	g_QvsL->Draw("AP");

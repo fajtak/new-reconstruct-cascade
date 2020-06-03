@@ -95,6 +95,7 @@ extern std::vector<UnifiedHit> gPulses; //global vector of PulsesVariables
 extern int gVerbose;
 extern TVector3 gReferencePosition;
 extern const double gRecCinWater;
+extern const double gRecC;
 extern TVirtualFitter* gMinuit;
 extern TRandom2 gRanGen;
 extern double gMCTimeConstant;

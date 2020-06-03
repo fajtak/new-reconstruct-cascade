@@ -6,13 +6,21 @@
 #include "TVector3.h"
 #include "TMath.h"
 #include "TSystem.h"
-
+#include "TGraph.h"
 
 #include <iostream>
+
+std::vector<double> stringXPositions = {5.22,52.13,57.54,25.17,-29.84,-53.6,-42.32,0};
+std::vector<double> stringYPositions = {62.32,37.15,-13.92,-52.01,-52.36,-7.49,42.74,0};
 
 TH1F* h_nHits = new TH1F("h_nHits","Number of hits per Event; N_{hits} [#]; NoE [#]",250,0,250);
 TH1F* h_energy = new TH1F("h_energy","Reconstructed energy; E [TeV]; NoE [#]",1000,0,1000);
 TH1F* h_theta = new TH1F("h_theta","Zenith angle (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
+TH1F* h_thetaContained = new TH1F("h_thetaContained","Zenith angle, contained cascades (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
+TH2F* h_energyNHits = new TH2F("h_energyNHits","Energy vs NHits; log_{10}(E [TeV]); N_{hits} [#]",50,0,5,100,0,100);
+TGraph* g_cascadeXY = new TGraph();
+TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
+
 
 void DrawResults()
 {
@@ -24,6 +32,22 @@ void DrawResults()
 
 	TCanvas* c_theta = new TCanvas("c_theta","Theta",800,600);
 	h_theta->Draw();
+	h_thetaContained->SetLineColor(kRed);
+	h_thetaContained->Draw("same");
+
+	TCanvas* c_energyNHits2 = new TCanvas("c_energyNHits2","EnergyVsNHits2",800,600);
+	h_energyNHits->Draw("colz");
+
+	TCanvas* c_cascadePositions = new TCanvas("c_cascadePositions","Results",800,600);
+
+	g_stringPositions->SetMarkerStyle(20);
+	g_stringPositions->SetMarkerColor(kRed);
+	g_stringPositions->Draw("AP");
+	g_stringPositions->SetTitle("Cascade XY positions; X [m]; Y [m]");
+	g_cascadeXY->SetMarkerStyle(21);
+	g_cascadeXY->SetTitle("Positions of reconstructed cascades;X [m];Y [m]");
+	g_cascadeXY->Draw("PSame");
+
 }
 
 bool IsContained(TVector3* position)
@@ -43,15 +67,17 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 	int startID = cluster!=-1?cluster:0;
 	int endID = cluster!=-1?cluster+1:10;
 
+	const char* env_p = std::getenv("CEPH_MNT");
+
 	for (int i = startID; i < endID; ++i)
 	{
 		switch(folder)
 		{
 			case 0:
-				filesDir = Form("/Data/BaikalData/dataVal/exp%d/cluster%d/",year,i);
+				filesDir = Form("%s/dataVal/exp%d/cluster%d/",env_p,year,i);
 				break;
 			case 1:
-				filesDir = Form("/home/fajtak/work/data/baikalData/dataVM240/exp%d/cluster%d/",year,i);
+				filesDir = Form("%s/dataVM240/exp%d/cluster%d/",env_p,year,i);
 				break;
 		}
 		cout << filesDir << endl;
@@ -103,11 +129,14 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 
 	cout << reconstructedCascades.GetEntries() << endl;
 
+	int nProcessedEvents = 0;
+	int nHighEnergyEvents = 0;
+
 	for (int i = 0; i < reconstructedCascades.GetEntries(); ++i)
 	{
 		reconstructedCascades.GetEntry(i);
 
-		if (directionSigma > 10)
+		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 30)
 			continue;
 
 		// if (directionSigma > 5 || energy < 10 || energySigma > 5)
@@ -121,8 +150,10 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 
 		if (energy > 100 && highEnergy && IsContained(position))
 		{
-			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
+			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
+			g_cascadeXY->SetPoint(nHighEnergyEvents,position->X(),position->Y());
+			nHighEnergyEvents++;
 		}
 
 		if (theta/TMath::Pi()*180 < 80 && upGoing && IsContained(position))
@@ -137,9 +168,19 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_nHits->Fill(nHits);
 		h_energy->Fill(energy);
 		h_theta->Fill(theta/TMath::Pi()*180);
+
+		if (IsContained(position))
+		{
+			h_thetaContained->Fill(theta/TMath::Pi()*180);
+			h_energyNHits->Fill(TMath::Log10(energy),nHitsAfterTFilter);
+		nProcessedEvents++;
+			// position->Print();
+		}
 	}
 
 	DrawResults();
+
+	cout << nProcessedEvents << endl;
 
 	return 0;
 }
