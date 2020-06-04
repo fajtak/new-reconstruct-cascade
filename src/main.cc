@@ -855,6 +855,8 @@ void NormalizeTimeCal()
 	{
 		if (gOMtimeCal[i] != -1)
 		{
+			if (BARS::App::Cluster == 0 && BARS::App::Season == 2016 && BARS::App::Run > 389 && i > 251)
+				gOMtimeCal[i] -= 2500;
 			nValues++;
 			meanValue += gOMtimeCal[i];
 		}
@@ -1463,9 +1465,9 @@ double LikelihoodFilterPassedGrid(UnifiedEvent &event)
 
 int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 {
-	int nHitsPerString[gNStrings]{0};
-	int nNoiseHitsPerString[gNStrings]{0};
-	int nTrackHitsPerString[gNStrings]{0};
+	int nHitsPerString[8]{0};
+	int nNoiseHitsPerString[8]{0};
+	int nTrackHitsPerString[8]{0};
 	TGraph* g_hits[gNStrings];
 	TGraph* g_noiseHits[gNStrings];
 	TGraph* g_trackHits[gNStrings];
@@ -1498,7 +1500,7 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		g_trackHits[i] = new TGraph(nTrackHitsPerString[i]);
 		g_lowerLimit[i] = new TGraph(nOMsPerString);
 		g_upperLimit[i] = new TGraph(nOMsPerString);
-		g_trackLimit[i] = new TGraph(nOMsPerString);
+		g_trackLimit[i] = new TGraph();
 		mg_hitsMatrix[i] = new TMultiGraph(Form("mg_%d",i),Form("String_%d;Calibrated time [ns]; OM Z position [m]",i+1));
 		nHitsPerString[i] = 0;
 		nNoiseHitsPerString[i] = 0;
@@ -1535,20 +1537,26 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 	TVector3 cascDir(0,0,1);
 	cascDir.SetTheta(event.theta);
 	cascDir.SetPhi(event.phi);
+	int nPoints = 0;
 
 	for (int j = 0; j < gNOMs; ++j)
 	{
+		if (j%36 == 0)
+			nPoints = 0;
 		double distanceToCascade = (cascPos - gOMpositions[j]).Mag();
 	    double expectedTime = cascTime + distanceToCascade*gRecCinWater;
 		g_lowerLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime-gTCutTimeWindowNs,gOMpositions[j].Z());
 		g_upperLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime+gTCutTimeWindowNs,gOMpositions[j].Z());
 
+		if ((gOMpositions[j]-cascPos).Mag() > 100)
+			continue;
 		double sPerp = (gOMpositions[j]-cascPos).Perp(cascDir);
 		double sLong = (gOMpositions[j]-cascPos)*(cascDir);
 		double lLong = sPerp/TMath::Tan(0.719887);
 		double expTime = cascTime + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
 
-		g_trackLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expTime,gOMpositions[j].Z());
+		g_trackLimit[j/nOMsPerString]->SetPoint(nPoints,expTime,gOMpositions[j].Z());
+		nPoints++;
 	}
 	for (int i = 0; i < gPulses.size(); ++i)
 	{
@@ -1578,8 +1586,11 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		g_ledMatrix[i]->SetMarkerStyle(20);
 		g_ledMatrix[i]->SetMarkerColor(kRed);
 		g_lowerLimit[i]->SetLineColor(kGreen);
+		g_lowerLimit[i]->SetLineWidth(3);
 		g_upperLimit[i]->SetLineColor(kGreen);
+		g_upperLimit[i]->SetLineWidth(3);
 		g_trackLimit[i]->SetLineColor(kOrange);
+		g_trackLimit[i]->SetLineWidth(3);
 	}
 	cEvent->cd(9);
 	g_QvsL->Draw("AP");
@@ -1601,7 +1612,7 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 	double tableParameters[4]{0};
 	double par[7]{cascPos.X(),cascPos.Y(),cascPos.Z(),0,energy,theta,phi};
 
-	int nHitsPerString[gNStrings]{0};
+	int nHitsPerString[8]{0};
 	TGraph* g_MeasQ[gNStrings];
 	TGraph* g_DeadOM[gNStrings];
 	TGraph* g_ExpQ[gNStrings];
@@ -2015,9 +2026,18 @@ int ProcessExperimentalData()
     	return -2;
     }
 
+	const char* eosName = "root://eos.jinr.ru//";
+    std::string buf(gUseEOSRead?eosName:"");
+    buf.append(filePath);
+
+    // Sets necessary pointers to access data through TTree
+    //TFile* file = new TFile(filePath,"READ");
+    TFile* file = new TFile(buf.c_str());
+	TTree* tree = (TTree*)file->Get("Events");
+
 	// Sets necessary pointers to access data through TTree
-	TFile* file = new TFile(filePath,"READ");
-    TTree* tree = (TTree*)file->Get("Events");
+	// TFile* file = new TFile(filePath,"READ");
+    // TTree* tree = (TTree*)file->Get("Events");
     if (!tree || !tree->GetBranch("BJointImpulseTel.") || !tree->GetBranch("BJointHeader."))
     {
     	std::cout << "No Events TTree or BJointImpulseTel/BJointHeader branches found!" << endl;

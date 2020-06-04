@@ -1,71 +1,77 @@
-03.06.2019 - git commit ---
+04.06.2020 - git commit ---
+	* new switch "-w" for reading from eos with root://eos.jinr.ru// prefix
+	* time correction -2500ns for season 2016, cluster0, runs > 389 implemented
+	* nStrings in Event and Charge Visualizations changed to number since it didn't compile on VM
+	* expected muon hits are drawn just if they are closer than 100 m from the track
+
+03.06.2020 - git commit 3c726cdb4c8c986291949cba60e65a40a051ca50
 	* Drawing of the expected muon hits added to the visualization
 	* DataStudyRecCasc.C extended, the XY cascade positions drawn
 	* bash script downloadJoint from eos added
 	* root script for the programOutput_season_cluster.log added with basic statistics
 
-27.05.2019 - git commit 3e0819767f7ba5b355ac2eb9a06329cebae4368c
+27.05.2020 - git commit 3e0819767f7ba5b355ac2eb9a06329cebae4368c
 	* downloadJointVal and downloadJointEos bash scripts edited
 	* structure of the timeCal and qCalib files is now verified
 
-27.05.2019 - git commit 1f16822d0d80312b23760dcf9c4643bb1156848c
+27.05.2020 - git commit 1f16822d0d80312b23760dcf9c4643bb1156848c
 	* new bash scripts added from VM to process runs + make folders
 
-27.05.2019 - git commit 05e39d85e51dca5af2afe884afada1a13168585d
+27.05.2020 - git commit 05e39d85e51dca5af2afe884afada1a13168585d
 	* new bash scripts added to download results from VM machines to the user computer
 	* slight changes in DatastudyRecCas.C
 
-25.05.2019 - git commit 2bc0c5fbf7382e18e683e447367e58a119068cc7
+25.05.2020 - git commit 2bc0c5fbf7382e18e683e447367e58a119068cc7
 	* minor fix
 
-25.05.2019 - git commit cd50f9d4e50ca5fea427abc3d1b89a6077f88f2d
+25.05.2020 - git commit cd50f9d4e50ca5fea427abc3d1b89a6077f88f2d
 	* added new bash script to download joint+qclib files
 	* when the -o "/path/to/store/results/" (output) switch is used the results are saved there
 	* if the rootOutputFile is not produced the code stops
 
-23.05.2019 - git commit e5ad43b29f7f736b89d054782c4870a305dd2720
+23.05.2020 - git commit e5ad43b29f7f736b89d054782c4870a305dd2720
 	* JSON output finally added
 
-23.05.2019 - git commit 651200544339b6f6b5ac71e36e7740e2003c88c3
+23.05.2020 - git commit 651200544339b6f6b5ac71e36e7740e2003c88c3
 	* first version of the track filter implemented
 	* output is the histogram h_nHitsTrack in Histograms
 
-20.05.2019 - git commit 0d404ae3bac3e239aefbe4ee7334d89f3076ce6d
+20.05.2020 - git commit 0d404ae3bac3e239aefbe4ee7334d89f3076ce6d
 	* new bash scripts for processing of the new runs only
 	* new root script for the processing of the programOutput.log
 	* new root script DatastudyRecCasc.C
 
-16.05.2019 - git commit 42fa5a7aa10258e521bac102ab191e5bc1bd618f
+16.05.2020 - git commit 42fa5a7aa10258e521bac102ab191e5bc1bd618f
 	* filling QTotal histogram added
 
-16.05.2019 - git commit 5b45010648245a367ece422fdc86bd13411699f8
+16.05.2020 - git commit 5b45010648245a367ece422fdc86bd13411699f8
 	* new switch -e to process a single event specified by the number behind e
 	* results are saved to the singleRecCascResults_eventID.root file to not overwrite the whole run processing
 
-14.05.219 - git commit af2a8d23dafdb0c4fcff5d3fe7878dd109eafcad
+14.05.2020 - git commit af2a8d23dafdb0c4fcff5d3fe7878dd109eafcad
 	* bash script for remote PC corrected. It has to be started from the build folder with ../scripts/bash/processAllRunsRemote Year Cluster
 	* Segmentation fault for runs without TTree or Branches solved out
 
-14.05.2019 - git commit 2e8d083df84dad75f33cf90f10276ae80a7143ed
+14.05.2020 - git commit 2e8d083df84dad75f33cf90f10276ae80a7143ed
 	* slight changes to bash scripts
 
-14.05.2019 - git commit c8504582ec27e7a8aa322c00d08283dc18e234ec
+14.05.2020 - git commit c8504582ec27e7a8aa322c00d08283dc18e234ec
 	* scripts folder re-organized
 	* bash scripts for batch run processing on local as well remote computer added
 	* Qchi2Cut value increased from 50 to 100
 
-11.05.2019 - git commit b98212f28dea09f1e214e06c4f5485df0f79db8f
+11.05.2020 - git commit b98212f28dea09f1e214e06c4f5485df0f79db8f
 	* Initial commit
 
 ***********************************************************************************************************************************
 Transition to Reconstruction Software V.2.0
 ***********************************************************************************************************************************
 
-12.02.2019 - git commit ---
+12.02.2020 - git commit ---
 	* Changes in the folder paths for VM68 (processExperimental, json, saveHistograms)
 	* 2019 geometry read directly from /home/fajtak/geometry-tmp/
 
-12.02.2019 - git commit aa3740c13ad24331de52754d0e1626afb29f3366
+12.02.2020 - git commit aa3740c13ad24331de52754d0e1626afb29f3366
 	* Huge change!!! All inputs (data, MC, MCcascades) are now processed in the same way
 	* standardized UniformEvent was implemented and all different inputs are transformed to this format
 	* DoTheMagicUnified()

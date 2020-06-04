@@ -43,6 +43,7 @@ int gNCutT = -1;
 double gTCutChi2 = -1;
 double gLikelihoodCut = -1;
 bool gUseMultiDirFit = false;
+bool gUseEOSRead = false;
 
 
 using namespace BARS;
@@ -123,6 +124,17 @@ static const struct App::ProgramOption_t options_list[]{
 			required_argument,
 			"set eventID that is going to be processed",
 			[](char* argv) {gEventID = atoi(argv);},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"eosRead", 'w',
+			no_argument,
+			"Uses root://eos.jinr.ru// read style",
+			[](char* argv) {gUseEOSRead = true;},
 			[]() {;}
 		},
 
