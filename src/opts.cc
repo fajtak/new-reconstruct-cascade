@@ -44,6 +44,7 @@ double gTCutChi2 = -1;
 double gLikelihoodCut = -1;
 bool gUseMultiDirFit = false;
 bool gUseEOSRead = false;
+bool gUseNewFolderStructure = false;
 
 
 using namespace BARS;
@@ -135,6 +136,17 @@ static const struct App::ProgramOption_t options_list[]{
 			no_argument,
 			"Uses root://eos.jinr.ru// read style",
 			[](char* argv) {gUseEOSRead = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"newFolderStructure", 'l',
+			no_argument,
+			"Uses new folder structure from the middle of 2019 with clusterX/exp/joint/j01/",
+			[](char* argv) {gUseNewFolderStructure = true;},
 			[]() {;}
 		},
 

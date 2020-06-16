@@ -2019,7 +2019,11 @@ int ProcessExperimentalData()
 
 
 	// Sets the file path and checks its existence
-    const char* filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    const char* filePath = "";
+    if (!gUseNewFolderStructure)
+    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    else
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/j01/%04d/%s",BARS::App::Season,BARS::App::Cluster,BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     if (!BARS::App::FileExists(filePath))
     {
     	std::cout << "File: " << filePath << " was not found!" << endl;

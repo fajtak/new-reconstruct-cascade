@@ -113,6 +113,8 @@ extern double gTCutChi2;
 extern double gLikelihoodCut;
 extern bool   gUseMultiDirFit;
 extern bool gUseEOSRead;
+extern bool gUseNewFolderStructure;
+
 
 void parseOpts(int argc, char** argv);
 void readRC(const char* rcpath);

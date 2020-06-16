@@ -1,4 +1,9 @@
-04.06.2020 - git commit ---
+16.06.2020 - git commit ---
+	* new switch "-l" for new folder data structure from mid 2019
+	* in root scripts DatastudyRecCas.C and MCstudyRecCas.C the .root output added so now the MC and Data results can be compared
+	* new script compareDataMCCascades.C added to produce comparison histograms for Real and MC data
+
+04.06.2020 - git commit 16da6406bf6fae0d593decefd9814008141b56e3
 	* new switch "-w" for reading from eos with root://eos.jinr.ru// prefix
 	* time correction -2500ns for season 2016, cluster0, runs > 389 implemented
 	* nStrings in Event and Charge Visualizations changed to number since it didn't compile on VM

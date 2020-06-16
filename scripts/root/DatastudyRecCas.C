@@ -14,10 +14,23 @@ std::vector<double> stringXPositions = {5.22,52.13,57.54,25.17,-29.84,-53.6,-42.
 std::vector<double> stringYPositions = {62.32,37.15,-13.92,-52.01,-52.36,-7.49,42.74,0};
 
 TH1F* h_nHits = new TH1F("h_nHits","Number of hits per Event; N_{hits} [#]; NoE [#]",250,0,250);
+TH1F* h_nHitsFull = new TH1F("h_nHitsFull","Number of hits per Event; N_{hits} [#]; NoE [#]",250,0,250);
+TH1F* h_nHitsAfterTFilter = new TH1F("h_nHitsAfterTFilter","Number of hits per Event used for reconstruction; N_{hits} [#]; NoE [#]",250,0,250);
+TH1F* h_nHitsAfterTFilterFull = new TH1F("h_nHitsAfterTFilterFull","Number of hits per Event used for reconstruction; N_{hits} [#]; NoE [#]",250,0,250);
+TH1F* h_nStringsAfterTFilter = new TH1F("h_nStringsAfterTFilter","Number of strings per Event used for reconstruction; N_{strings} [#]; NoE [#]",10,0,10);
+TH1F* h_nStringsAfterTFilterFull = new TH1F("h_nStringsAfterTFilterFull","Number of strings per Event used for reconstruction; N_{strings} [#]; NoE [#]",10,0,10);
 TH1F* h_energy = new TH1F("h_energy","Reconstructed energy; E [TeV]; NoE [#]",1000,0,1000);
+TH1F* h_energyFull = new TH1F("h_energyFull","Reconstructed energy; E [TeV]; NoE [#]",1000,0,1000);
 TH1F* h_theta = new TH1F("h_theta","Zenith angle (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
+TH1F* h_thetaFull = new TH1F("h_thetaFull","Zenith angle (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
+TH1F* h_phi = new TH1F("h_phi","Azimuth angle (0 = East, 90 = North); #phi [deg] ",360,0,360);
+TH1F* h_phiFull = new TH1F("h_phiFull","Azimuth angle (0 = East, 90 = North); #phi [deg] ",360,0,360);
 TH1F* h_thetaContained = new TH1F("h_thetaContained","Zenith angle, contained cascades (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
 TH2F* h_energyNHits = new TH2F("h_energyNHits","Energy vs NHits; log_{10}(E [TeV]); N_{hits} [#]",50,0,5,100,0,100);
+TH1F* h_qTotal = new TH1F("h_qTotal","Overall deposited charge;Q [p.e.];NoE [#]",1000,0,10000);
+TH1F* h_qTotalFull = new TH1F("h_qTotalFull","Overall deposited charge;Q [p.e.];NoE [#]",1000,0,10000);
+TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood;L [#];NoE [#]",100,0,10);
+TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",100,0,10);
 TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
 
@@ -47,6 +60,31 @@ void DrawResults()
 	g_cascadeXY->SetMarkerStyle(21);
 	g_cascadeXY->SetTitle("Positions of reconstructed cascades;X [m];Y [m]");
 	g_cascadeXY->Draw("PSame");
+
+}
+
+void SaveResults(int year, int cluster)
+{
+	TString outputFileName = Form("../../results/mcResults_data_y%dc%d.root",year,cluster);
+	TFile* outputFile = new TFile(outputFileName,"RECREATE");
+
+	h_nHits->Write();
+	h_nHitsAfterTFilter->Write();
+	h_nStringsAfterTFilter->Write();
+	h_energy->Write();
+	h_theta->Write();
+	h_phi->Write();
+	h_qTotal->Write();
+	h_likelihood->Write();
+
+	h_nHitsFull->Write();
+	h_nHitsAfterTFilterFull->Write();
+	h_nStringsAfterTFilterFull->Write();
+	h_energyFull->Write();
+	h_thetaFull->Write();
+	h_phiFull->Write();
+	h_qTotalFull->Write();
+	h_likelihoodFull->Write();
 
 }
 
@@ -136,6 +174,15 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 	{
 		reconstructedCascades.GetEntry(i);
 
+		h_nHitsFull->Fill(nHits);
+		h_nHitsAfterTFilterFull->Fill(nHitsAfterTFilter);
+		h_nStringsAfterTFilterFull->Fill(nStringsAfterTFilter);
+		h_energyFull->Fill(energy);
+		h_thetaFull->Fill(theta/TMath::Pi()*180);
+		h_phiFull->Fill(phi/TMath::Pi()*180);
+		h_qTotalFull->Fill(qTotal);
+		h_likelihoodFull->Fill(likelihood);
+
 		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 30)
 			continue;
 
@@ -166,8 +213,13 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		// cout << energy << " " << energySigma << " " << directionSigma << endl;
 
 		h_nHits->Fill(nHits);
+		h_nHitsAfterTFilter->Fill(nHitsAfterTFilter);
+		h_nStringsAfterTFilter->Fill(nStringsAfterTFilter);
 		h_energy->Fill(energy);
 		h_theta->Fill(theta/TMath::Pi()*180);
+		h_phi->Fill(phi/TMath::Pi()*180);
+		h_qTotal->Fill(qTotal);
+		h_likelihood->Fill(likelihood);
 
 		if (IsContained(position))
 		{
@@ -179,6 +231,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 	}
 
 	DrawResults();
+	SaveResults(year,cluster);
 
 	cout << nProcessedEvents << endl;
 
