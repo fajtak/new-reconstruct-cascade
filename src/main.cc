@@ -2213,9 +2213,9 @@ int ProcessMCData()
 	}else
 	{
 		if (gInputType == 3)
-			filePath = Form("%s/n_cors_n2m_cl2016_x*.root",gFileInputFolder);
+			filePath = Form("%s/n_cors_n2m_cl2016_x*.root",gFileInputFolder.c_str());
 		if (gInputType == 2)
-			filePath = Form("%s/n_nuatm_gs_n2m_cl2016_x*.root",gFileInputFolder);
+			filePath = Form("%s/n_nuatm_gs_n2m_cl2016_x*.root",gFileInputFolder.c_str());
 	}
 
 
