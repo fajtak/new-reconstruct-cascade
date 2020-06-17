@@ -1,4 +1,7 @@
-16.06.2020 - git commit ---
+17.06.2020 - git commit ---
+	* new scripts for wout -> root MC data processing added
+
+16.06.2020 - git commit 3e78a6e3557fabeb2cf9aebf8bbbff30f29865f8
 	* new switch "-l" for new folder data structure from mid 2019
 	* in root scripts DatastudyRecCas.C and MCstudyRecCas.C the .root output added so now the MC and Data results can be compared
 	* new script compareDataMCCascades.C added to produce comparison histograms for Real and MC data
