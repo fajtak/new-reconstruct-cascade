@@ -2203,10 +2203,21 @@ int ProcessMCData()
 	}
 
 	const char* filePath = " ";
-	if (gInputType == 3)
-		filePath = "/Data/BaikalData/mc/2018may/n_cors_n2m_cl2016_x*.root";
-	if (gInputType == 2)
-		filePath = "/Data/BaikalData/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x*.root";
+
+	if (gFileInputFolder == "")
+	{
+		if (gInputType == 3)
+			filePath = "/Data/BaikalData/mc/2018may/n_cors_n2m_cl2016_x*.root";
+		if (gInputType == 2)
+			filePath = "/Data/BaikalData/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x*.root";
+	}else
+	{
+		if (gInputType == 3)
+			filePath = Form("%s/n_cors_n2m_cl2016_x*.root",gFileInputFolder);
+		if (gInputType == 2)
+			filePath = Form("%s/n_nuatm_gs_n2m_cl2016_x*.root",gFileInputFolder);
+	}
+
 
 	TChain* mcFiles = new TChain("Events");
 	mcFiles->Add(filePath);
@@ -2232,10 +2243,16 @@ int ProcessMCData()
 		return -3;
 
 	TString outputFileName = "";
-	if (gInputType == 3)
-		outputFileName = "/Data/BaikalData/mc/2018may/";
-	if (gInputType == 2)
-		outputFileName = "/Data/BaikalData/mc/nuatm_feb19/";
+	if (gFileInputFolder == "")
+	{
+		if (gInputType == 3)
+			outputFileName = "/Data/BaikalData/mc/2018may/";
+		if (gInputType == 2)
+			outputFileName = "/Data/BaikalData/mc/nuatm_feb19/";
+	}else
+	{
+		outputFileName = gFileInputFolder;
+	}
 	outputFileName += "recCascResults.root";
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");

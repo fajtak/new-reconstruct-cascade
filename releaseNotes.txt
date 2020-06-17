@@ -1,4 +1,8 @@
 17.06.2020 - git commit ---
+	* slight fix of the readMCNu/MuCM scripts
+	* newly MC files (atm muon bundles and up-going neutrinos) can be processed on VM with -f switch
+
+17.06.2020 - git commit 5b31e3d912f29298050d0e72a0515707f81c2738
 	* new scripts for wout -> root MC data processing added
 
 16.06.2020 - git commit 3e78a6e3557fabeb2cf9aebf8bbbff30f29865f8
