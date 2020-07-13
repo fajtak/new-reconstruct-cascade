@@ -45,6 +45,7 @@ double gLikelihoodCut = -1;
 bool gUseMultiDirFit = false;
 bool gUseEOSRead = false;
 bool gUseNewFolderStructure = false;
+bool gUseNonHitLikelihoodTerm = false;
 
 
 using namespace BARS;
@@ -58,6 +59,17 @@ static const struct App::ProgramOption_t options_list[]{
 	{App::opt_Cluster, NOT_REQUIRED},
 	{App::opt_Season,  NOT_REQUIRED},
 	{App::opt_Run,     NOT_REQUIRED},
+	{
+		{
+			"nonLog", 'g',
+			required_argument,
+			"use nonHitLikelihood term",
+			[](char* argv) {gUseNonHitLikelihoodTerm = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
 	{
 		{
 			"number", 'n',

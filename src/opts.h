@@ -114,6 +114,7 @@ extern double gLikelihoodCut;
 extern bool   gUseMultiDirFit;
 extern bool gUseEOSRead;
 extern bool gUseNewFolderStructure;
+extern bool gUseNonHitLikelihoodTerm;
 
 
 void parseOpts(int argc, char** argv);

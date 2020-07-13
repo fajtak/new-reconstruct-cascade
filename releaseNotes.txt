@@ -1,4 +1,7 @@
-17.06.2020 - git commit ---
+13.07.2020 - git commit ---
+	*new switch "-g" for non-hit likelihood term
+
+17.06.2020 - git commit be0c6d663661faafcc6e37a5d0e7de7a91d63859
 	* minor fix
 
 17.06.2020 - git commit 5b31e3d912f29298050d0e72a0515707f81c2738

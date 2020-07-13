@@ -584,31 +584,36 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 			// cout << -350 << endl;
 		}
 	}
-	// cout << "After g pulses" << endl;
-	// for (int i = 0; i < gNOMs; ++i)
-	// {
-	// 	if (NotInGPulses(i))
-	// 	{
-	// 		GetParameters(par,i,tableParameters);
-	// 		double expectedNPE = GetInterpolatedValue(tableParameters);
-	// 		// cout << i << " " << TMath::Poisson(0,expectedNPE*100000000*par[4]) << endl;
 
-	// 		if (TMath::Poisson(0,expectedNPE*110000000*par[4]) > 10e-320)
-	// 		{
-	// 			logLike -= TMath::Log10(TMath::Poisson(0,expectedNPE*110000000*par[4]));
-	// 			// cout << TMath::Log10(TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4])) << endl;
-	// 			// cout << i << " " << TMath::Log10(TMath::PoissonI(0,expectedNPE*100000000*par[4])) << endl;
-	// 		}
-	// 		else
-	// 		{
-	// 			logLike -= -320;
-	// 			// cout << i << " " << -350 << endl;
-	// 		}
-	// 	}
-	// }
-	// cout << "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: " << logLike << endl;
+	if(gUseNonHitLikelihoodTerm)
+	{
+		for (int i = 0; i < gNOMs; ++i)
+		{
+			if (NotInGPulses(i))
+			{
+				GetParameters(par,i,tableParameters);
+				double expectedNPE = GetInterpolatedValue(tableParameters);
+				// cout << i << " " << TMath::Poisson(0,expectedNPE*100000000*par[4]) << endl;
+	
+				if (TMath::Poisson(0,expectedNPE*110000000*par[4]) > 10e-320)
+				{
+					logLike -= TMath::Log10(TMath::Poisson(0,expectedNPE*110000000*par[4]));
+					// cout << TMath::Log10(TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4])) << endl;
+					// cout << i << " " << TMath::Log10(TMath::PoissonI(0,expectedNPE*100000000*par[4])) << endl;
+				}
+				else
+				{
+					logLike -= -320;
+					// cout << i << " " << -350 << endl;
+				}
+			}
+		}
+		// cout << "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: " << logLike << endl;
+	}
+
 	f = logLike;
 }
+
 
 // Function that checks if all arguments necessary for Experimental Data processing have been set
 bool CheckInputParamsExpData()
@@ -956,7 +961,7 @@ int ReadLogTable()
 	// cout << "4D LogTable reading starts" << endl;
 	ifstream fTab;
 	if (App::Output == "")
-		fTab.open("/Data/BaikalData/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+		fTab.open("/media/zuzana/Data/BaikalData/showerTableLukas/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 	else
 		fTab.open("./hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 
@@ -1368,8 +1373,14 @@ double FitCascDirection(UnifiedEvent &event, double &energy, double &theta, doub
 	pSig = gMinuit->GetParError(6);
 
 	// cout << chi2 << " " << gPulses.size() << " " <<  chi2/gPulses.size() << " " << fMinuit->GetParameter(5) << " " << fMinuit->GetParameter(6) << endl;
-	return chi2/gPulses.size();
-	// return chi2/gNOMs;
+	// return chi2/gPulses.size();
+	// cout<<"chi2/gNOMs "<<chi2/gNOMs<<endl;
+	if(gUseNonHitLikelihoodTerm){
+		return chi2/gNOMs;
+	}else{
+		return chi2/gPulses.size();
+	}
+
 }
 
 double EstimateInitialDirection(TVector3& cascPos, double& cascTime, double& energy, double &theta, double &phi)
@@ -1459,7 +1470,7 @@ double LikelihoodFilterPassedGrid(UnifiedEvent &event)
 	}
 	event.likelihood = lowestLog;
 	// cout << "End likelihood" << endl;
-	// cout << lowestLog << " " << energy << " " << theta << " " << phi << endl;
+	cout <<"likelihood "<< lowestLog << " energy " << event.energy << " theta " << event.theta << " phi " << event.phi << endl;
 	return lowestLog;
 }
 
