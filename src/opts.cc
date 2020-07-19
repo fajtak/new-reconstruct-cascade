@@ -17,6 +17,7 @@ std::string gFileInputFolder = "";
 
 double gLogTable4D[200][351][21][21]{0};
 std::vector<double> gNoiseTable;
+std::vector<double> gNoiseProbability;
 int gNOMs = 288;
 const int gNStrings = 8;
 std::vector<TVector3> gOMpositions(gNOMs);
@@ -46,6 +47,7 @@ bool gUseMultiDirFit = false;
 bool gUseEOSRead = false;
 bool gUseNewFolderStructure = false;
 bool gUseNonHitLikelihoodTerm = false;
+bool gUseNoiseHitLikelihoodTerm = false;
 
 
 using namespace BARS;
@@ -61,7 +63,18 @@ static const struct App::ProgramOption_t options_list[]{
 	{App::opt_Run,     NOT_REQUIRED},
 	{
 		{
-			"nonLog", 'g',
+			"noiseHitLog", 'p',
+			required_argument,
+			"use noiseHitLikelihood term",
+			[](char* argv) {gUseNoiseHitLikelihoodTerm = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"nonHitLog", 'g',
 			required_argument,
 			"use nonHitLikelihood term",
 			[](char* argv) {gUseNonHitLikelihoodTerm = true;},
@@ -187,7 +200,7 @@ void readRC(const char* rcpath)
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
-	gLikelihoodCut = env.GetValue("LikelihoodCut",3.0);
+	gLikelihoodCut = env.GetValue("LikelihoodCut",1); //3 before
 	gUseMultiDirFit = env.GetValue("MultiDirFit",true);
 }
 

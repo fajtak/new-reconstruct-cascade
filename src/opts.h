@@ -86,6 +86,7 @@ extern std::string gFileInputFolder;
 
 extern double gLogTable4D[200][351][21][21];
 extern std::vector<double> gNoiseTable;
+extern std::vector<double> gNoiseProbability;
 extern int gNOMs;
 extern const int gNStrings;
 extern std::vector<TVector3> gOMpositions;
@@ -115,6 +116,7 @@ extern bool   gUseMultiDirFit;
 extern bool gUseEOSRead;
 extern bool gUseNewFolderStructure;
 extern bool gUseNonHitLikelihoodTerm;
+extern bool gUseNoiseHitLikelihoodTerm;
 
 
 void parseOpts(int argc, char** argv);
