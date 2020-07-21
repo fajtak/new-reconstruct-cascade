@@ -32,6 +32,7 @@ TVirtualFitter* gMinuit;
 TRandom2 gRanGen;
 double gMCTimeConstant = 3900; // seconds per MC file
 double gMCNoiseRateInkHz = 50; // in kHz
+const double gEnergyCorrectionArray[20] = { 1.67773, 1.56738, 1.53488, 1.42292, 1.34681, 1.33311, 1.30409, 1.31283, 1.3094, 1.28182, 1.26567, 1.27433, 1.24962, 1.24205, 1.26317, 1.22895, 1.23192, 1.21746, 1.22675, 1.13126 };
 
 int gNCut = -1;
 double gQTotalCut = -1;
@@ -200,7 +201,7 @@ void readRC(const char* rcpath)
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
-	gLikelihoodCut = env.GetValue("LikelihoodCut",1); //3 before
+	gLikelihoodCut = env.GetValue("LikelihoodCut",3); //value 1 is used for the Non-hit and Noise-hit likelihood term
 	gUseMultiDirFit = env.GetValue("MultiDirFit",true);
 }
 

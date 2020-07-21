@@ -973,8 +973,7 @@ int ReadLogTable()
 	// cout << "4D LogTable reading starts" << endl;
 	ifstream fTab;
 	if (App::Output == ""){
-		cout<<"LOOOOOOOg"<<endl;
-		fTab.open("/media/zuzana/Data/BaikalData/showerTableLukas/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+		fTab.open("/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 		// fTab.open("/home/zubardac/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 	}
 	else{
@@ -1012,11 +1011,11 @@ int ReadLogTable()
 
 int ReadNoiseChargeTable()
 {
-	ifstream inputFile("/media/zuzana/Data/BaikalData/showerTableLukas/mc-noise-charge-2016.dat", ios::in);
+	ifstream inputFile("/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/mc-noise-charge-2016.dat", ios::in);
 
    	if (!inputFile)
     {
-    	cerr << "Calibration file: " << "/Data/BaikalData/showerTable/mc-noise-charge-2016.dat" << " was NOT found. Program termination!" << endl;
+    	cerr << "Calibration file: " << "/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/mc-noise-charge-2016.dat" << " was NOT found. Program termination!" << endl;
     	return -1;
   	}
 
@@ -1041,12 +1040,11 @@ int ReadNoiseChargeTable()
 
 int ReadNoiseProbability()
 {
-	cout<<"Noise Probability "<<endl;
-	ifstream inputFile("/media/zuzana/Data/BaikalData/showerTableLukas/noiseProbability_Binwidth_1pe.dat", ios::in);
+	ifstream inputFile("/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/noiseProbability_Binwidth_1pe.dat", ios::in);
 
 	if (!inputFile)
     {
-    	cerr << "Noise Probability File: " << "/media/zuzana/Data/BaikalData/showerTableLukas/noiseProbability_Binwidth_1pe.dat" << " was NOT found. Program termination!" << endl;
+    	cerr << "Noise Probability File: " << "/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/noiseProbability_Binwidth_1pe.dat" << " was NOT found. Program termination!" << endl;
     	return -1;
   	}
   	gNoiseProbability.clear();
@@ -1529,6 +1527,38 @@ double LikelihoodFilterPassedGrid(UnifiedEvent &event)
 	return lowestLog;
 }
 
+int inRange(int roundedEnergy)
+{
+    int bin = 0;
+    int arraySize = sizeof(gEnergyCorrectionArray)/sizeof(gEnergyCorrectionArray[0]);
+    int energyBin = 30; //xlow used in the rebinned histogram of h_mismatchEnergyvsEnergy_pfx
+
+    if(roundedEnergy < energyBin) //if energy is lower than xlow in the histogram, the first element of array is used (i.e energy is lower than 1 TeV)
+    	bin = 0;
+
+    for(int i = 0; i < arraySize; i ++) 
+    {
+        if(energyBin <= roundedEnergy && roundedEnergy < (energyBin+2)) //check if the roundedEnegy is in one of the energy bins, which corresponds to gEnergyCorrectionArray
+            bin = i;
+        
+        energyBin += 2; //increment by 2 due to binning in the rebinned histogram of h_mismatchEnergyvsEnergy_pfx
+    }
+
+    if(roundedEnergy >= energyBin) //if energy is higher than xhigh in the histogram, the last element of array is used (i.e energy is higher than 10 PeV)
+    	bin = arraySize - 1;
+
+    return bin;   
+}
+
+double GetCorrectedEnergy(double energy)
+{
+    double logEnergy = TMath::Log10(energy*1000)/0.1; // energy (in TeV) is converted to log_10(E [GeV]) to get a number on the xaxis in the histograms Energy vs MismatchEnergy
+	int roundedEnergy = (int)logEnergy;
+    int bin = inRange(roundedEnergy);
+    
+	return energy/gEnergyCorrectionArray[bin];     
+}
+
 int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 {
 	int nHitsPerString[8]{0};
@@ -1979,7 +2009,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	h_mcPhi->Fill(event.mcPhi);
 	eventStats->nNFilter++;
 	CaussalityFilter(event);
-	
+
 	event.nHitsAfterCaus = gPulses.size();
 	event.nStringsAfterCaus = GetNStrings();
 
@@ -2036,11 +2066,14 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nLikelihoodFilter++;
 	EventVisualization(i,event,event.position,event.time);
 	ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
+	event.correctedEnergy = GetCorrectedEnergy(event.energy);
 	SaveCascadeJSON(i,event);
 	ScanLogLikelihoodEnergy(i,event);
 	ScanLogLikelihoodDirectionCircular(i,event);
 	ScanLogLikelihoodDirection(i,event);
 	event.directionSigma = CalculateDirectionError(event);
+	
+	//}
 	return 0;
 }
 
@@ -2057,6 +2090,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("chi2AfterTFilter",&event.chi2AfterTFilter);
 	outputTree->Branch("energy",&event.energy);
 	outputTree->Branch("energySigma",&event.energySigma);
+	outputTree->Branch("correctedEnergy",&event.correctedEnergy);
 	outputTree->Branch("theta",&event.theta);
 	outputTree->Branch("thetaSigma",&event.thetaSigma);
 	outputTree->Branch("directionSigma",&event.directionSigma);
@@ -2217,7 +2251,7 @@ int ProcessMCCascades()
 	if (ReadInputParamFiles() == -1)
 		return -3;
 
-	TString outputFileName = "/media/zuzana/Backup/mcCascadesResults/_a_p/";
+	TString outputFileName = "/media/zuzana/Backup/mcCascadesResults/skuska/";
 	outputFileName += "recCascResults.root";
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");

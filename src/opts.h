@@ -60,6 +60,7 @@ struct UnifiedEvent
 	int nNoiseHits = -1;
 	double energy = -1;
 	double energySigma = -1;
+	double correctedEnergy = -1;
 	double theta = -1;
 	double thetaSigma = -1;
 	double phi = -1;
@@ -101,6 +102,7 @@ extern TVirtualFitter* gMinuit;
 extern TRandom2 gRanGen;
 extern double gMCTimeConstant;
 extern double gMCNoiseRateInkHz;
+extern const double gEnergyCorrectionArray[20];
 
 extern int gNCut;
 extern double gQTotalCut;

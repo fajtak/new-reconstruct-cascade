@@ -1,4 +1,8 @@
-20.07.2020 - git commit ---
+21.07.2020 - git commit ---
+	*new variable "correctedEnergy" added to TTree
+	*energy correction added -> GetCorrectedEnergy()
+
+20.07.2020 - git commit 57ae7a826bf517e1905c9f7b66ce6f9bdba12e12
 	*new switch "-p" for noise-hit likelihood term
 	*New file with averaged noise probabilities for all OMs added: noiseProbability_Binwidth_1pe.dat
 
