@@ -1,4 +1,8 @@
-21.07.2020 - git commit ---
+23.07.2020 - git commit ---
+	*new switch "-q" for Charge Saturation Correction
+	*Charge Saturation Correction added to TransformToUnifiedEvent()
+
+21.07.2020 - git commit ec0dde659798b9de3911749b7237855e723c5a64
 	*new variable "correctedEnergy" added to TTree
 	*energy correction added -> GetCorrectedEnergy()
 

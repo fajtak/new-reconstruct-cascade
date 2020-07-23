@@ -49,6 +49,7 @@ bool gUseEOSRead = false;
 bool gUseNewFolderStructure = false;
 bool gUseNonHitLikelihoodTerm = false;
 bool gUseNoiseHitLikelihoodTerm = false;
+bool gUseChargeSatCorrection = false;
 
 
 using namespace BARS;
@@ -62,6 +63,17 @@ static const struct App::ProgramOption_t options_list[]{
 	{App::opt_Cluster, NOT_REQUIRED},
 	{App::opt_Season,  NOT_REQUIRED},
 	{App::opt_Run,     NOT_REQUIRED},
+	{
+		{
+			"chargeSaturation", 'q',
+			required_argument,
+			"use chargeSaturationCorrection",
+			[](char* argv) {gUseChargeSatCorrection = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
 	{
 		{
 			"noiseHitLog", 'p',

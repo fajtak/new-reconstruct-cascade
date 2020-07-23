@@ -51,6 +51,25 @@ TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000
 TH1F* h_mcTheta = new TH1F("h_mcTheta","MC theta; #theta [deg]; NoE [#]",400,0,4);
 TH1F* h_mcPhi = new TH1F("h_mcPhi","Likelihood value; #phi [deg]; NoE [#]",800,0,8);
 
+TF1* chargeSaturationCurve;
+
+double ChargeSaturationCurve(double *x, double *par)
+{
+   float xx =x[0];
+   double f = (1.0/(1 + pow(TMath::Log10(xx)/par[0],par[1])))*xx;
+
+   return f;
+}
+
+void ChargeSaturationFunction()
+{
+	chargeSaturationCurve = new TF1("chargeSaturationCurve",ChargeSaturationCurve,1,10000,2);
+	chargeSaturationCurve->SetParNames("constant","power");
+	chargeSaturationCurve->SetParameter(0,2.681);
+	chargeSaturationCurve->SetParameter(1,8.67);
+	chargeSaturationCurve->SetTitle("Charge Saturation Curve; Q_real [p.e.]; Q_meas [p.e.]");
+	chargeSaturationCurve->SetNpx(1000);
+}
 
 void SaveHistograms()
 {
@@ -147,14 +166,24 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
 	unifiedEvent.qTotal = 0;
+	double hitCharge = 0;
+
 	for (int i = 0; i < impulseTel->GetNimpulse(); ++i)
 	{
 		int OMID = impulseTel->GetNch(i);
 		if (gOMqCal[OMID != -1] && gOMtimeCal[OMID] != -1 && gOMpositions[OMID].Mag() !=0 && impulseTel->GetQ(i) > 0)
 		{
+			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
+
+			if(gUseChargeSatCorrection && hitCharge > 1)
+			{
+				ChargeSaturationFunction();
+				hitCharge = chargeSaturationCurve->GetX(impulseTel->GetQ(i)/gOMqCal[OMID]);
+			}
+
 			unifiedEvent.nHits++;
-			unifiedEvent.qTotal += impulseTel->GetQ(i)/gOMqCal[OMID];
-			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],impulseTel->GetQ(i)/gOMqCal[OMID],-1,false,-1});
+			unifiedEvent.qTotal += hitCharge;
+			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],hitCharge,-1,false,-1});
 		}
 	}
 }
@@ -2202,7 +2231,6 @@ int ProcessExperimentalData()
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
 		TransformToUnifiedEvent(impulseTel,unifiedEvent);
-		GenerateNoise(unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
 		if (status == 0)
 			t_RecCasc->Fill();
@@ -2251,7 +2279,7 @@ int ProcessMCCascades()
 	if (ReadInputParamFiles() == -1)
 		return -3;
 
-	TString outputFileName = "/media/zuzana/Backup/mcCascadesResults/skuska/";
+	TString outputFileName = "/media/zuzana/Backup/mcCascadesResults/";
 	outputFileName += "recCascResults.root";
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");
@@ -2353,9 +2381,9 @@ int ProcessMCData()
 	if (gFileInputFolder == "")
 	{
 		if (gInputType == 3)
-			outputFileName = "/media/zuzana/Backup/atmBundle/normalL3/";
+			outputFileName = "/media/zuzana/Backup/atmBundle/";
 		if (gInputType == 2)
-			outputFileName = "/media/zuzana/Backup/nuatm_feb19/newResults/";
+			outputFileName = "/media/zuzana/Backup/nuatm_feb19/results/";
 	}else
 	{
 		outputFileName = gFileInputFolder;

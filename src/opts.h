@@ -119,6 +119,8 @@ extern bool gUseEOSRead;
 extern bool gUseNewFolderStructure;
 extern bool gUseNonHitLikelihoodTerm;
 extern bool gUseNoiseHitLikelihoodTerm;
+extern bool gUseChargeSatCorrection;
+
 
 
 void parseOpts(int argc, char** argv);
