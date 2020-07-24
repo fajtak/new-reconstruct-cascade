@@ -67,7 +67,7 @@ static const struct App::ProgramOption_t options_list[]{
 	{
 		{
 			"chargeSaturation", 'q',
-			required_argument,
+			no_argument,
 			"use chargeSaturationCorrection",
 			[](char* argv) {gUseChargeSatCorrection = true;},
 			[]() {;}
@@ -78,7 +78,7 @@ static const struct App::ProgramOption_t options_list[]{
 	{
 		{
 			"noiseHitLog", 'p',
-			required_argument,
+			no_argument,
 			"use noiseHitLikelihood term",
 			[](char* argv) {gUseNoiseHitLikelihoodTerm = true;},
 			[]() {;}
@@ -89,7 +89,7 @@ static const struct App::ProgramOption_t options_list[]{
 	{
 		{
 			"nonHitLog", 'g',
-			required_argument,
+			no_argument,
 			"use nonHitLikelihood term",
 			[](char* argv) {gUseNonHitLikelihoodTerm = true;},
 			[]() {;}

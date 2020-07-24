@@ -1,4 +1,13 @@
-24.07.2020 - git commit ---
+24.07.2020 - git commit ---\
+	* newly implemented switches (q,p,g) now without required argument
+	* all mc simulations (a,m,u) now have to be started with -f /path/to/source/mc/data otherwise processing is terminated
+	* also input and output file paths were corrected
+	* logLikelihood table has to be put into inputFiles
+
+24.07.2020 - git commit 33d4033734a24f62bd4630e461d6071d24d80bea
+	* merge commit
+
+24.07.2020 - git commit a81aeeb1a8f3babb77ad70ed1fc87c93e509d97e
 	* paths in the bash/readMCMuNUVM changed
 	* root/DatastudyRecCac.C can now process all the years in once when -1 is used
 	* root/compareDataMCCascades.C axis titles changed
