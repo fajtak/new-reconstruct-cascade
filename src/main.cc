@@ -360,10 +360,11 @@ void PrintRunInfo(TTree* tree, BExtractedHeader* header)
 
 void PrintRunInfo(const char* filePath, TChain* events)
 {
+	double timeConstant = (gInputType == 2)?gMCNuTimeConstant:gMCMuTimeConstant;
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "MC Data: up-going single muons (" << (gInputType == 2 ? 1 : 0) << ") down-going muon bundles (" << (gInputType == 3 ? 1 : 0) << ")" << endl;
-	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  gMCTimeConstant << endl;
-    cout << "! " << events->GetEntries() << " " << (events->GetListOfFiles()->GetEntries()*gMCTimeConstant)/3600.0 << "  " << (events->GetListOfFiles()->GetEntries()*gMCTimeConstant)/3600.0/24.0 << endl;
+	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  timeConstant << endl;
+    cout << "! " << events->GetEntries() << " " << (events->GetListOfFiles()->GetEntries()*timeConstant)/3600.0 << "  " << (events->GetListOfFiles()->GetEntries()*timeConstant)/3600.0/24.0 << endl;
 
 	std::cout << std::string(81,'*') << std::endl;
 }
@@ -1977,6 +1978,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 {
+	outputTree->Branch("clusterID",&event.clusterID);
 	outputTree->Branch("runID",&event.runID);
 	outputTree->Branch("eventID",&event.eventID);
 	outputTree->Branch("nHits",&event.nHits);
@@ -2094,6 +2096,7 @@ int ProcessExperimentalData()
 			cout << std::flush;
 		}
 		tree->GetEntry(i);
+		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
 		TransformToUnifiedEvent(impulseTel,unifiedEvent);
@@ -2101,6 +2104,11 @@ int ProcessExperimentalData()
 		if (status == 0)
 			t_RecCasc->Fill();
 		h_exitStatus->Fill(status);
+		if (eventStats->nLikelihoodFilter > 50)
+		{
+			std::cout << "Probably LED matrix run. Processing terminated!" << std::endl;
+			break;
+		}
 	}
 	cout << endl;
 

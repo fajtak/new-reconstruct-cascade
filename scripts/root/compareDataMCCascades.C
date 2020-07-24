@@ -3,15 +3,17 @@
 #include "THStack.h"
 #include "TSystem.h"
 #include "TStyle.h"
+#include "TRatioPlot.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TProfile.h"
 #include "TPaveStats.h"
 #include "TLegend.h"
 
-int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 76.78)
+int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 359.938)
 {
 	bool showFull = false;
+	// bool showFull = true;
 
 	TFile* mcData = new TFile("../../results/mcResults_muatm_may19.root","READ");
 	TH1F* mcNHits  = (TH1F*)mcData->Get("h_nHits");
@@ -181,10 +183,10 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	reallikelihoodFull->Rebin(2);
 	reallikelihoodFull->Scale(1/(realDataDuration*24*3600));
 
-	cout << "Background expected: " << mcNHits->Integral()*realDataDuration*24*3600 << endl;
-	cout << "Data: " << realNHits->Integral()*realDataDuration*24*3600 << endl;
+	cout << "Background expected: " << mcTheta->Integral()*realDataDuration*24*3600 << endl;
+	cout << "Data: " << realTheta->Integral()*realDataDuration*24*3600 << endl;
 
-	THStack* s_nHits = new THStack("s_nHits","; N_{hits} [#];dN/dN_{hits} [#]");
+	THStack* s_nHits = new THStack("s_nHits","; N_{hits} [#];dN/dN_{hits} [Hz / 5 hits]");
 	s_nHits->Add(mcNHits,"HIST");
 	s_nHits->Add(realNHits,"");
 
@@ -193,7 +195,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_nHits->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_nHitsTFilter = new THStack("s_nHitsTFilter","; N_{hits}^{reco} [#];dN/dN_{hits}^{reco} [#]");
+	THStack* s_nHitsTFilter = new THStack("s_nHitsTFilter","; N_{hits}^{reco} [#];dN/dN_{hits}^{reco} [Hz / 2 hits]");
 	s_nHitsTFilter->Add(mcNHitsTFilter,"HIST");
 	s_nHitsTFilter->Add(realNHitsTFilter,"");
 
@@ -202,7 +204,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_nHitsTFilter->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_nStringsTFilter = new THStack("s_nStringsTFilter","; N_{strings}^{reco} [#];dN/dN_{strings}^{reco} [#]");
+	THStack* s_nStringsTFilter = new THStack("s_nStringsTFilter","; N_{strings}^{reco} [#];dN/dN_{strings}^{reco} [Hz]");
 	s_nStringsTFilter->Add(mcNStringsTFilter,"HIST");
 	s_nStringsTFilter->Add(realNStringsTFilter,"");
 
@@ -211,7 +213,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_nStringsTFilter->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_energy = new THStack("s_energy",";E_{rec} [TeV];dN/dE_{rec} [TeV]");
+	THStack* s_energy = new THStack("s_energy",";E_{rec} [TeV];dN/dE_{rec} [Hz / 5 TeV]");
 	s_energy->Add(mcEnergy,"HIST");
 	s_energy->Add(realEnergy,"");
 
@@ -229,7 +231,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_theta->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_phi = new THStack("s_phi",";#phi_{rec} [deg.];dN/d#phi_{rec} [Hz / 5 deg]");
+	THStack* s_phi = new THStack("s_phi",";#phi_{rec} [deg.];dN/d#phi_{rec} [Hz / 10 deg]");
 	s_phi->Add(mcPhi,"HIST");
 	s_phi->Add(realPhi,"");
 
@@ -238,7 +240,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_phi->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_qTotal = new THStack("s_qTotal",";Q [p.e.];dN/dQ [Hz]");
+	THStack* s_qTotal = new THStack("s_qTotal",";Q [p.e.];dN/dQ [Hz / 200 p.e.]");
 	s_qTotal->Add(mcQTotal,"HIST");
 	s_qTotal->Add(realQTotal,"");
 
@@ -247,7 +249,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_qTotal->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_likelihood = new THStack("s_likelihood",";L [#];dN/dL [Hz]");
+	THStack* s_likelihood = new THStack("s_likelihood",";L [#];dN/dL [Hz / 0.2]");
 	s_likelihood->Add(mclikelihood,"HIST");
 	s_likelihood->Add(reallikelihood,"");
 

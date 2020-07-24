@@ -88,9 +88,9 @@ void SaveResults(int year, int cluster)
 
 }
 
-bool IsContained(TVector3* position)
+bool IsContained(TVector3* position, double distFromCluster = 0)
 {
-	if (TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2)) < 60 && TMath::Abs(position->Z() < 265))
+	if (TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2)) < 60+distFromCluster && TMath::Abs(position->Z() < 265+distFromCluster))
 		return true;
 	else
 		return false;
@@ -105,30 +105,36 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 	int startID = cluster!=-1?cluster:0;
 	int endID = cluster!=-1?cluster+1:10;
 
+	int startSeason = year!=-1?year:16;
+	int endSeason = year!=-1?year+1:19+1;
+
 	const char* env_p = std::getenv("CEPH_MNT");
 
-	for (int i = startID; i < endID; ++i)
+	for (int j = startSeason; j < endSeason; j++)
 	{
-		switch(folder)
+		for (int i = startID; i < endID; ++i)
 		{
-			case 0:
-				filesDir = Form("%s/dataVal/exp%d/cluster%d/",env_p,year,i);
-				break;
-			case 1:
-				filesDir = Form("%s/dataVM240/exp%d/cluster%d/",env_p,year,i);
-				break;
-		}
-		cout << filesDir << endl;
+			switch(folder)
+			{
+				case 0:
+					filesDir = Form("%s/dataVal/exp%d/cluster%d/",env_p,j,i);
+					break;
+				case 1:
+					filesDir = Form("%s/dataVM240/exp%d/cluster%d/",env_p,j,i);
+					break;
+			}
+			cout << filesDir << endl;
 
-		auto dir = gSystem->OpenDirectory(filesDir.Data());
-		while (auto f = gSystem->GetDirEntry(dir))
-		{
-		  	if (!strcmp(f,".") || !strcmp(f,"..")) continue;
-		  	TString fullFilePath = filesDir + f + "/recCascResults.root";
-		  	if (!gSystem->AccessPathName(fullFilePath))
-		  		reconstructedCascades.Add(TString(filesDir) + f + "/recCascResults.root");
+			auto dir = gSystem->OpenDirectory(filesDir.Data());
+			while (auto f = gSystem->GetDirEntry(dir))
+			{
+			  	if (!strcmp(f,".") || !strcmp(f,"..")) continue;
+			  	TString fullFilePath = filesDir + f + "/recCascResults.root";
+			  	if (!gSystem->AccessPathName(fullFilePath))
+			  		reconstructedCascades.Add(TString(filesDir) + f + "/recCascResults.root");
+			}
+			gSystem->FreeDirectory(dir);
 		}
-		gSystem->FreeDirectory(dir);
 	}
 
 	int runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter;
@@ -183,19 +189,24 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_qTotalFull->Fill(qTotal);
 		h_likelihoodFull->Fill(likelihood);
 
-		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 30)
+
+		if (directionSigma > 10 ||!IsContained(position,10) || nHitsAfterTFilter < 30)
 			continue;
+
+		// cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " (" << position->X() << "," << position->Y() << "," << position->Z() << ")" << endl;
 
 		// if (directionSigma > 5 || energy < 10 || energySigma > 5)
 			// continue;
 		// if (mcEnergy < 20)
 			// continue;
 
+		// cout << runID << " " << eventID << endl;
+
 		TVector3 cascDirRec(0,0,1);
 		cascDirRec.SetTheta(theta);
 		cascDirRec.SetPhi(phi);
 
-		if (energy > 100 && highEnergy && IsContained(position))
+		if (energy > 100 && highEnergy)
 		{
 			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
@@ -203,7 +214,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 			nHighEnergyEvents++;
 		}
 
-		if (theta/TMath::Pi()*180 < 80 && upGoing && IsContained(position))
+		if (theta/TMath::Pi()*180 < 80 && upGoing)
 		{
 			cout << "Up-going Event - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
@@ -221,11 +232,12 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_qTotal->Fill(qTotal);
 		h_likelihood->Fill(likelihood);
 
+		nProcessedEvents++;
+
 		if (IsContained(position))
 		{
 			h_thetaContained->Fill(theta/TMath::Pi()*180);
 			h_energyNHits->Fill(TMath::Log10(energy),nHitsAfterTFilter);
-		nProcessedEvents++;
 			// position->Print();
 		}
 	}

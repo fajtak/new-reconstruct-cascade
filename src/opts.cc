@@ -29,7 +29,8 @@ const double gRecCinWater = 4.57;
 const double gRecC = 3.336;
 TVirtualFitter* gMinuit;
 TRandom2 gRanGen;
-double gMCTimeConstant = 3900; // seconds per MC file
+double gMCMuTimeConstant = 3900; // seconds per MC file
+double gMCNuTimeConstant = 4.4e9;
 double gMCNoiseRateInkHz = 50; // in kHz
 
 int gNCut = -1;
@@ -111,7 +112,7 @@ static const struct App::ProgramOption_t options_list[]{
 	},
 	{
 		{
-			"mcCas", 'f',
+			"mcInputFolder", 'f',
 			required_argument,
 			"set input folder with MC data",
 			[](char* argv) {gFileInputFolder = argv;},

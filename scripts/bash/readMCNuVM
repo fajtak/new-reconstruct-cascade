@@ -8,8 +8,8 @@ do
 	echo $command
 
 	if test -f "/eos/baikalgvd/mc_2016/nuatm/nuatm_feb19/wout/n_nuatm_gs_n2m_cl2016_x${command}.dat.gz.wout"; then
-		if [ ! -f "/home/fajtak/data/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x${command}.root" ]; then
-			../../../../build/bin/bexport-mc --in /eos/baikalgvd/mc_2016/nuatm/nuatm_feb19/wout/n_nuatm_gs_n2m_cl2016_x${command}.dat.gz.wout --out /home/fajtak/data/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x${command}.root
+		if [ ! -f "/mnt/cephfs/user/fajtak/data/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x${command}.root" ]; then
+			../../../../build/bin/bexport-mc -b --in /eos/baikalgvd/mc_2016/nuatm/nuatm_feb19/wout/n_nuatm_gs_n2m_cl2016_x${command}.dat.gz.wout --out /mnt/cephfs/user/fajtak/data/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x${command}.root
 		fi
 	fi
 done

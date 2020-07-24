@@ -2,14 +2,14 @@
 # downloads all joint.event.root files for given year and cluster
 # arguments: year(16,17,18,19), cluster(from zero/0)
 
-for runID in {1001..11000}
+for runID in {999..13000}
 do
 	command=$(printf "%04d" $runID)
 	echo $command
 
 	if test -f "/eos/baikalgvd/mc_2016/muatm/muatm_may19_wout/wout/n_cors_n2m_cl2016_x${command}.dat.gz.wout"; then
-		if [ ! -f "/home/fajtak/data/mc/muatm_may19/n_cors_n2m_cl2016_x${command}.root" ]; then
-			../../../../build/bin/bexport-mc --in /eos/baikalgvd/mc_2016/muatm/muatm_may19_wout/wout/n_cors_n2m_cl2016_x${command}.dat.gz.wout --out /home/fajtak/data/mc/muatm_may19/n_cors_n2m_cl2016_x${command}.root
+		if [ ! -f "/mnt/cephfs/user/fajtak/data/mc/muatm_may19/n_cors_n2m_cl2016_x${command}.root" ]; then
+			../../../../build/bin/bexport-mc -b --in /eos/baikalgvd/mc_2016/muatm/muatm_may19_wout/wout/n_cors_n2m_cl2016_x${command}.dat.gz.wout --out /mnt/cephfs/user/fajtak/data/mc/muatm_may19/n_cors_n2m_cl2016_x${command}.root
 		fi
 	fi
 done

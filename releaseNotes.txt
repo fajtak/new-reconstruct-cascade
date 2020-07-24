@@ -1,4 +1,13 @@
-17.06.2020 - git commit ---
+24.07.2020 - git commit ---
+	* paths in the bash/readMCMuNUVM changed
+	* root/DatastudyRecCac.C can now process all the years in once when -1 is used
+	* root/compareDataMCCascades.C axis titles changed
+	* root/programOutputTime.C can now work with runs with unknown time duration
+	* two different time constants for MuMC and NuMC implemented
+	* unified event has now clusterID
+	* number of reconstructed cascades is controlled and if larger than 50, run is terminated
+
+17.06.2020 - git commit be0c6d663661faafcc6e37a5d0e7de7a91d63859
 	* minor fix
 
 17.06.2020 - git commit 5b31e3d912f29298050d0e72a0515707f81c2738

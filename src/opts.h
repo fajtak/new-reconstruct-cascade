@@ -47,6 +47,7 @@ struct UnifiedHit
 // structure holding unified event format
 struct UnifiedEvent
 {
+	int clusterID = -1;
 	int runID = -1;
 	int eventID = -1;
 	std::vector<UnifiedHit> hits;
@@ -98,7 +99,8 @@ extern const double gRecCinWater;
 extern const double gRecC;
 extern TVirtualFitter* gMinuit;
 extern TRandom2 gRanGen;
-extern double gMCTimeConstant;
+extern double gMCMuTimeConstant;
+extern double gMCNuTimeConstant;
 extern double gMCNoiseRateInkHz;
 
 extern int gNCut;

@@ -119,6 +119,20 @@ int programOutputTime(int year, int cluster)
 			// cout << recentRun << endl;
 			fileIn >> oneLine >> nEvents >> measTimeHours >> measTimeDays;
 			// cout << nEvents << " " << measTimeDays << endl;
+
+			if (measTimeDays > 0 && measTimeDays < 5)
+			{
+				;
+			}else
+			{
+				measTimeDays = nEvents*(measTimeDaysTotal/nEventsTotal);
+				measTimeHours = measTimeDays*24;
+				// cout << recentRun << " " << measTimeHours << " "  << measTimeDays << endl;
+			}
+
+			if (nEvents == 0)
+				continue;
+
 			nEventsTotal += nEvents;
 			measTimeDaysTotal += measTimeDays;
 
