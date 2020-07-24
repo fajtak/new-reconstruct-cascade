@@ -216,6 +216,9 @@ void readRC(const char* rcpath)
 	gNCutT = env.GetValue("NCutT", 20);
 	gLikelihoodCut = env.GetValue("LikelihoodCut",3); //value 1 is used for the Non-hit and Noise-hit likelihood term
 	gUseMultiDirFit = env.GetValue("MultiDirFit",true);
+	gUseNonHitLikelihoodTerm = env.GetValue("NonHitLikelihoodTerm",false);
+	gUseNoiseHitLikelihoodTerm = env.GetValue("NoiseHitLikelihoodTerm",false);
+	gUseChargeSatCorrection = env.GetValue("ChargeSatCorrection",false);
 }
 
 // Parse options passed to the application.

@@ -61,7 +61,7 @@ double ChargeSaturationCurve(double *x, double *par)
    return f;
 }
 
-void ChargeSaturationFunction()
+void InitChargeSaturationFunction()
 {
 	chargeSaturationCurve = new TF1("chargeSaturationCurve",ChargeSaturationCurve,1,10000,2);
 	chargeSaturationCurve->SetParNames("constant","power");
@@ -177,8 +177,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 
 			if(gUseChargeSatCorrection && hitCharge > 1)
 			{
-				ChargeSaturationFunction();
-				hitCharge = chargeSaturationCurve->GetX(impulseTel->GetQ(i)/gOMqCal[OMID]);
+				hitCharge = chargeSaturationCurve->GetX(hitCharge);
 			}
 
 			unifiedEvent.nHits++;
@@ -356,6 +355,9 @@ void PrintConfig(void)
 	std::cout << "TFilterChi2Cut: " << gTCutChi2 << endl;
 	std::cout << "LikelihoodCut: " << gLikelihoodCut << endl;
 	std::cout << "UseMultiDirFit: " << gUseMultiDirFit << endl;
+	std::cout << "UseNonHitLikelihood: " << gUseNonHitLikelihoodTerm << endl;
+	std::cout << "UseNoiseLikelihood: " << gUseNoiseHitLikelihoodTerm << endl;
+	std::cout << "UseChargeSaturation: " << gUseChargeSatCorrection << endl;
 	std::cout << std::string(81,'*') << std::endl;
 }
 
@@ -1169,6 +1171,14 @@ int ReadInputParamFiles(TChain* events)
 	if (ReadLogTable() == -1)
 	{
 		std::cout << "Problem with 4D LogLikelihood file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Noise Probability File ... ";
+	cout << std::flush;
+    if (ReadNoiseProbability() == -1)
+	{
+		std::cout << "Problem with NoiseProbability File file!" << std::endl;
 		return -1;
 	}
 	cout << "DONE!" << endl;
@@ -2235,6 +2245,7 @@ int ProcessExperimentalData()
 	UnifiedEvent unifiedEvent;
 	TTree* t_RecCasc = new TTree("t_RecCasc","Reconstructed Cascades");
 	InitializeOutputTTree(t_RecCasc,unifiedEvent);
+	InitChargeSaturationFunction();
 	TDirectory *cdHist = outputFile->mkdir("Histograms");
 	TDirectory *cdVis = outputFile->mkdir("Visualizations");
    	cdVis->cd();
@@ -2261,7 +2272,7 @@ int ProcessExperimentalData()
 		if (status == 0)
 			t_RecCasc->Fill();
 		h_exitStatus->Fill(status);
-		if (eventStats->nLikelihoodFilter > 50)
+		if (eventStats->nLikelihoodFilter > 150)
 		{
 			std::cout << "Probably LED matrix run. Processing terminated!" << std::endl;
 			break;

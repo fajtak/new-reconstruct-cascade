@@ -1,4 +1,9 @@
-24.07.2020 - git commit ---\
+24.07.2020 - git commit ---
+	* charge saturation, nonHit and noise likelihood terms can be controlled from config.rc
+	* memory leak with charge saturation solved
+	* readNoiseProbability() added to MCData
+
+24.07.2020 - git commit ee5eaa8733ddca2b7e4b236d429fb84c4b94cb96
 	* newly implemented switches (q,p,g) now without required argument
 	* all mc simulations (a,m,u) now have to be started with -f /path/to/source/mc/data otherwise processing is terminated
 	* also input and output file paths were corrected
