@@ -61,6 +61,7 @@ struct UnifiedEvent
 	int nNoiseHits = -1;
 	double energy = -1;
 	double energySigma = -1;
+	double correctedEnergy = -1;
 	double theta = -1;
 	double thetaSigma = -1;
 	double phi = -1;
@@ -87,6 +88,7 @@ extern std::string gFileInputFolder;
 
 extern double gLogTable4D[200][351][21][21];
 extern std::vector<double> gNoiseTable;
+extern std::vector<double> gNoiseProbability;
 extern int gNOMs;
 extern const int gNStrings;
 extern std::vector<TVector3> gOMpositions;
@@ -102,6 +104,7 @@ extern TRandom2 gRanGen;
 extern double gMCMuTimeConstant;
 extern double gMCNuTimeConstant;
 extern double gMCNoiseRateInkHz;
+extern const double gEnergyCorrectionArray[20];
 
 extern int gNCut;
 extern double gQTotalCut;
@@ -116,6 +119,10 @@ extern double gLikelihoodCut;
 extern bool   gUseMultiDirFit;
 extern bool gUseEOSRead;
 extern bool gUseNewFolderStructure;
+extern bool gUseNonHitLikelihoodTerm;
+extern bool gUseNoiseHitLikelihoodTerm;
+extern bool gUseChargeSatCorrection;
+
 
 
 void parseOpts(int argc, char** argv);

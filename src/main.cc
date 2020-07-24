@@ -51,6 +51,25 @@ TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000
 TH1F* h_mcTheta = new TH1F("h_mcTheta","MC theta; #theta [deg]; NoE [#]",400,0,4);
 TH1F* h_mcPhi = new TH1F("h_mcPhi","Likelihood value; #phi [deg]; NoE [#]",800,0,8);
 
+TF1* chargeSaturationCurve;
+
+double ChargeSaturationCurve(double *x, double *par)
+{
+   float xx =x[0];
+   double f = (1.0/(1 + pow(TMath::Log10(xx)/par[0],par[1])))*xx;
+
+   return f;
+}
+
+void ChargeSaturationFunction()
+{
+	chargeSaturationCurve = new TF1("chargeSaturationCurve",ChargeSaturationCurve,1,10000,2);
+	chargeSaturationCurve->SetParNames("constant","power");
+	chargeSaturationCurve->SetParameter(0,2.681);
+	chargeSaturationCurve->SetParameter(1,8.67);
+	chargeSaturationCurve->SetTitle("Charge Saturation Curve; Q_real [p.e.]; Q_meas [p.e.]");
+	chargeSaturationCurve->SetNpx(1000);
+}
 
 void SaveHistograms()
 {
@@ -147,14 +166,24 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
 	unifiedEvent.qTotal = 0;
+	double hitCharge = 0;
+
 	for (int i = 0; i < impulseTel->GetNimpulse(); ++i)
 	{
 		int OMID = impulseTel->GetNch(i);
 		if (gOMqCal[OMID != -1] && gOMtimeCal[OMID] != -1 && gOMpositions[OMID].Mag() !=0 && impulseTel->GetQ(i) > 0)
 		{
+			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
+
+			if(gUseChargeSatCorrection && hitCharge > 1)
+			{
+				ChargeSaturationFunction();
+				hitCharge = chargeSaturationCurve->GetX(impulseTel->GetQ(i)/gOMqCal[OMID]);
+			}
+
 			unifiedEvent.nHits++;
-			unifiedEvent.qTotal += impulseTel->GetQ(i)/gOMqCal[OMID];
-			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],impulseTel->GetQ(i)/gOMqCal[OMID],-1,false,-1});
+			unifiedEvent.qTotal += hitCharge;
+			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],hitCharge,-1,false,-1});
 		}
 	}
 }
@@ -239,7 +268,6 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	unifiedEvent.qTotal = 0;
 	int nHits = 0;
 	int nNoiseHits = 0;
-	// cout << cascade->nHits << endl;
 	for (int i = 0; i < cascade->nHits; ++i)
 	{
 		nHits++;
@@ -558,6 +586,17 @@ bool NotInGPulses(int OMID)
 	return !inGPulses;
 }
 
+double GetNoiseProbability(double measuredCharge)
+{
+	if(measuredCharge >= 50.0 || gUseNoiseHitLikelihoodTerm == false) // Noise Probability for charge > 50 p.e. is not stored in gNoiseProbability vector
+		return 0;
+	else{
+		int roundedCharge = int(measuredCharge); // e.g measured charge = 14.8 p.e. is rounded to 14 and it is used for finding noise probability in gNoiseProbability vector
+		
+		return gNoiseProbability[roundedCharge];
+	}	
+}
+
 void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag)
 {
 	// cout << "In log" << endl;
@@ -574,9 +613,9 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 		double expectedNPE = GetInterpolatedValue(tableParameters);
 		// cout << expectedNPE << " " << expectedNPE*100000000*par[4] << " " << gPulses[i].charge << " " << TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4]) << endl;
 
-		if (TMath::Poisson(gPulses[i].charge,expectedNPE*110000000*par[4]) > 10e-320)
+		if ((TMath::Poisson(gPulses[i].charge,expectedNPE*110000000*par[4]) + GetNoiseProbability(gPulses[i].charge)) > 10e-320)
 		{
-			logLike -= TMath::Log10(TMath::Poisson(gPulses[i].charge,expectedNPE*110000000*par[4]));
+			logLike -= TMath::Log10(TMath::Poisson(gPulses[i].charge,expectedNPE*110000000*par[4]) + GetNoiseProbability(gPulses[i].charge));
 			// cout << TMath::Log10(TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4])) << endl;
 		}
 		else
@@ -585,31 +624,37 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 			// cout << -350 << endl;
 		}
 	}
-	// cout << "After g pulses" << endl;
-	// for (int i = 0; i < gNOMs; ++i)
-	// {
-	// 	if (NotInGPulses(i))
-	// 	{
-	// 		GetParameters(par,i,tableParameters);
-	// 		double expectedNPE = GetInterpolatedValue(tableParameters);
-	// 		// cout << i << " " << TMath::Poisson(0,expectedNPE*100000000*par[4]) << endl;
 
-	// 		if (TMath::Poisson(0,expectedNPE*110000000*par[4]) > 10e-320)
-	// 		{
-	// 			logLike -= TMath::Log10(TMath::Poisson(0,expectedNPE*110000000*par[4]));
-	// 			// cout << TMath::Log10(TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4])) << endl;
-	// 			// cout << i << " " << TMath::Log10(TMath::PoissonI(0,expectedNPE*100000000*par[4])) << endl;
-	// 		}
-	// 		else
-	// 		{
-	// 			logLike -= -320;
-	// 			// cout << i << " " << -350 << endl;
-	// 		}
-	// 	}
-	// }
-	// cout << "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: " << logLike << endl;
+	if(gUseNonHitLikelihoodTerm)
+	{
+		for (int i = 0; i < gNOMs; ++i)
+		{
+			if (NotInGPulses(i))
+			{
+				GetParameters(par,i,tableParameters);
+				double expectedNPE = GetInterpolatedValue(tableParameters);
+				// cout << i << " " << TMath::Poisson(0,expectedNPE*100000000*par[4]) << endl;
+	
+				if (TMath::Poisson(0,expectedNPE*110000000*par[4]) > 10e-320)
+				{
+					logLike -= TMath::Log10(TMath::Poisson(0,expectedNPE*110000000*par[4]));
+					// cout << TMath::Log10(TMath::PoissonI(gPulses[i].charge,expectedNPE*100000000*par[4])) << endl;
+					// cout << i << " " << TMath::Log10(TMath::PoissonI(0,expectedNPE*100000000*par[4])) << endl;
+				}
+				else
+				{
+					logLike -= -320;
+					// cout << i << " " << -350 << endl;
+				}
+			}
+		}
+		// cout << "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: " << logLike << endl;
+	}
+
+
 	f = logLike;
 }
+
 
 // Function that checks if all arguments necessary for Experimental Data processing have been set
 bool CheckInputParamsExpData()
@@ -778,7 +823,7 @@ int ReadGeometryMC(TChain* event)
 
 int ReadGeometryMCCascades()
 {
-	TString fileName = "/Data/BaikalData/mc/DZH_cascades/array2016_phys_kebkal.dat";
+	TString fileName = "/media/zuzana/Data/BaikalData/MC_cascadesDZH/MC_cascadeDZH/array2016_phys_kebkal.dat";
 
 	ifstream inputFile;
     inputFile.open(fileName);
@@ -928,6 +973,7 @@ int ReadQCal(void)
 			return -2;
 		}
 		gOMqCal[i] = readValue;
+		
 		if ((i+1)%36 == 0)
 		{
 		    getline(inputFile,dummyLine);
@@ -956,10 +1002,14 @@ int ReadLogTable()
 {
 	// cout << "4D LogTable reading starts" << endl;
 	ifstream fTab;
-	if (App::Output == "")
-		fTab.open("/Data/BaikalData/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
-	else
-		fTab.open("./hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+	if (App::Output == ""){
+		fTab.open("/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+		// fTab.open("/home/zubardac/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+	}
+	else{
+		fTab.open("/home/zubardac/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);		
+		// fTab.open("./hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+	}
 
 	if (!fTab.is_open())
 		return -1;
@@ -991,11 +1041,11 @@ int ReadLogTable()
 
 int ReadNoiseChargeTable()
 {
-	ifstream inputFile("/Data/BaikalData/showerTable/mc-noise-charge-2016.dat", ios::in);
+	ifstream inputFile("/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/mc-noise-charge-2016.dat", ios::in);
 
    	if (!inputFile)
     {
-    	cerr << "Calibration file: " << "/Data/BaikalData/showerTable/mc-noise-charge-2016.dat" << " was NOT found. Program termination!" << endl;
+    	cerr << "Calibration file: " << "/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/mc-noise-charge-2016.dat" << " was NOT found. Program termination!" << endl;
     	return -1;
   	}
 
@@ -1016,6 +1066,27 @@ int ReadNoiseChargeTable()
     inputFile.close();
 
 	return 0;
+}
+
+int ReadNoiseProbability()
+{
+	ifstream inputFile("/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/noiseProbability_Binwidth_1pe.dat", ios::in);
+
+	if (!inputFile)
+    {
+    	cerr << "Noise Probability File: " << "/home/zuzana/software/barsNew/bars/programs/reconstruct-cascade/inputFiles/noiseProbability_Binwidth_1pe.dat" << " was NOT found. Program termination!" << endl;
+    	return -1;
+  	}
+  	gNoiseProbability.clear();
+
+	double readValue = 0;	
+
+ 	while (inputFile >> readValue){
+   		gNoiseProbability.push_back(readValue);  
+    }
+    inputFile.close();
+
+    return 0;
 }
 
 int ReadInputParamFiles(TTree* tree, BExtractedHeader* header)
@@ -1049,6 +1120,14 @@ int ReadInputParamFiles(TTree* tree, BExtractedHeader* header)
 	if (ReadLogTable() == -1)
 	{
 		std::cout << "Problem with 4D LogLikelihood file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Noise Probability File ... ";
+	cout << std::flush;
+    if (ReadNoiseProbability() == -1)
+	{
+		std::cout << "Problem with NoiseProbability File file!" << std::endl;
 		return -1;
 	}
 	cout << "DONE!" << endl;
@@ -1090,7 +1169,15 @@ int ReadInputParamFiles()
 	cout << std::flush;
     if (ReadNoiseChargeTable() == -1)
 	{
-		std::cout << "Problem with geometry file!" << std::endl;
+		std::cout << "Problem with NoiseChargeTable file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Noise Probability File ... ";
+	cout << std::flush;
+    if (ReadNoiseProbability() == -1)
+	{
+		std::cout << "Problem with NoiseProbability File file!" << std::endl;
 		return -1;
 	}
 	cout << "DONE!" << endl;
@@ -1369,8 +1456,14 @@ double FitCascDirection(UnifiedEvent &event, double &energy, double &theta, doub
 	pSig = gMinuit->GetParError(6);
 
 	// cout << chi2 << " " << gPulses.size() << " " <<  chi2/gPulses.size() << " " << fMinuit->GetParameter(5) << " " << fMinuit->GetParameter(6) << endl;
-	return chi2/gPulses.size();
-	// return chi2/gNOMs;
+	// return chi2/gPulses.size();
+	// cout<<"chi2/gNOMs "<<chi2/gNOMs<<endl;
+	if(gUseNonHitLikelihoodTerm){
+		return chi2/gNOMs;
+	}else{
+		return chi2/gPulses.size();
+	}
+
 }
 
 double EstimateInitialDirection(TVector3& cascPos, double& cascTime, double& energy, double &theta, double &phi)
@@ -1460,8 +1553,40 @@ double LikelihoodFilterPassedGrid(UnifiedEvent &event)
 	}
 	event.likelihood = lowestLog;
 	// cout << "End likelihood" << endl;
-	// cout << lowestLog << " " << energy << " " << theta << " " << phi << endl;
+	cout <<"likelihood "<< lowestLog << " energy " << event.energy << " theta " << event.theta << " phi " << event.phi << endl;
 	return lowestLog;
+}
+
+int inRange(int roundedEnergy)
+{
+    int bin = 0;
+    int arraySize = sizeof(gEnergyCorrectionArray)/sizeof(gEnergyCorrectionArray[0]);
+    int energyBin = 30; //xlow used in the rebinned histogram of h_mismatchEnergyvsEnergy_pfx
+
+    if(roundedEnergy < energyBin) //if energy is lower than xlow in the histogram, the first element of array is used (i.e energy is lower than 1 TeV)
+    	bin = 0;
+
+    for(int i = 0; i < arraySize; i ++) 
+    {
+        if(energyBin <= roundedEnergy && roundedEnergy < (energyBin+2)) //check if the roundedEnegy is in one of the energy bins, which corresponds to gEnergyCorrectionArray
+            bin = i;
+        
+        energyBin += 2; //increment by 2 due to binning in the rebinned histogram of h_mismatchEnergyvsEnergy_pfx
+    }
+
+    if(roundedEnergy >= energyBin) //if energy is higher than xhigh in the histogram, the last element of array is used (i.e energy is higher than 10 PeV)
+    	bin = arraySize - 1;
+
+    return bin;   
+}
+
+double GetCorrectedEnergy(double energy)
+{
+    double logEnergy = TMath::Log10(energy*1000)/0.1; // energy (in TeV) is converted to log_10(E [GeV]) to get a number on the xaxis in the histograms Energy vs MismatchEnergy
+	int roundedEnergy = (int)logEnergy;
+    int bin = inRange(roundedEnergy);
+    
+	return energy/gEnergyCorrectionArray[bin];     
 }
 
 int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, double& cascTime)
@@ -1914,6 +2039,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	h_mcPhi->Fill(event.mcPhi);
 	eventStats->nNFilter++;
 	CaussalityFilter(event);
+
 	event.nHitsAfterCaus = gPulses.size();
 	event.nStringsAfterCaus = GetNStrings();
 
@@ -1933,6 +2059,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nQFilterChi2++;
 
 	event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
+
 	event.nStringsAfterTFilter = GetNStrings();
 	event.mcNTrackHitsAfterTFilter = GetNTrackHits(event);
 	h_nHitsTFilter->Fill(event.nHitsAfterTFilter);
@@ -1943,6 +2070,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nTFilter++;
 
 	event.chi2AfterTFilter = FitCascPos(event.position,event.time);
+	// cout<<"TFilterChi2 "<<event.chi2AfterTFilter<<endl;
 	h_chi2TFilter->Fill(event.chi2AfterTFilter);
 	if (event.chi2AfterTFilter > gTCutChi2)
 		return -5;
@@ -1968,11 +2096,14 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nLikelihoodFilter++;
 	EventVisualization(i,event,event.position,event.time);
 	ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
+	event.correctedEnergy = GetCorrectedEnergy(event.energy);
 	SaveCascadeJSON(i,event);
 	ScanLogLikelihoodEnergy(i,event);
 	ScanLogLikelihoodDirectionCircular(i,event);
 	ScanLogLikelihoodDirection(i,event);
 	event.directionSigma = CalculateDirectionError(event);
+	
+	//}
 	return 0;
 }
 
@@ -1990,6 +2121,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("chi2AfterTFilter",&event.chi2AfterTFilter);
 	outputTree->Branch("energy",&event.energy);
 	outputTree->Branch("energySigma",&event.energySigma);
+	outputTree->Branch("correctedEnergy",&event.correctedEnergy);
 	outputTree->Branch("theta",&event.theta);
 	outputTree->Branch("thetaSigma",&event.thetaSigma);
 	outputTree->Branch("directionSigma",&event.directionSigma);
@@ -2060,8 +2192,10 @@ int ProcessExperimentalData()
 		return -3;
 
 	TString outputFileName = "";
-	if (App::Output == "" || App::Output == "a")
+	if (App::Output == "" || App::Output == "a"){
     	outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	cout<<"outputFile "<<outputFileName<<endl;
+	}
     else
     	outputFileName =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
 	if (gEventID == -1)
@@ -2127,7 +2261,7 @@ int ProcessMCCascades()
 {
 	cout << "Processing MC Cascades Data" << endl;
 
-	const char* filePath = "/Data/BaikalData/mc/DZH_cascades/ne16_tin_c1_00*.root";
+	const char* filePath = "/media/zuzana/Data/BaikalData/MC_cascadesDZH/MC_cascadeDZH/ne16_tin_c*_00*.root";
 	TChain* mcFiles = new TChain("h11");
 	mcFiles->Add(filePath);
 	if (mcFiles->GetEntries() == 0)
@@ -2153,7 +2287,7 @@ int ProcessMCCascades()
 	if (ReadInputParamFiles() == -1)
 		return -3;
 
-	TString outputFileName = "/Data/BaikalData/mc/DZH_cascades/";
+	TString outputFileName = "/media/zuzana/Backup/mcCascadesResults/";
 	outputFileName += "recCascResults.root";
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");
@@ -2179,6 +2313,7 @@ int ProcessMCCascades()
 		mcFiles->GetEntry(i);
 		if (cascade->showerEnergy > 1000 || i % 1000 != 0)
 			continue;
+
 		nProcessed++;
 		unifiedEvent.eventID = i;
 		TransformToUnifiedEvent(cascade,unifiedEvent);
@@ -2215,9 +2350,9 @@ int ProcessMCData()
 	if (gFileInputFolder == "")
 	{
 		if (gInputType == 3)
-			filePath = "/Data/BaikalData/mc/2018may/n_cors_n2m_cl2016_x*.root";
+			filePath = "/media/zuzana/Backup/atmBundle/MC_atmMuBundle/n_cors_n2m_cl2016_x*.root";
 		if (gInputType == 2)
-			filePath = "/Data/BaikalData/mc/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x*.root";
+			filePath = "/media/zuzana/Backup/nuatm_feb19/n_nuatm_gs_n2m_cl2016_x*.root";
 	}else
 	{
 		if (gInputType == 3)
@@ -2254,9 +2389,9 @@ int ProcessMCData()
 	if (gFileInputFolder == "")
 	{
 		if (gInputType == 3)
-			outputFileName = "/Data/BaikalData/mc/2018may/";
+			outputFileName = "/media/zuzana/Backup/atmBundle/";
 		if (gInputType == 2)
-			outputFileName = "/Data/BaikalData/mc/nuatm_feb19/";
+			outputFileName = "/media/zuzana/Backup/nuatm_feb19/results/";
 	}else
 	{
 		outputFileName = gFileInputFolder;

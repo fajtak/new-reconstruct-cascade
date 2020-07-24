@@ -17,6 +17,7 @@ std::string gFileInputFolder = "";
 
 double gLogTable4D[200][351][21][21]{0};
 std::vector<double> gNoiseTable;
+std::vector<double> gNoiseProbability;
 int gNOMs = 288;
 const int gNStrings = 8;
 std::vector<TVector3> gOMpositions(gNOMs);
@@ -32,6 +33,7 @@ TRandom2 gRanGen;
 double gMCMuTimeConstant = 3900; // seconds per MC file
 double gMCNuTimeConstant = 4.4e9;
 double gMCNoiseRateInkHz = 50; // in kHz
+const double gEnergyCorrectionArray[20] = { 1.67773, 1.56738, 1.53488, 1.42292, 1.34681, 1.33311, 1.30409, 1.31283, 1.3094, 1.28182, 1.26567, 1.27433, 1.24962, 1.24205, 1.26317, 1.22895, 1.23192, 1.21746, 1.22675, 1.13126 };
 
 int gNCut = -1;
 double gQTotalCut = -1;
@@ -46,6 +48,9 @@ double gLikelihoodCut = -1;
 bool gUseMultiDirFit = false;
 bool gUseEOSRead = false;
 bool gUseNewFolderStructure = false;
+bool gUseNonHitLikelihoodTerm = false;
+bool gUseNoiseHitLikelihoodTerm = false;
+bool gUseChargeSatCorrection = false;
 
 
 using namespace BARS;
@@ -59,6 +64,39 @@ static const struct App::ProgramOption_t options_list[]{
 	{App::opt_Cluster, NOT_REQUIRED},
 	{App::opt_Season,  NOT_REQUIRED},
 	{App::opt_Run,     NOT_REQUIRED},
+	{
+		{
+			"chargeSaturation", 'q',
+			required_argument,
+			"use chargeSaturationCorrection",
+			[](char* argv) {gUseChargeSatCorrection = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"noiseHitLog", 'p',
+			required_argument,
+			"use noiseHitLikelihood term",
+			[](char* argv) {gUseNoiseHitLikelihoodTerm = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"nonHitLog", 'g',
+			required_argument,
+			"use nonHitLikelihood term",
+			[](char* argv) {gUseNonHitLikelihoodTerm = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
 	{
 		{
 			"number", 'n',
@@ -176,7 +214,7 @@ void readRC(const char* rcpath)
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
-	gLikelihoodCut = env.GetValue("LikelihoodCut",3.0);
+	gLikelihoodCut = env.GetValue("LikelihoodCut",3); //value 1 is used for the Non-hit and Noise-hit likelihood term
 	gUseMultiDirFit = env.GetValue("MultiDirFit",true);
 }
 
