@@ -7,6 +7,7 @@
 #include "TVector3.h"
 #include "TVirtualFitter.h"
 #include "TRandom2.h"
+#include "TTimeStamp.h"
 
 struct EventStats
 {
@@ -67,6 +68,9 @@ struct UnifiedEvent
 	double phi = -1;
 	double phiSigma = -1;
 	double directionSigma = -1;
+	double declination = -1;
+	double rightAscension = -1;
+	TTimeStamp eventTime;
 	TVector3 position;
 	double time = -1;
 	double mcFlagID = -1;
@@ -123,7 +127,8 @@ extern bool gUseNonHitLikelihoodTerm;
 extern bool gUseNoiseHitLikelihoodTerm;
 extern bool gUseChargeSatCorrection;
 
-
+extern const double gLatDet;
+extern const double gLonDet;
 
 void parseOpts(int argc, char** argv);
 void readRC(const char* rcpath);

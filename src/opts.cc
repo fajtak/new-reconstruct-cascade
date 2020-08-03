@@ -52,6 +52,10 @@ bool gUseNonHitLikelihoodTerm = false;
 bool gUseNoiseHitLikelihoodTerm = false;
 bool gUseChargeSatCorrection = false;
 
+//coordinates of the detector converted to radians (assuming east longitude)
+// taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3
+const double gLatDet = TMath::Pi() * 51.764 / 180.0;  //about 3.6 km south from 107 km station
+const double gLonDet = TMath::Pi() * 104.414 / 180.0; //about 3.6 km south from 107 km station
 
 using namespace BARS;
 

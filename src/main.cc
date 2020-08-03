@@ -63,12 +63,12 @@ double ChargeSaturationCurve(double *x, double *par)
 
 void InitChargeSaturationFunction()
 {
-	chargeSaturationCurve = new TF1("chargeSaturationCurve",ChargeSaturationCurve,1,10000,2);
+	chargeSaturationCurve = new TF1("chargeSaturationCurve",ChargeSaturationCurve,1,10000000,2);
 	chargeSaturationCurve->SetParNames("constant","power");
 	chargeSaturationCurve->SetParameter(0,2.681);
 	chargeSaturationCurve->SetParameter(1,8.67);
 	chargeSaturationCurve->SetTitle("Charge Saturation Curve; Q_real [p.e.]; Q_meas [p.e.]");
-	chargeSaturationCurve->SetNpx(1000);
+	chargeSaturationCurve->SetNpx(10000);
 }
 
 void SaveHistograms()
@@ -161,7 +161,7 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 	return 0;
 }
 
-void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &unifiedEvent)
+void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, BExtractedHeader* header, UnifiedEvent &unifiedEvent)
 {
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
@@ -175,9 +175,11 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 		{
 			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
 
-			if(gUseChargeSatCorrection && hitCharge > 1)
+			if(gUseChargeSatCorrection && hitCharge > 30)
 			{
+				// cerr << "Before: " << hitCharge << " " << OMID << " " << gOMqCal[OMID] << " " << impulseTel->GetQ(i) << endl;
 				hitCharge = chargeSaturationCurve->GetX(hitCharge);
+				// cerr << "After: " << hitCharge << endl;
 			}
 
 			unifiedEvent.nHits++;
@@ -185,6 +187,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],hitCharge,-1,false,-1});
 		}
 	}
+	unifiedEvent.eventTime = header->GetTime();
 }
 
 void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eventMask, UnifiedEvent &unifiedEvent)
@@ -2059,6 +2062,53 @@ double CalculateDirectionError(UnifiedEvent &event)
 	return (iteration-1)*stepInDegree;
 }
 
+//calculating local sidereal time in degrees acording to https://www.aa.quae.nl/en/reken/sterrentijd.html
+double LST(double unixTime, double longitude)
+{
+	//some constants from the website
+	const double l0 = 99.967794687;
+	const double l1 = 360.98564736628603;
+	const double l2 = 2.907879e-13;
+	const double l3 = -5.302e-22;
+
+	double daysSince2000 = (unixTime - 946684800.0) / 86400.0;
+
+	//faster but can be less precise than fmod on each
+	double localSiderealTime = l0 + l1 * daysSince2000 + l2 * std::pow(daysSince2000, 2)
+		+ l3 * std::pow(daysSince2000, 3) + 180*(longitude)/TMath::Pi();
+
+	//converting to hours
+	localSiderealTime = std::fmod(localSiderealTime, 360.0);
+	if (localSiderealTime < 0) localSiderealTime += 360.0;
+
+	return localSiderealTime;
+}
+
+// transform from horizontal to equatorial coordinates
+void CalculateEquatorialCoor(UnifiedEvent &event)
+{
+	double altitude = -TMath::Pi()/2+event.theta;
+	double azimuth = 3*TMath::Pi()/2-event.phi;
+	//transform using equations from http://star-www.st-and.ac.uk/~fv/webnotes/chapter7.htm
+	double declination = asin(sin(altitude) * sin(gLatDet) + cos(altitude) * cos(azimuth) * cos(gLatDet));
+	double localHourAngle = acos((sin(altitude) - sin(declination) * sin(gLatDet)) / (cos(declination) * cos(gLatDet)));
+
+	//expressing localHourAngle in degrees
+	localHourAngle = 180.0*localHourAngle/TMath::Pi();
+
+	if (sin(azimuth) > 0) localHourAngle = 360.0 - localHourAngle;
+	// cout << '\n' << "LHA correct: " << DecToDMS(localHourAngle / 15);
+
+	double localSiderealTime = LST(event.eventTime.AsDouble(), gLonDet);
+
+	//calculating right ascension
+	double rightAscension = localSiderealTime - localHourAngle;
+	if (rightAscension < 0) rightAscension += 360.0;
+
+	event.declination = declination;
+	event.rightAscension = rightAscension*TMath::Pi()/180;
+}
+
 int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 {
 	if (!NFilterPassed(event))
@@ -2131,7 +2181,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	ScanLogLikelihoodDirectionCircular(i,event);
 	ScanLogLikelihoodDirection(i,event);
 	event.directionSigma = CalculateDirectionError(event);
-
+	CalculateEquatorialCoor(event);
 	//}
 	return 0;
 }
@@ -2154,9 +2204,12 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("theta",&event.theta);
 	outputTree->Branch("thetaSigma",&event.thetaSigma);
 	outputTree->Branch("directionSigma",&event.directionSigma);
+	outputTree->Branch("declination",&event.declination);
+	outputTree->Branch("rightAscension",&event.rightAscension);
 	outputTree->Branch("phi",&event.phi);
 	outputTree->Branch("phiSigma",&event.phiSigma);
 	outputTree->Branch("position","TVector3",&event.position);
+	outputTree->Branch("eventTime","TTimeStamp",&event.eventTime);
 	outputTree->Branch("time",&event.time);
 	outputTree->Branch("likelihood",&event.likelihood);
 	outputTree->Branch("mcEnergy",&event.mcEnergy);
@@ -2267,7 +2320,7 @@ int ProcessExperimentalData()
 		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
-		TransformToUnifiedEvent(impulseTel,unifiedEvent);
+		TransformToUnifiedEvent(impulseTel,header,unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
 		if (status == 0)
 			t_RecCasc->Fill();

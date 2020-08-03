@@ -1,4 +1,10 @@
-24.07.2020 - git commit ---
+03.08.2020 - git commit ---
+	* declination and rightAscension calculation based on the Martin's code added
+	* eventTime (unixTime of the event) added to TTree
+	* charge saturation curve changed to 10mill to get rid of errors + correction calculated only for Q > 30 p.e.
+
+
+24.07.2020 - git commit d2bc0d76508134f8077f9e53aa33d998ef11bde0
 	* charge saturation, nonHit and noise likelihood terms can be controlled from config.rc
 	* memory leak with charge saturation solved
 	* readNoiseProbability() added to MCData
