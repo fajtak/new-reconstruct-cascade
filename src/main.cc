@@ -96,12 +96,21 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 		return 1;
 
 	TString outputFileName;
-	if (App::Output == "" || App::Output == "a")
-		outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-	else
-		outputFileName = Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+	if (gInputType == 0)
+	{
+		if (App::Output == "" || App::Output == "a")
+			outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+		else
+			outputFileName = Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+	}else
+	{
+		if (App::Output == "")
+			outputFileName = gFileInputFolder;
+		else
+			outputFileName = App::Output.Data();
+	}
 	char fname[100];
-	std::sprintf(fname,"cascade_season%d_cluster%d_run%d_evt%d.json",BARS::App::Season, BARS::App::Cluster, BARS::App::Run, eventID);
+	std::sprintf(fname,"/cascade_season%d_cluster%d_run%d_evt%d.json",BARS::App::Season, BARS::App::Cluster, BARS::App::Run, eventID);
 	outputFileName += fname;
 	std::ofstream fOutputFile;
 	fOutputFile.open(outputFileName);
@@ -2479,7 +2488,7 @@ int ProcessMCData()
 	else
 		outputFileName = App::Output.Data();
 
-	outputFileName += "recCascResults.root";
+	outputFileName += "/recCascResults.root";
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");
 	UnifiedEvent unifiedEvent;

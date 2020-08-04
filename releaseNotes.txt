@@ -1,4 +1,8 @@
 04.08.2020 - git commit ---
+	* json files production fixed for MC data
+	* recCascResults.root production fixed for MC data
+
+04.08.2020 - git commit 4163c79b4b0223f7ce0629fe277b877b313b7d53
 	* readMCMuVM and readMCNuVM from scripts/bash folder are now more sophisticated
 	* value of the MCMuTimeConstant can be now changed in config.rc file with "MCMuTimeConstant" keyword
 
