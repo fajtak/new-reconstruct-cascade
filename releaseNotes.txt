@@ -1,4 +1,8 @@
-03.08.2020 - git commit ---
+04.08.2020 - git commit ---
+	* readMCMuVM and readMCNuVM from scripts/bash folder are now more sophisticated
+	* value of the MCMuTimeConstant can be now changed in config.rc file with "MCMuTimeConstant" keyword
+
+03.08.2020 - git commit a94034a182ed8c735059e8822c6c3667a90f0aaf
 	* declination and rightAscension calculation based on the Martin's code added
 	* eventTime (unixTime of the event) added to TTree
 	* charge saturation curve changed to 10mill to get rid of errors + correction calculated only for Q > 30 p.e.

@@ -223,6 +223,7 @@ void readRC(const char* rcpath)
 	gUseNonHitLikelihoodTerm = env.GetValue("NonHitLikelihoodTerm",false);
 	gUseNoiseHitLikelihoodTerm = env.GetValue("NoiseHitLikelihoodTerm",false);
 	gUseChargeSatCorrection = env.GetValue("ChargeSatCorrection",false);
+	gMCMuTimeConstant = env.GetValue("MCMuTimeConstant",3900);
 }
 
 // Parse options passed to the application.
