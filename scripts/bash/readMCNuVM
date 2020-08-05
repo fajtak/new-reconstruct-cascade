@@ -1,21 +1,30 @@
 #!/bin/bash
-# exports atmospheric muon bundle .wout MC files to .root files
-# arguments: inputFilesPath, outputFilePaths, third parameter is optional and if used it adds .dat.gz to the processed file names (for back portability)
+# exports single up-going muon .wout MC files to .root files
+# arguments: inputFilesPath, outputFilePaths, third parameter is optional and specifies how many cores will be used to process data
+# fourth parameter is also optional and if used it adds .dat.gz to the processed file names (for back portability)
 
 fileExt=
+nCores=1
+count=0
 
 [ -z $1 ] && echo "Input MC data folder missing" && exit
 [ -z $2 ] && echo "Output MC data folder missing" && exit
-[ ! -z $3 ] && fileExt=.dat.gz
+[ ! -z $3 ] && nCores=$3
+[ ! -z $4 ] && fileExt=.dat.gz
 
 for runID in {0..15000}
 do
 	command=$(printf "%d" $runID)
-	echo $command
+	# echo $command
 
 	if test -f "${1}/n_nuatm_gs_n2m_cl2016_x${command}${fileExt}.wout"; then
 		if [ ! -f "${2}/n_nuatm_gs_n2m_cl2016_x${command}${fileExt}.root" ]; then
 			../../../../build/bin/bexport-mc -b --in ${1}/n_nuatm_gs_n2m_cl2016_x${command}.wout --out ${2}/n_nuatm_gs_n2m_cl2016_x${command}.root
+			(( count ++ ))
+			if (( count == nCores )); then
+      			wait
+        		count=0
+    		fi
 		fi
 	fi
 done

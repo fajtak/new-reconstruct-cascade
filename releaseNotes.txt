@@ -1,4 +1,7 @@
-04.08.2020 - git commit ---
+05.08.2020 - git commit ---
+	* readMCMuVm and readMCNuVM are now multi-threading
+
+04.08.2020 - git commit 4c7ee37d6faf243877354970fc0008353b8a6509
 	* json files production fixed for MC data
 	* recCascResults.root production fixed for MC data
 
