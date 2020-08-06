@@ -36,6 +36,7 @@ using namespace std;
 
 TH1D* h_nHits = new TH1D("h_nHits","Number of hits per event;N_{hits} [#];NoE [#]",300,0,300);
 TH1D* h_totalQ = new TH1D("h_totalQ","Total charge per event;Q [p.e.];NoE [#]",500,0,5000);
+TH1D* h_qPerHit = new TH1D("h_qPerHit","Charge per hit;Q [p.e.];NoE [#]",500,0,5000);
 TH1D* h_nHitsCaus = new TH1D("h_nHitsCaus","Number of hits per event after causality filter;N_{hits} [#];NoE [#]",300,0,300);
 TH1D* h_nStringsCaus = new TH1D("h_nStringsCaus","Number of hit strings per event after causality filter;N_{hits} [#];NoE [#]",10,0,10);
 TH1D* h_chi2Caus = new TH1D("h_chi2Caus","#chi^{2} of the position fit after causality filter;#chi^{2} [#];NoE [#]",500,0,500);
@@ -75,6 +76,7 @@ void SaveHistograms()
 {
 	h_nHits->Write();
 	h_totalQ->Write();
+	h_qPerHit->Write();
 	h_nHitsCaus->Write();
 	h_nStringsCaus->Write();
 	h_chi2Caus->Write();
@@ -180,14 +182,17 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, BExtractedHeader*
 	for (int i = 0; i < impulseTel->GetNimpulse(); ++i)
 	{
 		int OMID = impulseTel->GetNch(i);
-		if (gOMqCal[OMID != -1] && gOMtimeCal[OMID] != -1 && gOMpositions[OMID].Mag() !=0 && impulseTel->GetQ(i) > 0)
+		if (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && impulseTel->GetQ(i) > 0)
 		{
 			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
-
+			h_qPerHit->Fill(hitCharge);
 			if(gUseChargeSatCorrection && hitCharge > 30)
 			{
 				// cerr << "Before: " << hitCharge << " " << OMID << " " << gOMqCal[OMID] << " " << impulseTel->GetQ(i) << endl;
-				hitCharge = chargeSaturationCurve->GetX(hitCharge);
+				// if (hitCharge < 500)
+					hitCharge = chargeSaturationCurve->GetX(hitCharge);
+				// else
+					// hitCharge = 300000;//(TMath::Exp(hitCharge/879.868)-1.61775)/1.18315e-06;
 				// cerr << "After: " << hitCharge << endl;
 			}
 
@@ -2135,9 +2140,6 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -2;
 	eventStats->nSixThrees++;
 
-	// TVector3 cascPos(0,0,0);
-	// double cascTime = 0;
-
 	EstimateInitialPosMatrix(event.position,event.time);
 
 	event.chi2AfterCaus = FitCascPos(event.position,event.time);
@@ -2191,7 +2193,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	ScanLogLikelihoodDirection(i,event);
 	event.directionSigma = CalculateDirectionError(event);
 	CalculateEquatorialCoor(event);
-	//}
+
 	return 0;
 }
 

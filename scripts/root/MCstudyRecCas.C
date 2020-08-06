@@ -1,7 +1,9 @@
 #include "TCanvas.h"
 #include "TString.h"
+#include "TGraph.h"
 #include "TChain.h"
 #include "TH1F.h"
+#include "TFile.h"
 #include "TH2F.h"
 #include "TVector3.h"
 #include "TMath.h"
@@ -40,6 +42,8 @@ void SaveResults(int inputFile)
 		suffix = "nuatm_feb19";
 	if (inputFile == 1)
 		suffix = "muatm_may19";
+	if (inputFile == 2)
+		suffix = "muatm_jun20";
 	TString outputFileName = Form("../../results/mcResults_%s.root",suffix.Data());
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 
@@ -113,6 +117,9 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		case 1:
 			filesDir = Form("%s/mc/muatm_may19/recCascResults.root",env_p);
 			break;
+		case 2:
+			filesDir = Form("%s/mc/muatm_jun20/recCascResults.root",env_p);
+			break;
 		default:
 			break;
 	}
@@ -171,8 +178,11 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_qTotalFull->Fill(qTotal);
 		h_likelihoodFull->Fill(likelihood);
 
-		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 30)
+		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 28)
 			continue;
+
+		// if (directionSigma > 10 || nHitsAfterTFilter < 30)
+			// continue;
 
 		// if (directionSigma > 5 || energy < 10 || energySigma > 5)
 			// continue;
@@ -183,15 +193,15 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		cascDirRec.SetTheta(theta);
 		cascDirRec.SetPhi(phi);
 
-		if (energy > 100 && highEnergy && IsContained(position))
+		if (energy > 100 && highEnergy)
 		{
-			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << endl;
+			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " Et = " << mcEnergy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
 			g_cascadeXY->SetPoint(nHighEnergyEvents,position->X(),position->Y());
 			nHighEnergyEvents++;
 		}
 
-		if (theta/TMath::Pi()*180 < 80 && upGoing && IsContained(position))
+		if (theta/TMath::Pi()*180 < 80 && upGoing)
 		{
 			cout << "Up-going Event - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
@@ -209,11 +219,11 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_qTotal->Fill(qTotal);
 		h_likelihood->Fill(likelihood);
 
-		if (IsContained(position))
+		// if (IsContained(position))
 		{
 			h_thetaContained->Fill(theta/TMath::Pi()*180);
 			h_energyNHits->Fill(TMath::Log10(energy),nHitsAfterTFilter);
-		nProcessedEvents++;
+			nProcessedEvents++;
 			// position->Print();
 		}
 	}

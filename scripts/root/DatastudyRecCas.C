@@ -3,6 +3,7 @@
 #include "TChain.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TFile.h"
 #include "TVector3.h"
 #include "TMath.h"
 #include "TSystem.h"
@@ -190,7 +191,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_likelihoodFull->Fill(likelihood);
 
 
-		if (directionSigma > 10 ||!IsContained(position,10) || nHitsAfterTFilter < 30)
+		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 28)
 			continue;
 
 		// cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " (" << position->X() << "," << position->Y() << "," << position->Z() << ")" << endl;

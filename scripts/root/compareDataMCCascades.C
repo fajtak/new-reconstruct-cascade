@@ -10,12 +10,16 @@
 #include "TPaveStats.h"
 #include "TLegend.h"
 
-int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 359.938)
+#include <iostream>
+
+int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 431.076, double newMcDataDuration = 117.989)
+// int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 431.076, double newMcDataDuration = 136.845)
 {
 	bool showFull = false;
 	// bool showFull = true;
 
 	TFile* mcData = new TFile("../../results/mcResults_muatm_may19.root","READ");
+	// TFile* mcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
 	TH1F* mcNHits  = (TH1F*)mcData->Get("h_nHits");
 	mcNHits->SetTitle("Muon group MC");
 	mcNHits->SetLineColor(kRed);
@@ -56,7 +60,6 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	mclikelihood->SetLineColor(kRed);
 	mclikelihood->Rebin(2);
 	mclikelihood->Scale(1/(mcDataDuration*24*3600));
-
 	TH1F* mcNHitsFull  = (TH1F*)mcData->Get("h_nHitsFull");
 	mcNHitsFull->SetTitle("Muon group MC");
 	mcNHitsFull->SetLineColor(kRed);
@@ -98,6 +101,88 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	mclikelihoodFull->Rebin(2);
 	mclikelihoodFull->Scale(1/(mcDataDuration*24*3600));
 
+
+	TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
+	TH1F* newMcNHits  = (TH1F*)newMcData->Get("h_nHits");
+	newMcNHits->SetTitle("NEW Muon group MC");
+	newMcNHits->SetLineColor(kBlue);
+	newMcNHits->Rebin(5);
+	newMcNHits->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcNHitsTFilter  = (TH1F*)newMcData->Get("h_nHitsAfterTFilter");
+	newMcNHitsTFilter->SetTitle("NEW Muon group MC");
+	newMcNHitsTFilter->SetLineColor(kBlue);
+	newMcNHitsTFilter->Rebin(2);
+	newMcNHitsTFilter->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcNStringsTFilter  = (TH1F*)newMcData->Get("h_nStringsAfterTFilter");
+	newMcNStringsTFilter->SetTitle("NEW Muon group MC");
+	newMcNStringsTFilter->SetLineColor(kBlue);
+	// newMcNStringsTFilter->Rebin(2);
+	newMcNStringsTFilter->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcEnergy  = (TH1F*)newMcData->Get("h_energy");
+	newMcEnergy->SetTitle("NEW Muon group MC");
+	newMcEnergy->SetLineColor(kBlue);
+	newMcEnergy->Rebin(5);
+	newMcEnergy->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcTheta  = (TH1F*)newMcData->Get("h_theta");
+	newMcTheta->SetTitle("NEW Muon group MC");
+	newMcTheta->SetLineColor(kBlue);
+	newMcTheta->Rebin(5);
+	newMcTheta->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcPhi  = (TH1F*)newMcData->Get("h_phi");
+	newMcPhi->SetTitle("NEW Muon group MC");
+	newMcPhi->SetLineColor(kBlue);
+	newMcPhi->Rebin(10);
+	newMcPhi->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcQTotal  = (TH1F*)newMcData->Get("h_qTotal");
+	newMcQTotal->SetTitle("NEW Muon group MC");
+	newMcQTotal->SetLineColor(kBlue);
+	newMcQTotal->Rebin(20);
+	newMcQTotal->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMclikelihood  = (TH1F*)newMcData->Get("h_likelihood");
+	newMclikelihood->SetTitle("NEW Muon group MC");
+	newMclikelihood->SetLineColor(kBlue);
+	newMclikelihood->Rebin(2);
+	newMclikelihood->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcNHitsFull  = (TH1F*)newMcData->Get("h_nHitsFull");
+	// mcNHitsFull->SetTitle("NEW Muon group MC");
+	// mcNHitsFull->SetLineColor(kBlue);
+	// mcNHitsFull->Rebin(5);
+	// mcNHitsFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcNHitsTFilterFull  = (TH1F*)newMcData->Get("h_nHitsAfterTFilterFull");
+	// mcNHitsTFilterFull->SetTitle("NEW Muon group MC");
+	// mcNHitsTFilterFull->SetLineColor(kBlue);
+	// mcNHitsTFilterFull->Rebin(2);
+	// mcNHitsTFilterFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcNStringsTFilterFull  = (TH1F*)newMcData->Get("h_nStringsAfterTFilterFull");
+	// mcNStringsTFilterFull->SetTitle("NEW Muon group MC");
+	// mcNStringsTFilterFull->SetLineColor(kBlue);
+	// // mcNStringsTFilterFull->Rebin(2);
+	// mcNStringsTFilterFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcEnergyFull  = (TH1F*)newMcData->Get("h_energyFull");
+	// mcEnergyFull->SetTitle("NEW Muon group MC");
+	// mcEnergyFull->SetLineColor(kBlue);
+	// mcEnergyFull->Rebin(5);
+	// mcEnergyFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcThetaFull  = (TH1F*)newMcData->Get("h_thetaFull");
+	// mcThetaFull->SetTitle("NEW Muon group MC");
+	// mcThetaFull->SetLineColor(kBlue);
+	// mcThetaFull->Rebin(5);
+	// mcThetaFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcPhiFull  = (TH1F*)newMcData->Get("h_phiFull");
+	// mcPhiFull->SetTitle("NEW Muon group MC");
+	// mcPhiFull->SetLineColor(kBlue);
+	// mcPhiFull->Rebin(10);
+	// mcPhiFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mcQTotalFull  = (TH1F*)newMcData->Get("h_qTotalFull");
+	// mcQTotalFull->SetTitle("NEW Muon group MC");
+	// mcQTotalFull->SetLineColor(kBlue);
+	// mcQTotalFull->Rebin(20);
+	// mcQTotalFull->Scale(1/(newMcDataDuration*24*3600));
+	// TH1F* mclikelihoodFull  = (TH1F*)newMcData->Get("h_likelihoodFull");
+	// mclikelihoodFull->SetTitle("NEW Muon group MC");
+	// mclikelihoodFull->SetLineColor(kBlue);
+	// mclikelihoodFull->Rebin(2);
+	// mclikelihoodFull->Scale(1/(newMcDataDuration*24*3600));
 
 
 	TFile* realData = new TFile("../../results/mcResults_data_y16c0.root","READ");
@@ -141,7 +226,6 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	reallikelihood->SetMarkerStyle(kFullCircle);
 	reallikelihood->Rebin(2);
 	reallikelihood->Scale(1/(realDataDuration*24*3600));
-
 	TH1F* realNHitsFull  = (TH1F*)realData->Get("h_nHitsFull");
 	realNHitsFull->SetTitle("Data");
 	realNHitsFull->SetMarkerStyle(kFullCircle);
@@ -184,10 +268,12 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	reallikelihoodFull->Scale(1/(realDataDuration*24*3600));
 
 	cout << "Background expected: " << mcTheta->Integral()*realDataDuration*24*3600 << endl;
+	cout << "New Background expected: " << newMcTheta->Integral()*realDataDuration*24*3600 << endl;
 	cout << "Data: " << realTheta->Integral()*realDataDuration*24*3600 << endl;
 
 	THStack* s_nHits = new THStack("s_nHits","; N_{hits} [#];dN/dN_{hits} [Hz / 5 hits]");
 	s_nHits->Add(mcNHits,"HIST");
+	s_nHits->Add(newMcNHits,"HIST");
 	s_nHits->Add(realNHits,"");
 
 	TCanvas* c_nHits = new TCanvas("c_nHits","NHits",800,600);
@@ -197,6 +283,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 
 	THStack* s_nHitsTFilter = new THStack("s_nHitsTFilter","; N_{hits}^{reco} [#];dN/dN_{hits}^{reco} [Hz / 2 hits]");
 	s_nHitsTFilter->Add(mcNHitsTFilter,"HIST");
+	s_nHitsTFilter->Add(newMcNHitsTFilter,"HIST");
 	s_nHitsTFilter->Add(realNHitsTFilter,"");
 
 	TCanvas* c_nHitsTFilter = new TCanvas("c_nHitsTFilter","NHitsTFilter",800,600);
@@ -206,6 +293,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 
 	THStack* s_nStringsTFilter = new THStack("s_nStringsTFilter","; N_{strings}^{reco} [#];dN/dN_{strings}^{reco} [Hz]");
 	s_nStringsTFilter->Add(mcNStringsTFilter,"HIST");
+	s_nStringsTFilter->Add(newMcNStringsTFilter,"HIST");
 	s_nStringsTFilter->Add(realNStringsTFilter,"");
 
 	TCanvas* c_nStringsTFilter = new TCanvas("c_nStringsTFilter","NStringsTFilter",800,600);
@@ -215,6 +303,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 
 	THStack* s_energy = new THStack("s_energy",";E_{rec} [TeV];dN/dE_{rec} [Hz / 5 TeV]");
 	s_energy->Add(mcEnergy,"HIST");
+	s_energy->Add(newMcEnergy,"HIST");
 	s_energy->Add(realEnergy,"");
 
 	TCanvas* c_energy = new TCanvas("c_energy","Energy",800,600);
@@ -224,6 +313,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 
 	THStack* s_theta = new THStack("s_theta",";#theta_{rec} [deg.];dN/d#theta_{rec} [Hz / 5 deg]");
 	s_theta->Add(mcTheta,"HIST");
+	s_theta->Add(newMcTheta,"HIST");
 	s_theta->Add(realTheta,"");
 
 	TCanvas* c_theta = new TCanvas("c_theta","Theta",800,600);
@@ -231,8 +321,28 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 	s_theta->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
+	TH1F* newMcThetaScaled  = (TH1F*)newMcTheta->Clone("h_thetaScaled");
+	newMcThetaScaled->Scale(realTheta->Integral()/newMcThetaScaled->Integral());
+	newMcThetaScaled->SetLineStyle(5);
+	newMcThetaScaled->SetLineWidth(2);
+	TH1F* mcThetaScaled  = (TH1F*)mcTheta->Clone("h_thetaScaled");
+	mcThetaScaled->Scale(realTheta->Integral()/mcThetaScaled->Integral());
+	mcThetaScaled->SetLineStyle(5);
+	mcThetaScaled->SetLineWidth(2);
+
+	THStack* s_thetaScaled = new THStack("s_thetaScaled",";#theta_{rec} [deg.];dN/d#theta_{rec} [Hz / 5 deg]");
+	s_thetaScaled->Add(mcThetaScaled,"HIST");
+	s_thetaScaled->Add(newMcThetaScaled,"HIST");
+	s_thetaScaled->Add(realTheta,"");
+
+	TCanvas* c_thetaScaled = new TCanvas("c_thetaScaled","ThetaScaled",800,600);
+	gPad->SetGrid();
+	s_thetaScaled->Draw("nostack");
+	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
+
 	THStack* s_phi = new THStack("s_phi",";#phi_{rec} [deg.];dN/d#phi_{rec} [Hz / 10 deg]");
 	s_phi->Add(mcPhi,"HIST");
+	s_phi->Add(newMcPhi,"HIST");
 	s_phi->Add(realPhi,"");
 
 	TCanvas* c_phi = new TCanvas("c_phi","Phi",800,600);
@@ -242,6 +352,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 
 	THStack* s_qTotal = new THStack("s_qTotal",";Q [p.e.];dN/dQ [Hz / 200 p.e.]");
 	s_qTotal->Add(mcQTotal,"HIST");
+	s_qTotal->Add(newMcQTotal,"HIST");
 	s_qTotal->Add(realQTotal,"");
 
 	TCanvas* c_qTotal = new TCanvas("c_qTotal","QTotal",800,600);
@@ -251,6 +362,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 
 	THStack* s_likelihood = new THStack("s_likelihood",";L [#];dN/dL [Hz / 0.2]");
 	s_likelihood->Add(mclikelihood,"HIST");
+	s_likelihood->Add(newMclikelihood,"HIST");
 	s_likelihood->Add(reallikelihood,"");
 
 	TCanvas* c_likelihood = new TCanvas("c_likelihood","Likelihood",800,600);
@@ -327,7 +439,7 @@ int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDurati
 		s_likelihoodFull->Add(mclikelihoodFull,"HIST");
 		s_likelihoodFull->Add(reallikelihoodFull,"");
 
-		TCanvas* c_likelihoodFull = new TCanvas("c_likelihoodFull","Likelihood",800,600);
+		TCanvas* c_likelihoodFull = new TCanvas("c_likelihoodFull","LikelihoodFull",800,600);
 		gPad->SetGrid();
 		s_likelihoodFull->Draw("nostack");
 		gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
