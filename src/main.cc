@@ -22,6 +22,7 @@
 #include "BARS.h"
 #include "BExtractedImpulseTel.h"
 #include "BExtractedHeader.h"
+#include "BJointHeader.h"
 #include "BGeomTel.h"
 #include "BDynamicGeometry.h"
 #include "BEventMask.h"
@@ -172,7 +173,7 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 	return 0;
 }
 
-void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, BExtractedHeader* header, UnifiedEvent &unifiedEvent)
+void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
 {
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
@@ -201,7 +202,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, BExtractedHeader*
 			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],hitCharge,-1,false,-1});
 		}
 	}
-	unifiedEvent.eventTime = header->GetTime();
+	unifiedEvent.eventTime = eventTime;
 }
 
 void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eventMask, UnifiedEvent &unifiedEvent)
@@ -397,6 +398,21 @@ void PrintRunInfo(TTree* tree, BExtractedHeader* header)
 	long startTime = header->GetTime().GetSec();
 	tree->GetEntry(tree->GetEntries()-1);
 	long endTime = header->GetTime().GetSec();
+
+	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
+	cout << "Experimental Data" << endl;
+	cout << "Season: " << BARS::App::Season << " Cluster: " << BARS::App::Cluster << " Run: " <<  BARS::App::Run << endl;
+	cout << "! " << tree->GetEntries() << " " << (endTime-startTime)/3600.0 << " " << (endTime-startTime)/3600.0/24.0 << endl;
+	std::cout << std::string(81,'*') << std::endl;
+}
+
+// Prints important information about experimental data run
+void PrintRunInfo(TTree* tree, BJointHeader* header)
+{
+	tree->GetEntry(0);
+	long startTime = header->GetTimeCC().GetSec();
+	tree->GetEntry(tree->GetEntries()-1);
+	long endTime = header->GetTimeCC().GetSec();
 
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "Experimental Data" << endl;
@@ -753,7 +769,7 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 	return nOKOMs;
 }
 
-int ReadGeometry(TTree* tree, BExtractedHeader* header) // read dynamic geometry
+int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
 	const char* geometryFileName;
 	if (BARS::App::Season != 2020)
@@ -771,16 +787,6 @@ int ReadGeometry(TTree* tree, BExtractedHeader* header) // read dynamic geometry
 		cout<<"No TTree called Event in the geometry was found!"<<endl;
 		return -1;
 	}
-
-	int entryID = 0;
-	Int_t startTime = 0;
-
-	do
-	{
-		tree->GetEntry(entryID);
-		startTime = header->GetTime().GetSec();
-		entryID++;
-	}while (startTime == 0 && entryID < tree->GetEntries());
 
 	BDynamicGeometry* telGeometry = NULL;
 	geometryTree->SetBranchAddress("BGeomTel.", &telGeometry);
@@ -986,7 +992,15 @@ int ReadTimeCal()
 // It also let us know about operating OMs. If there is -1 in the qcalib for OM we assume it is dead.
 int ReadQCal(void)
 {
-	const char* filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+	const char* filePath = "";
+
+    if (!gUseNewFolderStructure)
+    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    else
+    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/joint1.0/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+
+
 	TString jointFileName(filePath);
 	TString chargeFileName(jointFileName(0,jointFileName.Length()-17));
 	chargeFileName += "qcalib";
@@ -1128,11 +1142,11 @@ int ReadNoiseProbability()
     return 0;
 }
 
-int ReadInputParamFiles(TTree* tree, BExtractedHeader* header)
+int ReadInputParamFiles(TTree* tree, double startTime)
 {
 	cout << "Reading Geometry ... ";
 	cout << std::flush;
-	if (ReadGeometry(tree,header) == -1)
+	if (ReadGeometry(tree,startTime) == -1)
 	{
 		std::cout << "Problem with geometry file!" << std::endl;
 		return -1;
@@ -2231,6 +2245,59 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("mcNTrackHitsAfterTFilter",&event.mcNTrackHitsAfterTFilter);
 }
 
+bool CheckTreeAndBranches(TTree* tree)
+{
+	if (!tree)
+	{
+		std::cout << "No Events TTree found!" << endl;
+		return false;
+	}
+	if (!gUseNewFolderStructure)
+	{
+		if (!tree->GetBranch("BJointImpulseTel.") || !tree->GetBranch("BJointHeader."))
+		{
+			std::cout << "No  BJointImpulseTel./BJointHeader. branches found!" << endl;
+			return false;
+		}
+	}else
+	{
+		if (!tree->GetBranch("BJointImpulseTel") || !tree->GetBranch("BJointHeader"))
+		{
+			std::cout << "No  BJointImpulseTel/BJointHeader branches found!" << endl;
+			return false;
+		}
+	}
+	return true;
+}
+
+double FindEventTime(TTree* tree, BExtractedHeader* header)
+{
+	int entryID = 0;
+	double startTime = 0;
+
+	do
+	{
+		tree->GetEntry(entryID);
+		startTime = header->GetTime().AsDouble();
+		entryID++;
+	}while (startTime == 0 && entryID < tree->GetEntries());
+	return startTime;
+}
+
+double FindEventTime(TTree* tree, BJointHeader* header)
+{
+	int entryID = 0;
+	double startTime = 0;
+
+	do
+	{
+		tree->GetEntry(entryID);
+		startTime = header->GetTimeCC().AsDouble();
+		entryID++;
+	}while (startTime == 0 && entryID < tree->GetEntries());
+	return startTime;
+}
+
 // Main function responsible for the processing of the real data
 // required input parameters are seasonID, clusterID, RunID
 // joint.events.root files are found automatically based on the enviroment variables
@@ -2250,7 +2317,8 @@ int ProcessExperimentalData()
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/j01/%04d/%s",BARS::App::Season,BARS::App::Cluster,BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/joint1.0/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     if (!BARS::App::FileExists(filePath))
     {
     	std::cout << "File: " << filePath << " was not found!" << endl;
@@ -2269,19 +2337,31 @@ int ProcessExperimentalData()
 	// Sets necessary pointers to access data through TTree
 	// TFile* file = new TFile(filePath,"READ");
     // TTree* tree = (TTree*)file->Get("Events");
-    if (!tree || !tree->GetBranch("BJointImpulseTel.") || !tree->GetBranch("BJointHeader."))
-    {
-    	std::cout << "No Events TTree or BJointImpulseTel/BJointHeader branches found!" << endl;
+    if (!CheckTreeAndBranches(tree))
     	return -2;
-    }
+
 	BExtractedImpulseTel* impulseTel = NULL;
 	BExtractedHeader* header = NULL;
-	tree->SetBranchAddress("BJointImpulseTel.",&impulseTel);
-	tree->SetBranchAddress("BJointHeader.",&header);
+	BJointHeader* jointHeader = NULL;
 
-	PrintRunInfo(tree,header);
+	double eventTime = 0;
 
-	if (ReadInputParamFiles(tree,header) == -1)
+	if (!gUseNewFolderStructure)
+	{
+		tree->SetBranchAddress("BJointImpulseTel.",&impulseTel);
+		tree->SetBranchAddress("BJointHeader.",&header);
+		PrintRunInfo(tree,header);
+		tree->GetEntry(0);
+		eventTime = FindEventTime(tree,header);
+	}else
+	{
+		tree->SetBranchAddress("BJointImpulseTel",&impulseTel);
+		tree->SetBranchAddress("BJointHeader",&jointHeader);
+		PrintRunInfo(tree,jointHeader);
+		eventTime = FindEventTime(tree,jointHeader);
+	}
+
+	if (ReadInputParamFiles(tree,eventTime) == -1)
 		return -3;
 
 	TString outputFileName = "";
@@ -2331,7 +2411,7 @@ int ProcessExperimentalData()
 		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
-		TransformToUnifiedEvent(impulseTel,header,unifiedEvent);
+		TransformToUnifiedEvent(impulseTel,eventTime,unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
 		if (status == 0)
 			t_RecCasc->Fill();
