@@ -373,6 +373,9 @@ void PrintConfig(void)
 	std::cout << "TFilterChi2Cut: " << gTCutChi2 << endl;
 	std::cout << "LikelihoodCut: " << gLikelihoodCut << endl;
 	std::cout << "UseMultiDirFit: " << gUseMultiDirFit << endl;
+	std::cout << "LikelihoodThetaSteps: " << gLikelihoodThetaSteps << endl;
+	std::cout << "LikelihoodPhiSteps: " << gLikelihoodPhiSteps << endl;
+	std::cout << "LikelihoodEnergySteps: " << gLikelihoodEnergySteps << endl;
 	std::cout << "UseNonHitLikelihood: " << gUseNonHitLikelihoodTerm << endl;
 	std::cout << "UseNoiseLikelihood: " << gUseNoiseHitLikelihoodTerm << endl;
 	std::cout << "UseChargeSaturation: " << gUseChargeSatCorrection << endl;
@@ -771,11 +774,12 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
-	const char* geometryFileName;
-	if (BARS::App::Season != 2020)
-		geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
-	else
-		geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
+	const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
+
+	// if (BARS::App::Season != 2020)
+		// geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
+	// else
+		// geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
 
 	TTree* geometryTree = nullptr;
 	TFile* geomFile = new TFile(geometryFileName,"READ");
@@ -1580,19 +1584,19 @@ double LikelihoodFilterPassed(UnifiedEvent &event)
 double LikelihoodFilterPassedGrid(UnifiedEvent &event)
 {
 	// cout << "In likelihood" << endl;
-	int nThetaSteps = 4;
-	int nPhiSteps = 6;
-	int nEnergySteps = 4;
+	int nThetaSteps = gLikelihoodThetaSteps;
+	int nPhiSteps = gLikelihoodPhiSteps;
+	int nEnergySteps = gLikelihoodEnergySteps;
 	double lowestLog = 10000;
 	for (int k = 0; k < nThetaSteps-1; ++k)
 	{
-		for (int l = 0; l < nPhiSteps-1; ++l)
+		for (int l = 0; l < nPhiSteps; ++l)
 		{
 			for (int i = 0; i < nEnergySteps; ++i)
 			{
-				double cascadeEnergy = TMath::Power(10,1);
+				double cascadeEnergy = TMath::Power(10,i);
 				double cascadeTheta = TMath::Pi()/(nThetaSteps)*(k+1);
-				double cascadePhi = TMath::Pi()*2/nPhiSteps*(l+1);
+				double cascadePhi = TMath::Pi()*2/nPhiSteps*(l);
 				double cascadeEnergySigma = 0;
 				double cascadeThetaSigma = 0;
 				double cascadePhiSigma = 0;

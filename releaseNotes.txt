@@ -1,4 +1,8 @@
 07.08.2020 - git commit ---
+	* number of likelihood steps in theta, phi and energy can be modified in config.rc
+	* geometry path for 2019 and 2020 data changed
+
+07.08.2020 - git commit 86bc32586ff3ff7a338bdf0606a8884158d4fdea
 	* bash script joinProgramOutputs added
 	* fix of the qcalib path for new data structure
 

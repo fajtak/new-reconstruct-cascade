@@ -108,6 +108,9 @@ extern TRandom2 gRanGen;
 extern double gMCMuTimeConstant;
 extern double gMCNuTimeConstant;
 extern double gMCNoiseRateInkHz;
+extern int gLikelihoodThetaSteps; //
+extern int gLikelihoodPhiSteps;
+extern int gLikelihoodEnergySteps;
 extern const double gEnergyCorrectionArray[20];
 
 extern int gNCut;

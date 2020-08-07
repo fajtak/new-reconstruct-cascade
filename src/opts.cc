@@ -33,6 +33,9 @@ TRandom2 gRanGen;
 double gMCMuTimeConstant = 3900; // seconds per MC file
 double gMCNuTimeConstant = 4.4e9;
 double gMCNoiseRateInkHz = 50; // in kHz
+int gLikelihoodThetaSteps = 4; //
+int gLikelihoodPhiSteps = 6;
+int gLikelihoodEnergySteps = 4;
 const double gEnergyCorrectionArray[20] = { 1.67773, 1.56738, 1.53488, 1.42292, 1.34681, 1.33311, 1.30409, 1.31283, 1.3094, 1.28182, 1.26567, 1.27433, 1.24962, 1.24205, 1.26317, 1.22895, 1.23192, 1.21746, 1.22675, 1.13126 };
 
 int gNCut = -1;
@@ -224,6 +227,9 @@ void readRC(const char* rcpath)
 	gUseNoiseHitLikelihoodTerm = env.GetValue("NoiseHitLikelihoodTerm",false);
 	gUseChargeSatCorrection = env.GetValue("ChargeSatCorrection",false);
 	gMCMuTimeConstant = env.GetValue("MCMuTimeConstant",3900);
+	gLikelihoodThetaSteps = env.GetValue("LikelihoodThetaSteps",4);
+	gLikelihoodPhiSteps = env.GetValue("LikelihoodPhiSteps",6);
+	gLikelihoodEnergySteps = env.GetValue("LikelihoodEnergySteps",4);
 }
 
 // Parse options passed to the application.
