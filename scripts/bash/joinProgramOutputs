@@ -1,0 +1,11 @@
+#!/bin/bash
+# join per-run generated program output logs to a single per-season and per-cluster file
+# arguments: year(16,17,18,19), cluster(from zero/0)
+
+cd ../../logs
+rm programOutput_$1_$2.log
+
+or runID in {1..999}
+do
+	cat programOutput_$1_$2_runID.log >> programOutput_$1_$2.log
+done
