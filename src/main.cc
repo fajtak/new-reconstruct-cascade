@@ -395,7 +395,7 @@ void PrintHeader(void)
 }
 
 // Prints important information about experimental data run
-int PrintRunInfo(TTree* tree, BExtractedHeader* header)
+bool PrintRunInfo(TTree* tree, BExtractedHeader* header)
 {
 	tree->GetEntry(0);
 	long startTime = header->GetTime().GetSec();
@@ -418,18 +418,26 @@ int PrintRunInfo(TTree* tree, BExtractedHeader* header)
 }
 
 // Prints important information about experimental data run
-void PrintRunInfo(TTree* tree, BJointHeader* header)
+bool PrintRunInfo(TTree* tree, BJointHeader* header)
 {
 	tree->GetEntry(0);
 	long startTime = header->GetTimeCC().GetSec();
 	tree->GetEntry(tree->GetEntries()-1);
 	long endTime = header->GetTimeCC().GetSec();
 
+	if ((endTime-startTime)/3600.0 < 2)
+	{
+		cout << "Run shorter than 2 hours identified! Processing of the run " << BARS::App::Run << " terminated!" << endl;
+		return false;
+	}
+
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "Experimental Data" << endl;
 	cout << "Season: " << BARS::App::Season << " Cluster: " << BARS::App::Cluster << " Run: " <<  BARS::App::Run << endl;
 	cout << "! " << tree->GetEntries() << " " << (endTime-startTime)/3600.0 << " " << (endTime-startTime)/3600.0/24.0 << endl;
 	std::cout << std::string(81,'*') << std::endl;
+
+	return true;
 }
 
 void PrintRunInfo(const char* filePath, TChain* events)

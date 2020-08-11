@@ -1,4 +1,7 @@
 11.08.2020 - git commit ---
+	* Minor fix
+
+11.08.2020 - git commit 34260097d2f81a42f397d606d4a9dbe047026213
 	* Experimental runs shorter than 2 hours are not processed
 	* programOutputTime.C has now third parameters specifying the path to the log file
 
