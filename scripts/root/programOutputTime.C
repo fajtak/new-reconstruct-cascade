@@ -2,6 +2,8 @@
 #include <fstream>
 #include <string>
 
+#include "TCanvas.h"
+#include "TGraph.h"
 // TH1F* h_procSpeed = new TH1F("h_procSpeed","Processing speed in kEvents/s per event; Run [#];kEvents/s [kHz]",600,0,600);
 TGraph* g_nEventsPerRun = new TGraph();
 TGraph* g_nEventsPerSecond = new TGraph();
@@ -12,6 +14,7 @@ TGraph* g_realProcSpeed = new TGraph();
 TGraph* g_realProcTime = new TGraph();
 TGraph* g_realVsUserTime = new TGraph();
 TGraph* g_nRecCasc = new TGraph();
+TGraph* g_ratioNFilterNEvents = new TGraph();
 
 int DrawResults()
 {
@@ -78,13 +81,20 @@ int DrawResults()
 	g_nRecCasc->SetLineWidth(4);
 	g_nRecCasc->SetMarkerColor(4);
 
+	TCanvas* c_ratioNFilterNEvents = new TCanvas("c_ratioNFilterNEvents","RatioNFilterNEvents",800,600);
+	g_ratioNFilterNEvents->Draw("AP");
+	g_ratioNFilterNEvents->SetTitle("Ratio of NFilter and NEvents ;RunID [#]; Ratio [%]");
+	g_ratioNFilterNEvents->SetMarkerStyle(5);
+	g_ratioNFilterNEvents->SetLineWidth(4);
+	g_ratioNFilterNEvents->SetMarkerColor(6);
+
 	return 0;
 }
 
-int programOutputTime(int year, int cluster)
+int programOutputTime(int year, int cluster, TString folderPath)
 {
 	// ifstream fileIn(Form("/Data/BaikalData/dataVal/exp%d/cluster%d/programOutput_%d_%d.log",year,cluster,year,cluster));
-	ifstream fileIn(Form("/Data/BaikalData/dataVM240/programOutput_%d_%d.log",year,cluster));
+	ifstream fileIn(Form("%s/programOutput_%d_%d.log",folderPath.Data(),year,cluster));
 
 	string oneLine;
 	char oneChar;
@@ -194,6 +204,7 @@ int programOutputTime(int year, int cluster)
 			g_realVsUserTime->SetPoint(nProcessedRuns,recentRun,(realTimeMin*60+realTimeSec)/(userTimeMin*60+userTimeSec));
 			g_realProcTime->SetPoint(nProcessedRuns,recentRun,(realTimeMin*60+realTimeSec)/60);
 			g_nRecCasc->SetPoint(nProcessedRuns,recentRun,likelihoodFiter);
+			g_ratioNFilterNEvents->SetPoint(nProcessedRuns,recentRun,(double)nFilter/nEvents*100);
 		}
 	}
 

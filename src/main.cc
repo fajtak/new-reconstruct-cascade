@@ -395,18 +395,26 @@ void PrintHeader(void)
 }
 
 // Prints important information about experimental data run
-void PrintRunInfo(TTree* tree, BExtractedHeader* header)
+int PrintRunInfo(TTree* tree, BExtractedHeader* header)
 {
 	tree->GetEntry(0);
 	long startTime = header->GetTime().GetSec();
 	tree->GetEntry(tree->GetEntries()-1);
 	long endTime = header->GetTime().GetSec();
 
+	if ((endTime-startTime)/3600.0 < 2)
+	{
+		cout << "Run shorter than 2 hours identified! Processing of the run " << BARS::App::Run << " terminated!" << endl;
+		return false;
+	}
+
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "Experimental Data" << endl;
 	cout << "Season: " << BARS::App::Season << " Cluster: " << BARS::App::Cluster << " Run: " <<  BARS::App::Run << endl;
 	cout << "! " << tree->GetEntries() << " " << (endTime-startTime)/3600.0 << " " << (endTime-startTime)/3600.0/24.0 << endl;
 	std::cout << std::string(81,'*') << std::endl;
+
+	return true;
 }
 
 // Prints important information about experimental data run
@@ -2349,24 +2357,28 @@ int ProcessExperimentalData()
 	BJointHeader* jointHeader = NULL;
 
 	double eventTime = 0;
+	bool isLongerThan2hours = false;
 
 	if (!gUseNewFolderStructure)
 	{
 		tree->SetBranchAddress("BJointImpulseTel.",&impulseTel);
 		tree->SetBranchAddress("BJointHeader.",&header);
-		PrintRunInfo(tree,header);
+		isLongerThan2hours = PrintRunInfo(tree,header);
 		tree->GetEntry(0);
 		eventTime = FindEventTime(tree,header);
 	}else
 	{
 		tree->SetBranchAddress("BJointImpulseTel",&impulseTel);
 		tree->SetBranchAddress("BJointHeader",&jointHeader);
-		PrintRunInfo(tree,jointHeader);
+		isLongerThan2hours = PrintRunInfo(tree,jointHeader);
 		eventTime = FindEventTime(tree,jointHeader);
 	}
 
-	if (ReadInputParamFiles(tree,eventTime) == -1)
+	if (!isLongerThan2hours)
 		return -3;
+
+	if (ReadInputParamFiles(tree,eventTime) == -1)
+		return -4;
 
 	TString outputFileName = "";
 	if (App::Output == "" || App::Output == "a")
@@ -2386,7 +2398,7 @@ int ProcessExperimentalData()
 	if (!outputFile->IsOpen())
 	{
 		std::cout << "Output File: " << outputFileName << " can not be recreated!" << endl;
-    	return -4;
+    	return -5;
 	}
 
 	TDirectory *cdTree = outputFile->mkdir("Tree");

@@ -1,4 +1,8 @@
 11.08.2020 - git commit ---
+	* Experimental runs shorter than 2 hours are not processed
+	* programOutputTime.C has now third parameters specifying the path to the log file
+
+11.08.2020 - git commit dc01939b9d53c2f6ba63dd7d3e7288aabd8353bf
 	* MCNuTimeConstant can be changed from the config.rc file
 	* minor changed to compareDataMCCascades.C and DataStudyRecCac.C
 	* readMCNuVM fixed multi-threading
