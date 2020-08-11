@@ -227,6 +227,7 @@ void readRC(const char* rcpath)
 	gUseNoiseHitLikelihoodTerm = env.GetValue("NoiseHitLikelihoodTerm",false);
 	gUseChargeSatCorrection = env.GetValue("ChargeSatCorrection",false);
 	gMCMuTimeConstant = env.GetValue("MCMuTimeConstant",3900);
+	gMCNuTimeConstant = env.GetValue("MCNuTimeConstant",4.4e9);
 	gLikelihoodThetaSteps = env.GetValue("LikelihoodThetaSteps",4);
 	gLikelihoodPhiSteps = env.GetValue("LikelihoodPhiSteps",6);
 	gLikelihoodEnergySteps = env.GetValue("LikelihoodEnergySteps",4);

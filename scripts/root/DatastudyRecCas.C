@@ -123,6 +123,9 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 				case 1:
 					filesDir = Form("%s/dataVM240/exp%d/cluster%d/",env_p,j,i);
 					break;
+				case 2:
+					filesDir = Form("%s/dataPerseus/exp%d/cluster%d/",env_p,j,i);
+					break;
 			}
 			cout << filesDir << endl;
 

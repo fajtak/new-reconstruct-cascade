@@ -19,7 +19,7 @@ do
 
 	if test -f "${1}/n_nuatm_gs_n2m_cl2016_x${command}${fileExt}.wout"; then
 		if [ ! -f "${2}/n_nuatm_gs_n2m_cl2016_x${command}${fileExt}.root" ]; then
-			../../../../build/bin/bexport-mc -b --in ${1}/n_nuatm_gs_n2m_cl2016_x${command}.wout --out ${2}/n_nuatm_gs_n2m_cl2016_x${command}.root
+			../../../../build/bin/bexport-mc -b --in ${1}/n_nuatm_gs_n2m_cl2016_x${command}.wout --out ${2}/n_nuatm_gs_n2m_cl2016_x${command}.root &
 			(( count ++ ))
 			if (( count == nCores )); then
       			wait
