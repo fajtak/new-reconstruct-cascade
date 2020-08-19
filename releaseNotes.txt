@@ -1,4 +1,10 @@
-11.08.2020 - git commit ---
+19.08.2020 - git commit ---
+	* nTrackHits added
+	* root DatastudyRecCasc.C can now ignore LED matrix runs, can work with Dec and RA and store filtered
+	  cascades to a single output root file
+	* seasonID added to the output TTree
+
+11.08.2020 - git commit 3c0f93d8022795b1f6b60ee21dfe40dff1110f44
 	* Minor fix
 
 11.08.2020 - git commit 34260097d2f81a42f397d606d4a9dbe047026213
@@ -45,7 +51,6 @@
 	* declination and rightAscension calculation based on the Martin's code added
 	* eventTime (unixTime of the event) added to TTree
 	* charge saturation curve changed to 10mill to get rid of errors + correction calculated only for Q > 30 p.e.
-
 
 24.07.2020 - git commit d2bc0d76508134f8077f9e53aa33d998ef11bde0
 	* charge saturation, nonHit and noise likelihood terms can be controlled from config.rc

@@ -43,11 +43,20 @@ struct UnifiedHit
   double expectedCharge;
   bool noise;
   int MCflag;
+
+  	// equality comparison. doesn't modify object. therefore const.
+    bool operator==(const UnifiedHit& a) const
+    {
+        return (OMID == a.OMID && time == a.time && charge == a.charge);
+    }
 };
+
+
 
 // structure holding unified event format
 struct UnifiedEvent
 {
+	int seasonID = -1;
 	int clusterID = -1;
 	int runID = -1;
 	int eventID = -1;
@@ -56,6 +65,9 @@ struct UnifiedEvent
 	double mcTheta = -1;
 	double mcPhi = -1;
 	int mcNTrackHitsAfterTFilter = -1;
+	int nTrackHits = -1;
+	double trackTheta = -1;
+	double trackPhi = -1;
 	TVector3 mcPosition;
 	int nHits = -1;
 	int nSignalHits = -1;

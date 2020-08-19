@@ -1741,8 +1741,8 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 	}
 
 	TVector3 cascDir(0,0,1);
-	cascDir.SetTheta(event.theta);
-	cascDir.SetPhi(event.phi);
+	cascDir.SetTheta(event.trackTheta);
+	cascDir.SetPhi(event.trackPhi);
 	int nPoints = 0;
 
 	for (int j = 0; j < gNOMs; ++j)
@@ -1754,8 +1754,8 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		g_lowerLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime-gTCutTimeWindowNs,gOMpositions[j].Z());
 		g_upperLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime+gTCutTimeWindowNs,gOMpositions[j].Z());
 
-		if ((gOMpositions[j]-cascPos).Mag() > 100)
-			continue;
+		// if ((gOMpositions[j]-cascPos).Mag() > 100)
+			// continue;
 		double sPerp = (gOMpositions[j]-cascPos).Perp(cascDir);
 		double sLong = (gOMpositions[j]-cascPos)*(cascDir);
 		double lLong = sPerp/TMath::Tan(0.719887);
@@ -2157,6 +2157,87 @@ void CalculateEquatorialCoor(UnifiedEvent &event)
 	event.rightAscension = rightAscension*TMath::Pi()/180;
 }
 
+double TrackExpectedTime(UnifiedEvent &event, TVector3 &cascDir, int OMID)
+{
+	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
+	// if (sPerp > 150);
+		// return 0;
+	double sLong = (gOMpositions[OMID]-event.position)*(cascDir);
+	double lLong = sPerp/TMath::Tan(0.719887);
+	double expTime = event.time + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
+	return expTime;
+}
+
+int CountTrackHits(UnifiedEvent &event)
+{
+	int nThetaSteps = 180;
+	int nAziSteps = 360;
+
+	TVector3 cascDir(0,0,1);
+	int nHits = 0;
+	int nHitsMax = 0;
+
+	for (int i = 0; i < nThetaSteps; ++i)
+	{
+		for (int j = 0; j < nAziSteps; ++j)
+		{
+			nHits = 0;
+			cascDir.SetTheta(TMath::Pi()/nThetaSteps*i);
+			cascDir.SetPhi(2*TMath::Pi()/nAziSteps*j);
+			cascDir.SetMag(1);
+
+			for (int k = 0; k < event.nHits; ++k)
+			{
+				bool inGPulses = false;
+				for (int l = 0; l < gPulses.size(); ++l)
+				{
+					if (gPulses[l]==event.hits[k])
+					{
+						inGPulses = true;
+						break;
+					}
+				}
+				if(inGPulses)
+					continue;
+				if (TMath::Abs(event.hits[k].time - TrackExpectedTime(event,cascDir,event.hits[k].OMID)) < gTCutTimeWindowNs)
+				{
+					nHits++;
+				}
+			}
+			if (nHits > nHitsMax)
+			{
+				nHitsMax = nHits;
+				event.trackTheta = TMath::Pi()/nThetaSteps*i;
+				event.trackPhi = 2*TMath::Pi()/nAziSteps*j;
+			}
+		}
+	}
+	return nHitsMax;
+}
+
+
+// 	int nPoints = 0;
+
+// 	for (int j = 0; j < gNOMs; ++j)
+// 	{
+// 		if (j%36 == 0)
+// 			nPoints = 0;
+// 		double distanceToCascade = (cascPos - gOMpositions[j]).Mag();
+// 	    double expectedTime = cascTime + distanceToCascade*gRecCinWater;
+// 		g_lowerLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime-gTCutTimeWindowNs,gOMpositions[j].Z());
+// 		g_upperLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,expectedTime+gTCutTimeWindowNs,gOMpositions[j].Z());
+
+// 		if ((gOMpositions[j]-cascPos).Mag() > 100)
+// 			continue;
+// 		double sPerp = (gOMpositions[j]-cascPos).Perp(cascDir);
+// 		double sLong = (gOMpositions[j]-cascPos)*(cascDir);
+// 		double lLong = sPerp/TMath::Tan(0.719887);
+// 		double expTime = cascTime + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
+
+// 		g_trackLimit[j/nOMsPerString]->SetPoint(nPoints,expTime,gOMpositions[j].Z());
+// 		nPoints++;
+// 	}
+
 int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 {
 	if (!NFilterPassed(event))
@@ -2218,6 +2299,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	if (event.likelihood > gLikelihoodCut)
 		return -6;
 	eventStats->nLikelihoodFilter++;
+	event.nTrackHits = CountTrackHits(event);
 	EventVisualization(i,event,event.position,event.time);
 	ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
 	event.correctedEnergy = GetCorrectedEnergy(event.energy);
@@ -2233,6 +2315,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 {
+	outputTree->Branch("seasonID",&event.seasonID);
 	outputTree->Branch("clusterID",&event.clusterID);
 	outputTree->Branch("runID",&event.runID);
 	outputTree->Branch("eventID",&event.eventID);
@@ -2263,6 +2346,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("mcPosition","TVector3",&event.mcPosition);
 	outputTree->Branch("qTotal",&event.qTotal);
 	outputTree->Branch("mcNTrackHitsAfterTFilter",&event.mcNTrackHitsAfterTFilter);
+	outputTree->Branch("nTrackHits",&event.nTrackHits);
 }
 
 bool CheckTreeAndBranches(TTree* tree)
@@ -2432,6 +2516,7 @@ int ProcessExperimentalData()
 			cout << std::flush;
 		}
 		tree->GetEntry(i);
+		unifiedEvent.seasonID = BARS::App::Season;
 		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
@@ -2523,7 +2608,7 @@ int ProcessMCCascades()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
-		if (cascade->showerEnergy > 1000 || i % 1000 != 0)
+		if (cascade->showerEnergy > 1000 || i % 10000 != 0)
 			continue;
 
 		nProcessed++;
