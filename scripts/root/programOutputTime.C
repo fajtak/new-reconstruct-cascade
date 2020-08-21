@@ -102,6 +102,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	int nShorterRuns = 0;
 	int nNotJointRuns = 0;
 	int nNotBranchesRuns = 0;
+	int nNotTtreeRuns = 0;
 	int recentRun = 0;
 	int nEvents = 0;
 	int nEventsTotal = 0;
@@ -133,6 +134,8 @@ int programOutputTime(int year, int cluster, TString folderPath)
 			nNotJointRuns++;
 		if (oneLine == "branches")
 			nNotBranchesRuns++;
+		if (oneLine == "TTree")
+			nNotTtreeRuns++;
 		if (oneLine == "Run:")
 		{
 			nProcessedRuns++;
@@ -223,11 +226,12 @@ int programOutputTime(int year, int cluster, TString folderPath)
 
 	cout << "Number of Processed Runs: " << nProcessedRuns << " Number of Events [M#]: " << nEventsTotal/1000000 << " Measurement Time [days] : " << measTimeDaysTotal << endl;
 	cout << "Real time processing [hours]: " << realTimeMinSum/60 << " User time processing [hours]: " << userTimeMinSum/60 << endl;
-	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns << endl;
+	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns + nNotTtreeRuns << endl;
 	cout << "\tNumber of Processed runs: " << nProcessedRuns << endl;
 	cout << "\tNumber of runs shorter than 2 hours: " << nShorterRuns << endl;
 	cout << "\tNumber of runs without joint.events.root: " << nNotJointRuns << endl;
 	cout << "\tNumber of runs without branches: " << nNotBranchesRuns << endl;
+	cout << "\tNumber of runs without TTree: " << nNotTtreeRuns << endl;
 	// cout << "Number of Reconstructed Cascades: " << nRecCascTotal << endl;
 
 	// h_procSpeed->Draw();
