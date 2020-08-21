@@ -6,13 +6,15 @@
 [ -z $2 ] && echo "Cluster info missing" && exit
 
 rm ../logs/programOutput_$1_$2_*.log
+rm ../logs/processingTime_$1_$2.log
 
 # RUNS=$(seq 1 100)
 
 # echo "$CLUSTERS" | parallel $BASE/process-cluster.sh --season $SEASON --cluster {} --dir "$PRODUCTION"
 # echo "$RUNS" | parallel (time ./new-reconstruct-cascade -s 20$1 -c $2 -r {} ) 2>&1 | tee ../logs/programOutput_$1_$2_{}.log
+date >> ../logs/processingTime_$1_$2.log
 parallel "(time ./new-reconstruct-cascade -s 20$1 -c $2 -r {1}) 2>&1 | tee ../logs/programOutput_$1_$2_{1}.log" ::: {1..100}
-
+date >> ../logs/processingTime_$1_$2.log
 # for runID in {1..999}
 # do
 	# ( time ./new-reconstruct-cascade -s 20$1 -c $2 -r $runID ) 2>&1 | tee ../logs/programOutput_$1_$2_$runID.log &

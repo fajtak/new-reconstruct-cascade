@@ -6,10 +6,13 @@
 [ -z $2 ] && echo "Cluster info missing" && exit
 
 rm ../logs/programOutput_$1_$2_*.log
+rm ../logs/processingTime_$1_$2.log
 
+date >> ../logs/processingTime_$1_$2.log
 if [ "$1" -eq "16" ];
 	then
-		parallel "(time ./new-reconstruct-cascade -s 20$1 -c $2 -r {1} -o /home/fajtak/data) 2>&1 | tee ../logs/programOutput_$1_$2_{1}.log" ::: {1..999}
+		parallel "(time ./new-reconstruct-cascade -s 20$1 -c $2 -r {1} -o /home/fajtak/data -w -q) 2>&1 | tee ../logs/programOutput_$1_$2_{1}.log" ::: {1..999}
 	else
-		parallel "(time ./new-reconstruct-cascade -s 20$1 -c $2 -r {1} -t r01_i01_j01_t01 -o /home/fajtak/data/) 2>&1 | tee ../logs/programOutput_$1_$2_{1}.log" ::: {1..100}
+		parallel "(time ./new-reconstruct-cascade -s 20$1 -c $2 -r {1} -t r01_i01_j01_t01 -o /home/fajtak/data/ -q -w ) 2>&1 | tee ../logs/programOutput_$1_$2_{1}.log" ::: {1..100}
 fi
+date >> ../logs/processingTime_$1_$2.log
