@@ -66,6 +66,7 @@ struct UnifiedEvent
 	double mcPhi = -1;
 	int mcNTrackHitsAfterTFilter = -1;
 	int nTrackHits = -1;
+	double trackCharge = -1;
 	double trackTheta = -1;
 	double trackPhi = -1;
 	TVector3 mcPosition;

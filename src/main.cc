@@ -187,15 +187,15 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime,
 		{
 			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
 			h_qPerHit->Fill(hitCharge);
-			if(gUseChargeSatCorrection && hitCharge > 30)
-			{
+			// if(gUseChargeSatCorrection && hitCharge > 30)
+			// {
 				// cerr << "Before: " << hitCharge << " " << OMID << " " << gOMqCal[OMID] << " " << impulseTel->GetQ(i) << endl;
 				// if (hitCharge < 500)
-					hitCharge = chargeSaturationCurve->GetX(hitCharge);
+					// hitCharge = chargeSaturationCurve->GetX(hitCharge);
 				// else
 					// hitCharge = 300000;//(TMath::Exp(hitCharge/879.868)-1.61775)/1.18315e-06;
 				// cerr << "After: " << hitCharge << endl;
-			}
+			// }
 
 			unifiedEvent.nHits++;
 			unifiedEvent.qTotal += hitCharge;
@@ -656,10 +656,16 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 	// cout << "In log" << endl;
 	double logLike = 0;
 	double tableParameters[4]{0};
+	int nExcludedHits = 0;
 	// cout << "Calculating logLike" << endl;
 	// cout << par[0] << " " << par[1] << " " << par[2] << " " << par[3] << " " << par[4] << " " << par[5] << " " << par[6] << endl;
 	for (unsigned int i = 0; i < gPulses.size(); ++i)
 	{
+		if(gUseChargeSatCorrection && gPulses[i].charge > 100)
+		{
+			nExcludedHits++;
+			continue;
+		}
 		// cout << "GPulses: " << gPulses[i].OMID << endl;
 		GetParameters(par,gPulses[i].OMID,tableParameters);
 		// gOMpositions[gPulses[i].OMID].Print();
@@ -705,8 +711,12 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 		// cout << "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: " << logLike << endl;
 	}
 
-
-	f = logLike;
+	if(gUseNonHitLikelihoodTerm){
+		f = logLike/(gNOMs-nExcludedHits);
+	}else{
+		f = logLike/(gPulses.size()-nExcludedHits);
+	}
+	// f = logLike;
 }
 
 
@@ -1539,12 +1549,7 @@ double FitCascDirection(UnifiedEvent &event, double &energy, double &theta, doub
 	// cout << chi2 << " " << gPulses.size() << " " <<  chi2/gPulses.size() << " " << fMinuit->GetParameter(5) << " " << fMinuit->GetParameter(6) << endl;
 	// return chi2/gPulses.size();
 	// cout<<"chi2/gNOMs "<<chi2/gNOMs<<endl;
-	if(gUseNonHitLikelihoodTerm){
-		return chi2/gNOMs;
-	}else{
-		return chi2/gPulses.size();
-	}
-
+	return chi2;
 }
 
 double EstimateInitialDirection(TVector3& cascPos, double& cascTime, double& energy, double &theta, double &phi)
@@ -1919,7 +1924,7 @@ void ScanLogLikelihoodEnergy(int eventID,UnifiedEvent &event)
 		if (cascadeParameters[4] <= 0)
 			continue;
 		logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
-		g_energyLikelihoodScan->SetPoint(nRealPoints,cascadeParameters[4],likelihoodValue-event.likelihood*(gPulses.size()));
+		g_energyLikelihoodScan->SetPoint(nRealPoints,cascadeParameters[4],(likelihoodValue-event.likelihood)*(gPulses.size()));
 		nRealPoints++;
 	}
 	g_energyLikelihoodScan->Draw("AP");
@@ -1971,7 +1976,7 @@ void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
 			logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 			// if (likelihoodValue-event.likelihood*gPulses.size() < 0.5)
 			{
-				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,likelihoodValue-event.likelihood*gPulses.size());
+				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,(likelihoodValue-event.likelihood)*gPulses.size());
 				pointID++;
 			}
 		}
@@ -2095,9 +2100,9 @@ double CalculateDirectionError(UnifiedEvent &event)
 					cascadeParameters[6] = event.phi + step*j;
 					logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 					// cout << i << " " << j << " " << cascadeParameters[5]/TMath::Pi()*180 << " " << cascadeParameters[6]/TMath::Pi()*180 << " "  << likelihoodValue-event.likelihood*gPulses.size() << endl;
-					if (likelihoodValue-event.likelihood*gPulses.size() < minIterLikelihood)
+					if ((likelihoodValue-event.likelihood)*gPulses.size() < minIterLikelihood)
 					{
-						minIterLikelihood = likelihoodValue-event.likelihood*gPulses.size();
+						minIterLikelihood = (likelihoodValue-event.likelihood)*gPulses.size();
 					}
     			}
 	    	}
@@ -2176,12 +2181,16 @@ int CountTrackHits(UnifiedEvent &event)
 	TVector3 cascDir(0,0,1);
 	int nHits = 0;
 	int nHitsMax = 0;
+	double charge = 0;
+	double chargeMax = 0;
+
 
 	for (int i = 0; i < nThetaSteps; ++i)
 	{
 		for (int j = 0; j < nAziSteps; ++j)
 		{
 			nHits = 0;
+			charge = 0;
 			cascDir.SetTheta(TMath::Pi()/nThetaSteps*i);
 			cascDir.SetPhi(2*TMath::Pi()/nAziSteps*j);
 			cascDir.SetMag(1);
@@ -2202,11 +2211,14 @@ int CountTrackHits(UnifiedEvent &event)
 				if (TMath::Abs(event.hits[k].time - TrackExpectedTime(event,cascDir,event.hits[k].OMID)) < gTCutTimeWindowNs)
 				{
 					nHits++;
+					charge += event.hits[k].charge;
 				}
 			}
-			if (nHits > nHitsMax)
+			if (nHits >= nHitsMax && charge > chargeMax)
 			{
 				nHitsMax = nHits;
+				chargeMax = charge;
+				event.trackCharge = chargeMax;
 				event.trackTheta = TMath::Pi()/nThetaSteps*i;
 				event.trackPhi = 2*TMath::Pi()/nAziSteps*j;
 			}
@@ -2347,6 +2359,9 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("qTotal",&event.qTotal);
 	outputTree->Branch("mcNTrackHitsAfterTFilter",&event.mcNTrackHitsAfterTFilter);
 	outputTree->Branch("nTrackHits",&event.nTrackHits);
+	outputTree->Branch("trackCharge",&event.trackCharge);
+	outputTree->Branch("trackTheta",&event.trackTheta);
+	outputTree->Branch("trackPhi",&event.trackPhi);
 }
 
 bool CheckTreeAndBranches(TTree* tree)

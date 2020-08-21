@@ -99,6 +99,9 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	string oneLine;
 	char oneChar;
 	int nProcessedRuns = 0;
+	int nShorterRuns = 0;
+	int nNotJointRuns = 0;
+	int nNotBranchesRuns = 0;
 	int recentRun = 0;
 	int nEvents = 0;
 	int nEventsTotal = 0;
@@ -118,10 +121,18 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	double realTimeSec = 0;
 	double userTimeMin = 0;
 	double userTimeSec = 0;
+	double realTimeMinSum = 0;
+	double userTimeMinSum = 0;
 
 	while(!fileIn.eof())
 	{
 		fileIn >> oneLine;
+		if (oneLine == "shorter")
+			nShorterRuns++;
+		if (oneLine == "was")
+			nNotJointRuns++;
+		if (oneLine == "branches")
+			nNotBranchesRuns++;
 		if (oneLine == "Run:")
 		{
 			nProcessedRuns++;
@@ -190,10 +201,12 @@ int programOutputTime(int year, int cluster, TString folderPath)
 				if (oneLine == "real")
 				{
 					fileIn >> realTimeMin >> oneChar >> realTimeSec;
+					realTimeMinSum += realTimeMin;
 				}
 				if (oneLine == "user")
 				{
 					fileIn >> userTimeMin >> oneChar >> userTimeSec;
+					userTimeMinSum += userTimeMin;
 					runEnded = true;
 				}
 			}
@@ -209,6 +222,12 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	}
 
 	cout << "Number of Processed Runs: " << nProcessedRuns << " Number of Events [M#]: " << nEventsTotal/1000000 << " Measurement Time [days] : " << measTimeDaysTotal << endl;
+	cout << "Real time processing [hours]: " << realTimeMinSum/60 << " User time processing [hours]: " << userTimeMinSum/60 << endl;
+	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns << endl;
+	cout << "\tNumber of Processed runs: " << nProcessedRuns << endl;
+	cout << "\tNumber of runs shorter than 2 hours: " << nShorterRuns << endl;
+	cout << "\tNumber of runs without joint.events.root: " << nNotJointRuns << endl;
+	cout << "\tNumber of runs without branches: " << nNotBranchesRuns << endl;
 	// cout << "Number of Reconstructed Cascades: " << nRecCascTotal << endl;
 
 	// h_procSpeed->Draw();

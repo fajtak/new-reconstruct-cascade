@@ -1,4 +1,10 @@
-19.08.2020 - git commit ---
+21.08.2020 - git commit ---
+	* trackCharge added
+	* slight changes to root scripts
+	* programOutputTime.C now does the statistics of processed/unprocessed runs
+	* implementation of charge saturation changed. Now pulses with Q > 100 p.e. are not used for reconstruction
+
+19.08.2020 - git commit 3ccf89d40f1ebd43ed708dbadd7534e6ba2642b1
 	* nTrackHits added
 	* root DatastudyRecCasc.C can now ignore LED matrix runs, can work with Dec and RA and store filtered
 	  cascades to a single output root file
