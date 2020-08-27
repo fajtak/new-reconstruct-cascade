@@ -15,8 +15,8 @@
 int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuration = 429.406, double newMcDataDuration = 355.833)
 // int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 431.076, double newMcDataDuration = 136.845)
 {
-	bool showFull = false;
-	// bool showFull = true;
+	// bool showFull = false;
+	bool showFull = true;
 
 	TFile* mcData = new TFile("../../results/mcResults_muatm_may19.root","READ");
 	// TFile* mcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
@@ -185,9 +185,9 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	// mclikelihoodFull->Scale(1/(newMcDataDuration*24*3600));
 
 
-	// TFile* realData = new TFile("../../results/mcResults_data_y16c0.root","READ");
+	TFile* realData = new TFile("../../results/mcResults_data_y16c0.root","READ");
 	// TFile* realData = new TFile("../../results/mcResults_data_y18c-1.root","READ");
-	TFile* realData = new TFile("../../results/mcResults_data_y19c-1.root","READ");
+	// TFile* realData = new TFile("../../results/mcResults_data_y19c-1.root","READ");
 	TH1F* realNHits  = (TH1F*)realData->Get("h_nHits");
 	realNHits->SetTitle("Data");
 	realNHits->SetMarkerStyle(kFullCircle);

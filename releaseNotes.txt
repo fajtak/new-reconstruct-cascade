@@ -1,4 +1,11 @@
-21.08.2020 - git commit ---
+27.08.2020 - git commit ---
+	* parallel processing scripts fixed
+	* -g flag (nonHit Probability) is now default in the parallelProcessAllRuns/VM
+	* DatastudyRecCas.C now produces wikiOutput of reconstructed cascades + cut on Z position < 240m
+	* only active channels are used to normalize loglikelihood + different logLikelihood cut for nonHit Probability
+	* root Cascstudy.C script added
+
+21.08.2020 - git commit 736d044e4e5649bad7b864f102b007fc2b30bc7a
 	* parallel processing time is now saved in logs/processingTime
 
 21.08.2020 - git commit 495016fcbce87bfbd26a1f9d8c879a39ebbb4b45

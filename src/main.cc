@@ -173,6 +173,11 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 	return 0;
 }
 
+bool IsActiveChannel(int OMID)
+{
+	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001);
+}
+
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
 {
 	unifiedEvent.hits.clear();
@@ -689,6 +694,11 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 	{
 		for (int i = 0; i < gNOMs; ++i)
 		{
+			if (!IsActiveChannel(i))
+			{
+				nExcludedHits++;
+				continue;
+			}
 			if (NotInGPulses(i))
 			{
 				GetParameters(par,i,tableParameters);
@@ -1942,7 +1952,7 @@ void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
 	double cascadeParameters[7];
 	int iflag = 0;
 	int nPoints = 150;
-	double degInRad = 0.001745;
+	double degInRad = 0.001745*2;
 
 	cascadeParameters[0] = event.position.X();
 	cascadeParameters[1] = event.position.Y();
@@ -1976,13 +1986,15 @@ void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
 			logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 			// if (likelihoodValue-event.likelihood*gPulses.size() < 0.5)
 			{
-				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,(likelihoodValue-event.likelihood)*gPulses.size());
+				// cout << i << " " << likelihoodValue << " " << event.likelihood << " " << gPulses.size() << " " << (likelihoodValue-event.likelihood)*(gPulses.size()) << endl;
+				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,(likelihoodValue-event.likelihood)*(gPulses.size()));
 				pointID++;
 			}
 		}
 	}
 	// g_positionLikelihoodScan->Draw("surf7");
-	g_positionLikelihoodScan->Draw("cont1z");
+	g_positionLikelihoodScan->Draw("surf1");
+	// g_positionLikelihoodScan->Draw("cont1z");
 	g_truePosition->SetMarkerStyle(5);
 	g_truePosition->SetMarkerSize(5);
 	g_truePosition->SetMarkerColor(kRed);
@@ -2042,7 +2054,7 @@ void ScanLogLikelihoodDirectionCircular(int eventID, UnifiedEvent &event)
 			logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
 			// if (likelihoodValue-event.likelihood*gPulses.size() < 0.5)
 			{
-				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,likelihoodValue-event.likelihood*gPulses.size());
+				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,(likelihoodValue-event.likelihood)*gPulses.size());
 				pointID++;
 			}
 		}
@@ -2307,9 +2319,9 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 	h_likelihood->Fill(event.likelihood);
 
-
-	if (event.likelihood > gLikelihoodCut)
+	if (event.likelihood > (gUseNonHitLikelihoodTerm?gLikelihoodCut/6:gLikelihoodCut))
 		return -6;
+
 	eventStats->nLikelihoodFilter++;
 	event.nTrackHits = CountTrackHits(event);
 	EventVisualization(i,event,event.position,event.time);

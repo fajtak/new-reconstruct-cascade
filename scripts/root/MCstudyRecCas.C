@@ -31,6 +31,7 @@ TH1F* h_qTotal = new TH1F("h_qTotal","Overall deposited charge;Q [p.e.];NoE [#]"
 TH1F* h_qTotalFull = new TH1F("h_qTotalFull","Overall deposited charge;Q [p.e.];NoE [#]",1000,0,10000);
 TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood;L [#];NoE [#]",100,0,10);
 TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",100,0,10);
+TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
 TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
 
@@ -55,6 +56,7 @@ void SaveResults(int inputFile)
 	h_phi->Write();
 	h_qTotal->Write();
 	h_likelihood->Write();
+	h_z->Write();
 
 	h_nHitsFull->Write();
 	h_nHitsAfterTFilterFull->Write();
@@ -83,6 +85,9 @@ void DrawResults()
 	TCanvas* c_energyNHits2 = new TCanvas("c_energyNHits2","EnergyVsNHits2",800,600);
 	h_energyNHits->Draw("colz");
 
+	TCanvas* c_z = new TCanvas("c_z","Z position",800,600);
+	h_z->Draw();
+
 	TCanvas* c_cascadePositions = new TCanvas("c_cascadePositions","Results",800,600);
 
 	g_stringPositions->SetMarkerStyle(20);
@@ -95,9 +100,9 @@ void DrawResults()
 
 }
 
-bool IsContained(TVector3* position)
+bool IsContained(TVector3* position, double distFromCluster = 0)
 {
-	if (TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2)) < 60 && TMath::Abs(position->Z() < 265))
+	if (TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2)) < 60+distFromCluster && TMath::Abs(position->Z()) < 265+distFromCluster)
 		return true;
 	else
 		return false;
@@ -178,7 +183,7 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_qTotalFull->Fill(qTotal);
 		h_likelihoodFull->Fill(likelihood);
 
-		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 28)
+		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 20)
 			continue;
 
 		// if (directionSigma > 10 || nHitsAfterTFilter < 30)
@@ -218,6 +223,7 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_phi->Fill(phi/TMath::Pi()*180);
 		h_qTotal->Fill(qTotal);
 		h_likelihood->Fill(likelihood);
+		h_z->Fill(position->Z());
 
 		// if (IsContained(position))
 		{
