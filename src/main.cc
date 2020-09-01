@@ -1038,7 +1038,7 @@ int ReadQCal(void)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
     	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/$s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
 
 
 	TString jointFileName(filePath);
@@ -1188,7 +1188,7 @@ int ReadSectionMask()
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::SECTION_MASK, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/section/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/section/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::SECTION_MASK));
 
     if (!BARS::App::FileExists(filePath))
     {
