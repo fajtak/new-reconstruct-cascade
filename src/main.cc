@@ -1038,7 +1038,7 @@ int ReadQCal(void)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
     	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/joint1.0-dqm1.0/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/$s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
 
 
 	TString jointFileName(filePath);

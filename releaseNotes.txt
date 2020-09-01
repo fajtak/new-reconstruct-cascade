@@ -1,4 +1,7 @@
 01.09.2020 - git commit ---
+	* fix of qCalib with new Folder structure
+
+01.09.2020 - git commit aa3da78c5ce7ebeed8b40acb18f59017518eacd2
 	* the sections are masked based on the section.mask.root files on the event by event basis
 	* productionID can be changed by config.rc files with ProductionID keyword
 	* DatastudyRecCas.C changed so now different years can be processed together with -1 value for year
