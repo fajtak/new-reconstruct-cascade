@@ -15,6 +15,9 @@ std::string gProductionID = "";
 int gInputType = 0;
 std::string gFileInputFolder = "";
 
+BSectionStatus* gSectionMask = nullptr;
+TTree* gSectionMaskTree = nullptr;
+
 double gLogTable4D[200][351][21][21]{0};
 std::vector<double> gNoiseTable;
 std::vector<double> gNoiseProbability;
@@ -231,6 +234,7 @@ void readRC(const char* rcpath)
 	gLikelihoodThetaSteps = env.GetValue("LikelihoodThetaSteps",4);
 	gLikelihoodPhiSteps = env.GetValue("LikelihoodPhiSteps",6);
 	gLikelihoodEnergySteps = env.GetValue("LikelihoodEnergySteps",4);
+	gProductionID = env.GetValue("ProductionID","productionID");
 }
 
 // Parse options passed to the application.

@@ -175,7 +175,7 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 
 bool IsActiveChannel(int OMID)
 {
-	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001);
+	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && gSectionMask?gSectionMask->GetChannelStatus(OMID):true);
 }
 
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
@@ -188,7 +188,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime,
 	for (int i = 0; i < impulseTel->GetNimpulse(); ++i)
 	{
 		int OMID = impulseTel->GetNch(i);
-		if (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && impulseTel->GetQ(i) > 0)
+		if (IsActiveChannel(OMID) && impulseTel->GetQ(i) > 0)
 		{
 			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
 			h_qPerHit->Fill(hitCharge);
@@ -1182,6 +1182,33 @@ int ReadNoiseProbability()
     return 0;
 }
 
+int ReadSectionMask()
+{
+	std::string filePath = "";
+    if (!gUseNewFolderStructure)
+    	filePath = BARS::Data::File(BARS::Data::SECTION_MASK, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    else
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/section/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+
+    if (!BARS::App::FileExists(filePath))
+    {
+    	std::cout << "File: " << filePath << " was not found!" << endl;
+    	return -1;
+    }
+
+    TFile* file = new TFile(filePath.c_str());
+	gSectionMaskTree = (TTree*)file->Get("Events");
+
+	if (!gSectionMaskTree || !gSectionMaskTree->GetBranch("BSectionStatus."))
+	{
+		std::cout << "No Events TTree or BSectionStatus branch found in Section Mask file!" << endl;
+		return -2;
+	}
+
+	gSectionMaskTree->SetBranchAddress("BSectionStatus.",&gSectionMask);
+	return 0;
+}
+
 int ReadInputParamFiles(TTree* tree, double startTime)
 {
 	cout << "Reading Geometry ... ";
@@ -1220,7 +1247,15 @@ int ReadInputParamFiles(TTree* tree, double startTime)
 	cout << std::flush;
     if (ReadNoiseProbability() == -1)
 	{
-		std::cout << "Problem with NoiseProbability File file!" << std::endl;
+		std::cout << "Problem with NoiseProbability file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Section Mask File ... ";
+	cout << std::flush;
+    if (ReadSectionMask() == -1)
+	{
+		std::cout << "Problem with SectionMask file!" << std::endl;
 		return -1;
 	}
 	cout << "DONE!" << endl;
@@ -1606,13 +1641,13 @@ double EstimateInitialDirection(TVector3& cascPos, double& cascTime, double& ene
 	return 0;
 }
 
-double LikelihoodFilterPassed(UnifiedEvent &event)
+double SingleLikelihoodFilterPassed(UnifiedEvent &event)
 {
 	event.likelihood = FitCascDirection(event,event.energy,event.theta,event.phi,event.energySigma,event.thetaSigma,event.phiSigma);
 	return event.likelihood;
 }
 
-double LikelihoodFilterPassedGrid(UnifiedEvent &event)
+double MultipleLikelihoodFilterPassed(UnifiedEvent &event)
 {
 	// cout << "In likelihood" << endl;
 	int nThetaSteps = gLikelihoodThetaSteps;
@@ -1650,6 +1685,54 @@ double LikelihoodFilterPassedGrid(UnifiedEvent &event)
 	event.likelihood = lowestLog;
 	// cout << "End likelihood" << endl;
 	return lowestLog;
+}
+
+double GridLikelihoodFilterPassed(UnifiedEvent &event)
+{
+	int nPar = 0;
+	double* gin = new double(0);
+	int iflag = 0;
+	double likelihoodValue = 0;
+	double cascadeParameters[7];
+
+	double lowestLog = 1000000;
+
+	cascadeParameters[0] = event.position.X();
+	cascadeParameters[1] = event.position.Y();
+	cascadeParameters[2] = event.position.Z();
+	cascadeParameters[3] = event.time;
+
+	int nThetaSteps = 180;
+	int nPhiSteps = 360;
+	int nEnergySteps = 200;
+
+	for (int k = 0; k < nThetaSteps; ++k)
+	{
+		for (int l = 0; l < nPhiSteps; ++l)
+		{
+			for (int i = 0; i < nEnergySteps; ++i)
+			{
+				cascadeParameters[4] = 1+i*10;
+				// cascadeParameters[4] = TMath::Power(10,k);
+				// cascadeParameters[4] = cascade->showerEnergy;
+				// cascadeParameters[4] = 1+k*50;
+				cascadeParameters[5] = TMath::Pi()/nThetaSteps*(k);
+				cascadeParameters[6] = 2*TMath::Pi()/nPhiSteps*l;
+				logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
+				// cout << likelihoodValue << " " << cascadeParameters[0] << " " << cascadeParameters[1] << " " << cascadeParameters[2] << endl;
+				if (likelihoodValue < lowestLog)
+				{
+					lowestLog = likelihoodValue;
+					event.energy = cascadeParameters[4];
+					event.theta = cascadeParameters[5];
+					event.phi = cascadeParameters[6];
+				}
+				// cout << k << " " << l << " " << recentLog  << " " << cascadeEnergy << " " << cascadeTheta << " " << cascadePhi << endl;
+			}
+			// cout << k << " " << l << endl;
+		}
+	}
+	return 0;
 }
 
 int inRange(int roundedEnergy)
@@ -1867,7 +1950,7 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 		int stringID = i/36;
 		GetParameters(par,i,tableParameters);
 		g_ExpQ[stringID]->SetPoint(i%36,i,GetInterpolatedValue(tableParameters)*110000000*energy);
-		if (gOMqCal[i] == -1)
+		if (gOMqCal[i] == -1 || gSectionMask?gSectionMask->GetChannelStatus(i) == 0:false)
 			g_DeadOM[stringID]->SetPoint(g_DeadOM[stringID]->GetN(),i,0);
 	}
 
@@ -2310,11 +2393,11 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	event.energy = TMath::Power(10,3.30123+0.0447574*gPulses.size()-0.000135729*gPulses.size()*gPulses.size())/1000;
 
 	if (gUseMultiDirFit)
-		LikelihoodFilterPassedGrid(event);
+		MultipleLikelihoodFilterPassed(event);
 	else
 	{
 		EstimateInitialDirection(event.position,event.time,event.energy,event.theta,event.phi);
-		LikelihoodFilterPassed(event);
+		SingleLikelihoodFilterPassed(event);
 	}
 
 	h_likelihood->Fill(event.likelihood);
@@ -2449,7 +2532,7 @@ int ProcessExperimentalData()
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
     	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/joint1.0/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     if (!BARS::App::FileExists(filePath))
     {
     	std::cout << "File: " << filePath << " was not found!" << endl;
@@ -2543,6 +2626,8 @@ int ProcessExperimentalData()
 			cout << std::flush;
 		}
 		tree->GetEntry(i);
+		gSectionMaskTree->GetEntry(i);
+
 		unifiedEvent.seasonID = BARS::App::Season;
 		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
@@ -2635,7 +2720,7 @@ int ProcessMCCascades()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
-		if (cascade->showerEnergy > 1000 || i % 10000 != 0)
+		if (cascade->showerEnergy > 1000 || i % 1000 != 0)
 			continue;
 
 		nProcessed++;

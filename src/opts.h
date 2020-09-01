@@ -8,6 +8,8 @@
 #include "TVirtualFitter.h"
 #include "TRandom2.h"
 #include "TTimeStamp.h"
+#include "TTree.h"
+#include "BSectionStatus.h"
 
 struct EventStats
 {
@@ -102,6 +104,9 @@ extern int gEventID;
 extern int gInputType;
 extern std::string gProductionID;
 extern std::string gFileInputFolder;
+
+extern TTree* gSectionMaskTree;
+extern BSectionStatus* gSectionMask;
 
 extern double gLogTable4D[200][351][21][21];
 extern std::vector<double> gNoiseTable;

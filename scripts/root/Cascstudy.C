@@ -51,7 +51,7 @@ void DrawResults()
 	h_cost->Draw();
 
 	TCanvas* c_CascEnergy = new TCanvas("c_CascEnergy","Cascade Energy",800,600);
-	THStack* hs_cascadeEnergy = new THStack("hs_cascadeEnergy","Cascade Energy; E [TeV]; NoE [#]");
+	THStack* hs_cascadeEnergy = new THStack("hs_cascadeEnergy","Cascade Energy; E [TeV];dN/dE [Hz / 5 TeV]");
 	hs_cascadeEnergy->Add(h_astroCascEnergy);
 	hs_cascadeEnergy->Add(h_atmCascEnergy);
 	h_atmCascEnergy->SetLineColor(kRed);
@@ -87,11 +87,11 @@ int Cascstudy()
 	SetBranches(cascade,mcFiles);
 
 	// double time = 1;
-	double time = 3.15e7;
-	int hitCut = 28;
+	double time = 3.15e7/365*230;
+	int hitCut = 20;
 	// double ICflux = 4.1e-9;
 	double ICFlux = 1.7e-10;
-	double electronAtmFlux = 1.2e-7;
+	double electronAtmFlux = 1.1e-8;
 	double muonAtmFlux = 1.2e-7;
 
 	for (int i = 0; i < mcFiles->GetEntries(); ++i)

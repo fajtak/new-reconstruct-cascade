@@ -34,6 +34,7 @@ TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",
 TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
 TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
+TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mismatch angle [deg.];Estimated Error [deg.]",180,0,180,180,0,180);
 
 
 void SaveResults(int inputFile)
@@ -45,6 +46,10 @@ void SaveResults(int inputFile)
 		suffix = "muatm_may19";
 	if (inputFile == 2)
 		suffix = "muatm_jun20";
+	if (inputFile == 3)
+		suffix = "muatm_may19_nonHit";
+	if (inputFile == 4)
+		suffix = "muatm_jun20_nonHit";
 	TString outputFileName = Form("../../results/mcResults_%s.root",suffix.Data());
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 
@@ -57,6 +62,7 @@ void SaveResults(int inputFile)
 	h_qTotal->Write();
 	h_likelihood->Write();
 	h_z->Write();
+	h_dirError->Write();
 
 	h_nHitsFull->Write();
 	h_nHitsAfterTFilterFull->Write();
@@ -98,6 +104,9 @@ void DrawResults()
 	g_cascadeXY->SetTitle("Positions of reconstructed cascades;X [m];Y [m]");
 	g_cascadeXY->Draw("PSame");
 
+	TCanvas* c_dirError = new TCanvas("c_dirError","DirError",800,600);
+	h_dirError->Draw("colz");
+
 }
 
 bool IsContained(TVector3* position, double distFromCluster = 0)
@@ -106,6 +115,19 @@ bool IsContained(TVector3* position, double distFromCluster = 0)
 		return true;
 	else
 		return false;
+}
+
+double GetReconstructionError(double theta, double phi, double mcTheta, double mcPhi)
+{
+	TVector3 recDir(0,0,1);
+	recDir.SetTheta(theta);
+	recDir.SetPhi(phi);
+
+	TVector3 mcDir(0,0,1);
+	mcDir.SetTheta(mcTheta);
+	mcDir.SetPhi(mcPhi);
+
+	return recDir.Angle(mcDir);
 }
 
 int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = true)
@@ -124,6 +146,15 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 			break;
 		case 2:
 			filesDir = Form("%s/mc/muatm_jun20/recCascResults.root",env_p);
+			break;
+		case 3:
+			filesDir = Form("%s/mc/muatm_may19_nonHit/recCascResults.root",env_p);
+			break;
+		case 4:
+			filesDir = Form("%s/mc/muatm_jun20_nonHit/recCascResults.root",env_p);
+			break;
+		case 5:
+			filesDir = Form("%s/mc/cascades/recCascResults.root",env_p);
 			break;
 		default:
 			break;
@@ -183,8 +214,11 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_qTotalFull->Fill(qTotal);
 		h_likelihoodFull->Fill(likelihood);
 
-		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 20)
+
+		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
 			continue;
+
+		h_dirError->Fill(GetReconstructionError(theta,phi,mcTheta,mcPhi)/TMath::Pi()*180,directionSigma);
 
 		// if (directionSigma > 10 || nHitsAfterTFilter < 30)
 			// continue;

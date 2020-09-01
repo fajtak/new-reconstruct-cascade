@@ -1,4 +1,11 @@
-27.08.2020 - git commit ---
+01.09.2020 - git commit ---
+	* the sections are masked based on the section.mask.root files on the event by event basis
+	* productionID can be changed by config.rc files with ProductionID keyword
+	* DatastudyRecCas.C changed so now different years can be processed together with -1 value for year
+	* MCstudyRecCas.C nonHit MCs can be processed + comparison of reconstruction directions errors added
+	* In the new folder processing (-l flag) you can use tad flag (-t) to change the version easily
+
+27.08.2020 - git commit f41bee170a5c7cc74dacaa21d078ea1c112b1820
 	* parallel processing scripts fixed
 	* -g flag (nonHit Probability) is now default in the parallelProcessAllRuns/VM
 	* DatastudyRecCas.C now produces wikiOutput of reconstructed cascades + cut on Z position < 240m

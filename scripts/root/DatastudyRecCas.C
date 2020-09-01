@@ -40,7 +40,7 @@ TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
 TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
 
-int clusterID, runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter;
+int seasonID, clusterID, runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter;
 double energy,theta,phi,mcEnergy,mcTheta,mcPhi;
 double energySigma,thetaSigma,phiSigma,directionSigma;
 double chi2AfterCaus, chi2AfterTFilter, cascTime, likelihood, qTotal;
@@ -204,6 +204,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 
 	TTree* filteredCascades = new TTree("filteredCascades","Filtered Cascades");
 
+	reconstructedCascades.SetBranchAddress("seasonID", &seasonID);
 	reconstructedCascades.SetBranchAddress("clusterID", &clusterID);
 	reconstructedCascades.SetBranchAddress("runID", &runID);
 	reconstructedCascades.SetBranchAddress("eventID", &eventID);
@@ -233,6 +234,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 	reconstructedCascades.SetBranchAddress("likelihood", &likelihood);
 	reconstructedCascades.SetBranchAddress("qTotal", &qTotal);
 
+	filteredCascades->Branch("seasonID", &seasonID);
 	filteredCascades->Branch("clusterID", &clusterID);
 	filteredCascades->Branch("runID", &runID);
 	filteredCascades->Branch("eventID", &eventID);
@@ -273,7 +275,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		reconstructedCascades.GetEntry(i);
 		// cout << runID << endl;
 
-		if (IsLEDMatrixRun(year,clusterID,runID))
+		if (IsLEDMatrixRun(seasonID-2000,clusterID,runID))
 			continue;
 
 			// cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " (" << position->X() << "," << position->Y() << "," << position->Z() << ")" << endl;

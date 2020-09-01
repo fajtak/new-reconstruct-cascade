@@ -15,11 +15,11 @@
 int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuration = 429.406, double newMcDataDuration = 355.833)
 // int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 431.076, double newMcDataDuration = 136.845)
 {
-	// bool showFull = false;
-	bool showFull = true;
+	bool showFull = false;
+	// bool showFull = true;
 
-	TFile* mcData = new TFile("../../results/mcResults_muatm_may19.root","READ");
-	// TFile* mcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
+	// TFile* mcData = new TFile("../../results/mcResults_muatm_may19.root","READ");
+	TFile* mcData = new TFile("../../results/mcResults_muatm_may19_nonHit.root","READ");
 	TH1F* mcNHits  = (TH1F*)mcData->Get("h_nHits");
 	mcNHits->SetTitle("Muon group MC");
 	mcNHits->SetLineColor(kRed);
@@ -102,7 +102,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	mclikelihoodFull->Scale(1/(mcDataDuration*24*3600));
 
 
-	TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
+	// TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
+	TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20_nonHit.root","READ");
 	TH1F* newMcNHits  = (TH1F*)newMcData->Get("h_nHits");
 	newMcNHits->SetTitle("NEW Muon group MC");
 	newMcNHits->SetLineColor(kBlue);
