@@ -34,7 +34,7 @@ TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",
 TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
 TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
-TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mismatch angle [deg.];Estimated Error [deg.]",180,0,180,180,0,180);
+TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mismatch angle [deg.];Estimated Error [deg.]",100,0,100,50,0,25);
 
 
 void SaveResults(int inputFile)
@@ -214,11 +214,12 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_qTotalFull->Fill(qTotal);
 		h_likelihoodFull->Fill(likelihood);
 
+		h_dirError->Fill(GetReconstructionError(theta,phi,mcTheta,mcPhi)/TMath::Pi()*180,directionSigma);
 
 		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
 			continue;
 
-		h_dirError->Fill(GetReconstructionError(theta,phi,mcTheta,mcPhi)/TMath::Pi()*180,directionSigma);
+
 
 		// if (directionSigma > 10 || nHitsAfterTFilter < 30)
 			// continue;

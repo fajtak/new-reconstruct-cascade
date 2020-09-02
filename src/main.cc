@@ -377,7 +377,8 @@ void PrintConfig(void)
 	std::cout << "NCutT: " << gNCutT << endl;
 	std::cout << "TFilterChi2Cut: " << gTCutChi2 << endl;
 	std::cout << "LikelihoodCut: " << gLikelihoodCut << endl;
-	std::cout << "UseMultiDirFit: " << gUseMultiDirFit << endl;
+	std::cout << "UseMultiDirFit: " << (gDirFitType == 1) << endl;
+	std::cout << "UseGridDirFit: " << (gDirFitType == 2) << endl;
 	std::cout << "LikelihoodThetaSteps: " << gLikelihoodThetaSteps << endl;
 	std::cout << "LikelihoodPhiSteps: " << gLikelihoodPhiSteps << endl;
 	std::cout << "LikelihoodEnergySteps: " << gLikelihoodEnergySteps << endl;
@@ -1704,7 +1705,7 @@ double GridLikelihoodFilterPassed(UnifiedEvent &event)
 
 	int nThetaSteps = 180;
 	int nPhiSteps = 360;
-	int nEnergySteps = 200;
+	int nEnergySteps = 40;
 
 	for (int k = 0; k < nThetaSteps; ++k)
 	{
@@ -1732,7 +1733,8 @@ double GridLikelihoodFilterPassed(UnifiedEvent &event)
 			// cout << k << " " << l << endl;
 		}
 	}
-	return 0;
+	event.likelihood = lowestLog;
+	return lowestLog;
 }
 
 int inRange(int roundedEnergy)
@@ -2392,12 +2394,17 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 	event.energy = TMath::Power(10,3.30123+0.0447574*gPulses.size()-0.000135729*gPulses.size()*gPulses.size())/1000;
 
-	if (gUseMultiDirFit)
-		MultipleLikelihoodFilterPassed(event);
-	else
-	{
-		EstimateInitialDirection(event.position,event.time,event.energy,event.theta,event.phi);
-		SingleLikelihoodFilterPassed(event);
+	switch (gDirFitType) {
+		case 0:
+			EstimateInitialDirection(event.position,event.time,event.energy,event.theta,event.phi);
+			SingleLikelihoodFilterPassed(event);
+			break;
+		case 1:
+			MultipleLikelihoodFilterPassed(event);
+			break;
+		case 2:
+			GridLikelihoodFilterPassed(event);
+			break;
 	}
 
 	h_likelihood->Fill(event.likelihood);
@@ -2656,6 +2663,14 @@ int ProcessExperimentalData()
     return 0;
 }
 
+bool IsContained(mcCascade* cascade, double distFromCluster=0)
+{
+	if (TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2)) < 60+distFromCluster && TMath::Abs(cascade->position[2]) < 265+distFromCluster)
+		return true;
+	else
+		return false;
+}
+
 int ProcessMCCascades()
 {
 	if (!CheckInputParamsMCCascades()) // Check input parameters
@@ -2720,7 +2735,7 @@ int ProcessMCCascades()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
-		if (cascade->showerEnergy > 1000 || i % 1000 != 0)
+		if (cascade->showerEnergy > 1000 || i % 100 != 0 || !IsContained(cascade))
 			continue;
 
 		nProcessed++;

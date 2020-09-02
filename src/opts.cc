@@ -51,7 +51,7 @@ double gTCutTimeWindowNs = -1;
 int gNCutT = -1;
 double gTCutChi2 = -1;
 double gLikelihoodCut = -1;
-bool gUseMultiDirFit = false;
+int gDirFitType = -1;
 bool gUseEOSRead = false;
 bool gUseNewFolderStructure = false;
 bool gUseNonHitLikelihoodTerm = false;
@@ -225,7 +225,7 @@ void readRC(const char* rcpath)
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
 	gLikelihoodCut = env.GetValue("LikelihoodCut",3); //value 1 is used for the Non-hit and Noise-hit likelihood term
-	gUseMultiDirFit = env.GetValue("MultiDirFit",true);
+	gDirFitType = env.GetValue("DirFitType",1);
 	gUseNonHitLikelihoodTerm = env.GetValue("NonHitLikelihoodTerm",false);
 	gUseNoiseHitLikelihoodTerm = env.GetValue("NoiseHitLikelihoodTerm",false);
 	gUseChargeSatCorrection = env.GetValue("ChargeSatCorrection",false);
@@ -234,7 +234,7 @@ void readRC(const char* rcpath)
 	gLikelihoodThetaSteps = env.GetValue("LikelihoodThetaSteps",4);
 	gLikelihoodPhiSteps = env.GetValue("LikelihoodPhiSteps",6);
 	gLikelihoodEnergySteps = env.GetValue("LikelihoodEnergySteps",4);
-	gProductionID = env.GetValue("ProductionID","productionID");
+	gProductionID = env.GetValue("ProductionID","");
 }
 
 // Parse options passed to the application.
