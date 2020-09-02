@@ -1,4 +1,8 @@
-01.09.2020 - git commit ---
+02.09.2020 - git commit ---
+	* Grid likelihood technique added
+	* Only contained MC cascades are now being processed
+
+01.09.2020 - git commit c15582409684ec5bb6f221f29395920933af9149
 	* fix of sectionMask and qCalib
 
 01.09.2020 - git commit 931a80d713d02b6370261dbf4ca568f77efc0aad

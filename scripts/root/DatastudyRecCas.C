@@ -290,7 +290,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_likelihoodFull->Fill(likelihood);
 
 
-		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
+		if (directionSigma > 20 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
 			continue;
 
 			// cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " (" << position->X() << "," << position->Y() << "," << position->Z() << ")" << endl;

@@ -141,7 +141,7 @@ extern double gTCutTimeWindowNs;
 extern int gNCutT;
 extern double gTCutChi2;
 extern double gLikelihoodCut;
-extern bool   gUseMultiDirFit;
+extern int   gDirFitType;
 extern bool gUseEOSRead;
 extern bool gUseNewFolderStructure;
 extern bool gUseNonHitLikelihoodTerm;
