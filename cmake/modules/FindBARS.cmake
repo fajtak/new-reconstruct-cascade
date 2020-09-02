@@ -13,11 +13,19 @@ include(LibFindMacros)
 # Paths
 #-----------------------------------
 
-find_library(BARS_LIBRARY
-  NAMES libmars.so
-  HINTS $ENV{BARSSYS}/lib
-  NO_DEFAULT_PATH
-)
+if(APPLE)
+  find_library(BARS_LIBRARY
+    NAMES libmars.dylib
+    HINTS $ENV{BARSSYS}/lib
+    NO_DEFAULT_PATH
+  )
+else()
+  find_library(BARS_LIBRARY
+    NAMES libmars.so
+    HINTS $ENV{BARSSYS}/lib
+    NO_DEFAULT_PATH
+  )
+endif()
 
 set(BARSSYS $ENV{BARSSYS} CACHE PATH "BARS build directory")
 set(BARS_INCLUDE_DIR ${BARSSYS}/include CACHE PATH "BARS include directory")
