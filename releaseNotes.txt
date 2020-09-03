@@ -1,4 +1,8 @@
-02.09.2020 - git commit ---
+03.09.2020 - git commit ---
+	* New flag (-b) to save time residuals to timeRes.txt file was added
+	* New root script timeRes.C for processing of the timeRes.txt output files
+
+02.09.2020 - git commit dfc3d543dcd075d6da50e6fd51200dd367e6b656
 	* Grid likelihood technique added
 	* Only contained MC cascades are now being processed
 

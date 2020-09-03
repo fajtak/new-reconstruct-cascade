@@ -147,6 +147,7 @@ extern bool gUseNewFolderStructure;
 extern bool gUseNonHitLikelihoodTerm;
 extern bool gUseNoiseHitLikelihoodTerm;
 extern bool gUseChargeSatCorrection;
+extern bool gSaveServiceInfo;
 
 extern const double gLatDet;
 extern const double gLonDet;

@@ -57,6 +57,7 @@ bool gUseNewFolderStructure = false;
 bool gUseNonHitLikelihoodTerm = false;
 bool gUseNoiseHitLikelihoodTerm = false;
 bool gUseChargeSatCorrection = false;
+bool gSaveServiceInfo = false;
 
 //coordinates of the detector converted to radians (assuming east longitude)
 // taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3
@@ -196,6 +197,17 @@ static const struct App::ProgramOption_t options_list[]{
 			no_argument,
 			"Uses new folder structure from the middle of 2019 with clusterX/exp/joint/j01/",
 			[](char* argv) {gUseNewFolderStructure = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"saveServiceInfo", 'b',
+			no_argument,
+			"Saves time residuals and charge saturation service txt files",
+			[](char* argv) {gSaveServiceInfo = true;},
 			[]() {;}
 		},
 

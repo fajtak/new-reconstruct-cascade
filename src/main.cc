@@ -509,6 +509,37 @@ void chi2(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag) /
 	f = constant*theChi2; // function returns calculated chi2, it is global function which is used in SetFCN()
 }
 
+int SaveTimeResiduals(UnifiedEvent &event)
+{
+	TString outputFileName = "";
+	if (App::Output == "" || App::Output == "a")
+	{
+    	outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+	}
+    else
+    	outputFileName =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+
+    outputFileName += "timeRes.txt";
+	ofstream outputTimeResFile;
+    outputTimeResFile.open(outputFileName,std::ofstream::app);
+
+    if (!outputTimeResFile)
+    {
+    	cerr << "Time residual service file: " << outputFileName << " was NOT found. Program termination!" << endl;
+    	return -1;
+  	}
+
+	for (unsigned int i = 0; i < gPulses.size(); ++i)
+	{
+		// chi calculation (measured - theoretical)
+		double timeRes = gPulses[i].time - ExpectedTime(event.position,event.time,gPulses[i].OMID);
+		outputTimeResFile << gPulses[i].OMID << "\t" << timeRes << endl;
+	}
+	outputTimeResFile.close();
+
+	return 0;
+}
+
 // Input: calculated parameters R,Z,phi,cosTheta Output: given lower indexes in 4D array
 int GetIndexes(double* inputs, int* outputs)
 {
@@ -2423,6 +2454,11 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	ScanLogLikelihoodDirection(i,event);
 	event.directionSigma = CalculateDirectionError(event);
 	CalculateEquatorialCoor(event);
+
+	if (gSaveServiceInfo)
+	{
+		SaveTimeResiduals(event);
+	}
 
 	return 0;
 }
