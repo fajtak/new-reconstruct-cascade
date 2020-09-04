@@ -1,4 +1,13 @@
-03.09.2020 - git commit ---
+04.09.2020 - git commit ---
+	* If BARS_LOG_TABLE environment variable is set then the program can be started from everywhere in your computer
+
+04.09.2020 - git commit 9ce7933fa42311c6e643e0294b640eedd1cc7831
+	* root script timeRes.C extended for charge saturation curve and fitting of the time residuals for individual channels
+	* SaveServiceInfo extended for Qexp and QMeas
+	* Newly also unformatted timecalib_dzh can be read for time calibration
+	* bash script joinTimeRes added to merge results from the individual runs
+
+03.09.2020 - git commit 264c29c78b4b4362c706d80073b7c7e310a411e3
 	* New flag (-b) to save time residuals to timeRes.txt file was added
 	* New root script timeRes.C for processing of the timeRes.txt output files
 

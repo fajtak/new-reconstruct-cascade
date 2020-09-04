@@ -318,7 +318,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 			nHighEnergyEvents++;
 		}
 
-		if (theta/TMath::Pi()*180 < 80 && upGoing && energy > 20)
+		if (theta/TMath::Pi()*180 < 80 && upGoing && nHitsAfterTFilter > 30)
 		{
 			cout << "Up-going Event - SeasonID: " << seasonID << " ClusterID: " << clusterID << " RunID: " << runID << " EventID: " << eventID << " E = " << energy << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;

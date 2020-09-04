@@ -1180,13 +1180,17 @@ int ReadQCal(void)
 int ReadLogTable()
 {
 	// cout << "4D LogTable reading starts" << endl;
+	TString logLikeTableFolder = std::getenv("BARS_LOG_TABLE");
+	// cout << logLikeTableFolder << endl;
+
 	ifstream fTab;
-	if (App::Output == ""){
+	if (logLikeTableFolder == ""){
 		fTab.open("../inputFiles/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 		// fTab.open("/home/zubardac/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 	}
 	else{
-		fTab.open("../inputFiles/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+		fTab.open(Form("%s/hq001200_double.dqho2011",logLikeTableFolder.Data()), ios::in|ios::binary|ios::ate);
+		// cout << Form("%s/hq001200_double.dqho2011",logLikeTableFolder.Data()) << endl;
 		// fTab.open("./hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
 	}
 
@@ -1249,7 +1253,21 @@ int ReadNoiseChargeTable()
 
 int ReadNoiseProbability()
 {
-	ifstream inputFile("../inputFiles/noiseProbability_Binwidth_1pe.dat", ios::in);
+	TString logLikeTableFolder = std::getenv("BARS_LOG_TABLE");
+	// cout << logLikeTableFolder << endl;
+
+	ifstream inputFile;
+	if (logLikeTableFolder == ""){
+		inputFile.open("../inputFiles/noiseProbability_Binwidth_1pe.dat", ios::in);
+		// inputFile.open("/home/zubardac/showerTable/hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+	}
+	else{
+		inputFile.open(Form("%s/noiseProbability_Binwidth_1pe.dat",logLikeTableFolder.Data()), ios::in|ios::binary|ios::ate);
+		// cout << Form("%s/hq001200_double.dqho2011",logLikeTableFolder.Data()) << endl;
+		// inputFile.open("./hq001200_double.dqho2011", ios::in|ios::binary|ios::ate);
+	}
+
+	// ifstream inputFile("../inputFiles/noiseProbability_Binwidth_1pe.dat", ios::in);
 
 	if (!inputFile)
     {
