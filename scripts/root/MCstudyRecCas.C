@@ -216,7 +216,7 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 
 		h_dirError->Fill(GetReconstructionError(theta,phi,mcTheta,mcPhi)/TMath::Pi()*180,directionSigma);
 
-		if (directionSigma > 10 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
+		if (directionSigma > 20 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
 			continue;
 
 

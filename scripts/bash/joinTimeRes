@@ -1,0 +1,15 @@
+#!/bin/bash
+# join per-run generated timeRes.txt output to a single per-season and per-cluster file
+# arguments: year(16,17,18,19), cluster(from zero/0), path to dataFiles
+
+cd $3/exp$1/cluster$2
+rm timeRes_$1_$2.txt
+
+
+for runID in {1..999}
+do
+	command=$(printf "%04d" $runID)
+	if test -f "${command}/timeRes.txt"; then
+		cat ${command}/timeRes.txt >> timeRes_$1_$2.txt
+	fi
+done

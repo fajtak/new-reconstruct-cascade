@@ -509,7 +509,7 @@ void chi2(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag) /
 	f = constant*theChi2; // function returns calculated chi2, it is global function which is used in SetFCN()
 }
 
-int SaveTimeResiduals(UnifiedEvent &event)
+int SaveServiceInfo(UnifiedEvent &event)
 {
 	TString outputFileName = "";
 	if (App::Output == "" || App::Output == "a")
@@ -529,15 +529,33 @@ int SaveTimeResiduals(UnifiedEvent &event)
     	return -1;
   	}
 
+  	// double tableParameters[4]{0};
+	// double par[7]{event.position->X(),event.position->Y(),event.position->Z(),0,event.energy,event.theta,event.phi};
+
 	for (unsigned int i = 0; i < gPulses.size(); ++i)
 	{
 		// chi calculation (measured - theoretical)
 		double timeRes = gPulses[i].time - ExpectedTime(event.position,event.time,gPulses[i].OMID);
-		outputTimeResFile << gPulses[i].OMID << "\t" << timeRes << endl;
+		outputTimeResFile << gPulses[i].OMID << "\t" << timeRes << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
 	}
 	outputTimeResFile.close();
 
 	return 0;
+}
+
+int CleanServiceInfo()
+{
+	TString outputFileName = "";
+	if (App::Output == "" || App::Output == "a")
+	{
+    	outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+	}
+    else
+    	outputFileName =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+
+    outputFileName += "timeRes.txt";
+	ofstream outputTimeResFile;
+    outputTimeResFile.open(outputFileName,std::ofstream::trunc);
 }
 
 // Input: calculated parameters R,Z,phi,cosTheta Output: given lower indexes in 4D array
@@ -1010,6 +1028,42 @@ int ReadTimeCalFile(const char* fileName, double multConst)
     return 0;
 }
 
+//  Reads time calibration files (offsets, timecalib_dzh) with the given structure
+int ReadTimeCalFileNew(const char* fileName, double multConst)
+{
+	ifstream inputFile;
+    inputFile.open(fileName);
+
+    if (!inputFile)
+    {
+    	cerr << "Calibration file: " << fileName << " was NOT found. Program termination!" << endl;
+    	return -1;
+  	}
+
+  	std::string line;
+  	int nOMsRead = 0;
+  	while (std::getline(inputFile, line)){
+		//Remove everything, following '#'
+  		std::string::size_type comment_col = line.find('#');
+  		comment_col = comment_col == std::string::npos ? line.length() : comment_col;
+  		line.erase(comment_col, line.length());
+		//Read all numbers from the line to calibration vector
+  		std::istringstream iss(line);
+  		float val;
+  		while(iss >> val)
+  		{
+  			if (val != -10000 && val != -1000)
+				gOMtimeCal[nOMsRead] += val*multConst;
+			else
+				gOMtimeCal[nOMsRead] = -1;
+			nOMsRead++;
+  		}
+  	}
+
+  	inputFile.close();
+    return 0;
+}
+
 void NormalizeTimeCal()
 {
 	double meanValue = 0;
@@ -1038,10 +1092,10 @@ void NormalizeTimeCal()
 int ReadTimeCal()
 {
 	const char* offsetFileName = BARS::Calib::File(BARS::App::Cluster, BARS::App::Season, BARS::Calib::OFFSET, "offsets");
-	if (ReadTimeCalFile(offsetFileName,-2.5) < 0)
+	if (ReadTimeCalFileNew(offsetFileName,-2.5) < 0)
 		return -1;
 	const char* timeCalName = BARS::Calib::File(BARS::App::Cluster, BARS::App::Season, BARS::Calib::TIME, "timecalib_dzh");
-	if (ReadTimeCalFile(timeCalName,1) < 0)
+	if (ReadTimeCalFileNew(timeCalName,1) < 0)
 		return -1;
 
 	NormalizeTimeCal();
@@ -2457,7 +2511,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 	if (gSaveServiceInfo)
 	{
-		SaveTimeResiduals(event);
+		SaveServiceInfo(event);
 	}
 
 	return 0;
@@ -2903,6 +2957,8 @@ int main(int argc, char** argv)
 
     PrintHeader();
     SetFitter();
+    if (gSaveServiceInfo)
+    	CleanServiceInfo();
 
     switch (gInputType) {
     	case 0:
