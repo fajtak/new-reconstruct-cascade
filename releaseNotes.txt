@@ -1,4 +1,8 @@
-04.09.2020 - git commit ---
+09.09.2020 - git commit ---
+	* gitignore wiki files
+	* -n and -e flags bugs reported by Eliska fixed
+
+04.09.2020 - git commit cfea783884ea106092ea7836749a24523a823913
 	* If BARS_LOG_TABLE environment variable is set then the program can be started from everywhere in your computer
 
 04.09.2020 - git commit 9ce7933fa42311c6e643e0294b640eedd1cc7831

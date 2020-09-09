@@ -800,6 +800,12 @@ bool CheckInputParamsExpData()
     	std::cout << "Set run with -r" << std::endl;
     	return false;
     }
+
+    if (gNEventsProcessed != -1 && gEventID != -1)
+    {
+    	std::cout << "You cannot use -e and -n flags together" << std::endl;
+    	return false;
+    }
     return true;
 }
 
@@ -2732,10 +2738,12 @@ int ProcessExperimentalData()
 
 	int startEventID = (gEventID == -1)?0:gEventID;
 	int endEventID = (gEventID == -1)?eventStats->nEntries:gEventID+1;
+	if (gEventID != -1) eventStats->nEntries = 1;
+
 
 	for (int i = startEventID; i < endEventID; ++i)
 	{
-		if (i%(eventStats->nEntries/10) == 0)
+		if (eventStats->nEntries > 10 && i%(eventStats->nEntries/10) == 0)
 		{
 			cout << round((double)(i)/eventStats->nEntries*100) << "% ";
 			cout << std::flush;
@@ -2837,7 +2845,7 @@ int ProcessMCCascades()
 
 	for (int i = 0; i < eventStats->nEntries; ++i)
 	{
-		if (i%(eventStats->nEntries/10) == 0)
+		if (eventStats->nEntries > 10 && i%(eventStats->nEntries/10) == 0)
 		{
 			cout << round((double)(i)/eventStats->nEntries*100) << "% ";
 			cout << std::flush;
@@ -2929,7 +2937,7 @@ int ProcessMCData()
 
 	for (int i = 0; i < eventStats->nEntries; ++i)
 	{
-		if (i%(eventStats->nEntries/10) == 0)
+		if (eventStats->nEntries > 10 && i%(eventStats->nEntries/10) == 0)
 		{
 			cout << round((double)(i)/eventStats->nEntries*100) << "% ";
 			cout << std::flush;
