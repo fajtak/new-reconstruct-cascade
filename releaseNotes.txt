@@ -1,4 +1,7 @@
 09.09.2020 - git commit ---
+	* section mask for MC data bug fix
+
+09.09.2020 - git commit 18de80d31d8120c35d41f67bda7bc65c7a8c6660
 	* gitignore wiki files
 	* -n and -e flags bugs reported by Eliska fixed
 

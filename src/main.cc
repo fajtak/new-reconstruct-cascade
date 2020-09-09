@@ -175,7 +175,7 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 
 bool IsActiveChannel(int OMID)
 {
-	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && gSectionMask?gSectionMask->GetChannelStatus(OMID):true);
+	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && (gSectionMask?gSectionMask->GetChannelStatus(OMID):true));
 }
 
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
@@ -2061,7 +2061,7 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 		int stringID = i/36;
 		GetParameters(par,i,tableParameters);
 		g_ExpQ[stringID]->SetPoint(i%36,i,GetInterpolatedValue(tableParameters)*110000000*energy);
-		if (gOMqCal[i] == -1 || gSectionMask?gSectionMask->GetChannelStatus(i) == 0:false)
+		if (gOMqCal[i] == -1 || (gSectionMask?gSectionMask->GetChannelStatus(i) == 0:false))
 			g_DeadOM[stringID]->SetPoint(g_DeadOM[stringID]->GetN(),i,0);
 	}
 
