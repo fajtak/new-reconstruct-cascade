@@ -1,4 +1,7 @@
 10.09.2020 - git commit ---
+	* the minimal difference between causalityHits and TFilterHits can be controlled with NCutDiff keyword in config file
+
+10.09.2020 - git commit 9a9857d4c43e3ebfc7a338e4a687a8539625c702
 	* new -z flag to process laser runs (no visualizations and no limit on the number of reconstructed cascades)
 
 09.09.2020 - git commit 53975ca790741418ce0ef718137a8ca226f02428

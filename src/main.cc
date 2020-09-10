@@ -2489,7 +2489,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	h_nHitsTFilter->Fill(event.nHitsAfterTFilter);
 	h_nStringsTFilter->Fill(GetNStrings());
 	h_nHitsChange->Fill(event.nHitsAfterTFilter-event.nHitsAfterCaus);
-	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < 0 || event.nHitsAfterTFilter < gNCutT)
+	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff || event.nHitsAfterTFilter < gNCutT)
 		return -4;
 	eventStats->nTFilter++;
 

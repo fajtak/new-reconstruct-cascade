@@ -49,6 +49,7 @@ int gCausFriendCut = -1;
 double gQCutChi2 = -1;
 double gTCutTimeWindowNs = -1;
 int gNCutT = -1;
+int gNCutDiff = -1;
 double gTCutChi2 = -1;
 double gLikelihoodCut = -1;
 int gDirFitType = -1;
@@ -248,6 +249,7 @@ void readRC(const char* rcpath)
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
+	gNCutDiff = env.GetValue("NCutDiff",0);
 	gLikelihoodCut = env.GetValue("LikelihoodCut",3); //value 1 is used for the Non-hit and Noise-hit likelihood term
 	gDirFitType = env.GetValue("DirFitType",1);
 	gUseNonHitLikelihoodTerm = env.GetValue("NonHitLikelihoodTerm",false);
