@@ -148,6 +148,7 @@ extern bool gUseNonHitLikelihoodTerm;
 extern bool gUseNoiseHitLikelihoodTerm;
 extern bool gUseChargeSatCorrection;
 extern bool gSaveServiceInfo;
+extern bool gLaserRun;
 
 extern const double gLatDet;
 extern const double gLonDet;

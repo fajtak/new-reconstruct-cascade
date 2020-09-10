@@ -556,6 +556,7 @@ int CleanServiceInfo()
     outputFileName += "timeRes.txt";
 	ofstream outputTimeResFile;
     outputTimeResFile.open(outputFileName,std::ofstream::trunc);
+    return 0;
 }
 
 // Input: calculated parameters R,Z,phi,cosTheta Output: given lower indexes in 4D array
@@ -2522,16 +2523,19 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -6;
 
 	eventStats->nLikelihoodFilter++;
-	event.nTrackHits = CountTrackHits(event);
-	EventVisualization(i,event,event.position,event.time);
-	ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
-	event.correctedEnergy = GetCorrectedEnergy(event.energy);
-	SaveCascadeJSON(i,event);
-	ScanLogLikelihoodEnergy(i,event);
-	ScanLogLikelihoodDirectionCircular(i,event);
-	ScanLogLikelihoodDirection(i,event);
-	event.directionSigma = CalculateDirectionError(event);
-	CalculateEquatorialCoor(event);
+	if (!gLaserRun)
+	{
+		event.nTrackHits = CountTrackHits(event);
+		EventVisualization(i,event,event.position,event.time);
+		ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
+		event.correctedEnergy = GetCorrectedEnergy(event.energy);
+		SaveCascadeJSON(i,event);
+		ScanLogLikelihoodEnergy(i,event);
+		ScanLogLikelihoodDirectionCircular(i,event);
+		ScanLogLikelihoodDirection(i,event);
+		event.directionSigma = CalculateDirectionError(event);
+		CalculateEquatorialCoor(event);
+	}
 
 	if (gSaveServiceInfo)
 	{
@@ -2760,7 +2764,7 @@ int ProcessExperimentalData()
 		if (status == 0)
 			t_RecCasc->Fill();
 		h_exitStatus->Fill(status);
-		if (eventStats->nLikelihoodFilter > 150)
+		if (eventStats->nLikelihoodFilter > 150 && !gLaserRun)
 		{
 			std::cout << "Probably LED matrix run. Processing terminated!" << std::endl;
 			break;
