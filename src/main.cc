@@ -188,6 +188,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime,
 	for (int i = 0; i < impulseTel->GetNimpulse(); ++i)
 	{
 		int OMID = impulseTel->GetNch(i);
+		// cout << "\t" << i << " " << OMID << " " << impulseTel->GetQ(i) << " " << impulseTel->GetQ(i)/gOMqCal[OMID] << endl;
 		if (IsActiveChannel(OMID) && impulseTel->GetQ(i) > 0)
 		{
 			hitCharge = impulseTel->GetQ(i)/gOMqCal[OMID];
@@ -2489,7 +2490,8 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	h_nHitsTFilter->Fill(event.nHitsAfterTFilter);
 	h_nStringsTFilter->Fill(GetNStrings());
 	h_nHitsChange->Fill(event.nHitsAfterTFilter-event.nHitsAfterCaus);
-	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff || event.nHitsAfterTFilter < gNCutT)
+	// if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff || event.nHitsAfterTFilter < gNCutT)
+	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff)
 		return -4;
 	eventStats->nTFilter++;
 
@@ -2791,6 +2793,16 @@ bool IsContained(mcCascade* cascade, double distFromCluster=0)
 		return false;
 }
 
+bool IsUncontained(mcCascade* cascade, int near, int far)
+{
+	double horizontalDist = TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2));
+	double verticalDist = TMath::Abs(cascade->position[2]);
+	if ((horizontalDist < far && horizontalDist > near && verticalDist < 263) || (horizontalDist < far && verticalDist < 263+(far-60) && verticalDist > 263+(near-60)))
+		return true;
+	else
+		return false;
+}
+
 int ProcessMCCascades()
 {
 	if (!CheckInputParamsMCCascades()) // Check input parameters
@@ -2855,7 +2867,8 @@ int ProcessMCCascades()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
-		if (cascade->showerEnergy > 1000 || i % 100 != 0 || !IsContained(cascade))
+		// if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsContained(cascade))
+		if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsUncontained(cascade,100,120))
 			continue;
 
 		nProcessed++;

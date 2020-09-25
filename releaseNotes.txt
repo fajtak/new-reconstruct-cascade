@@ -1,4 +1,8 @@
-10.09.2020 - git commit ---
+25.09.2020 - git commit ---
+	* 20 hits TFilter cut removed
+	* studyMCCascade.C root script added
+
+10.09.2020 - git commit a6277a2971fbad4259ef4fd4cfe6fc1f6a8a3c15
 	* the minimal difference between causalityHits and TFilterHits can be controlled with NCutDiff keyword in config file
 
 10.09.2020 - git commit 9a9857d4c43e3ebfc7a338e4a687a8539625c702
