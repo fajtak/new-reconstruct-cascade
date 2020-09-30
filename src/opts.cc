@@ -61,6 +61,10 @@ bool gUseChargeSatCorrection = false;
 bool gSaveServiceInfo = false;
 bool gLaserRun = false;
 
+double cgDoublePulseTimeWindow = 60; //ns
+
+
+
 //coordinates of the detector converted to radians (assuming east longitude)
 // taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3
 const double gLatDet = TMath::Pi() * 51.764 / 180.0;  //about 3.6 km south from 107 km station
@@ -127,6 +131,16 @@ static const struct App::ProgramOption_t options_list[]{
 			required_argument,
 			"set production ID of the data that will be processed",
 			[](char* argv) {gProductionID = argv;},
+			[]() {;}
+		},
+		NOT_REQUIRED
+	},
+	{
+		{
+			"mcDoubleCas", 'd',
+			no_argument,
+			"use mc double cascades data from Zhan-Arys as the input for the program",
+			[](char* argv) {gInputType = 4;},
 			[]() {;}
 		},
 		NOT_REQUIRED

@@ -48,6 +48,14 @@ TH1D* h_nHitsChange = new TH1D("h_nHitsChange","Change in the number of hits aft
 TH1D* h_exitStatus = new TH1D("h_exitStatus","Exit status of the event;#Status [#];NoE [#]",20,-10,10);
 TH1D* h_nHitsTrack = new TH1D("h_nHitsTrack","Number of track hits; N_{hits} [#]; NoE [#]",100,0,100);
 
+TH1D* h_totalQ1 = new TH1D("h_totalQ1","Charge of the first cascade;Q [p.e.];NoE [#]",500,0,5000);
+TH1D* h_totalQ2 = new TH1D("h_totalQ2","Charge of the second cascade;Q [p.e.];NoE [#]",500,0,5000);
+TH1F* h_mcEnergy1 = new TH1F("h_mcEnergy1","MC energy of the first cascade; E_{mc} [TeV]; NoE [#]",1000,0,1000);
+TH1F* h_mcEnergy2 = new TH1F("h_mcEnergy2","MC energy of the second cascade; E_{mc} [TeV]; NoE [#]",1000,0,1000);
+TH1D* h_dist_cas = new TH1D("h_dist_cas","Distance between cascades;Distance [m];NoE [#]",250,0,500);
+TH1D* h_nHits1 = new TH1D("h_nHits1","Number of hits from the first cascade;N_{hits} [#];NoE [#]",300,0,300);
+TH1D* h_nHits2 = new TH1D("h_nHits2","Number of hits from the second cascade;N_{hits} [#];NoE [#]",300,0,300);
+
 TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood value; #mathcal{L}; NoE [#]",100,0,100);
 TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000,0,1000);
 TH1F* h_mcTheta = new TH1F("h_mcTheta","MC theta; #theta [deg]; NoE [#]",400,0,4);
@@ -91,6 +99,16 @@ void SaveHistograms()
 	h_mcPhi->Write();
 	h_exitStatus->Write();
 	h_nHitsTrack->Write();
+	if(gInputType==4)
+	{
+		h_totalQ1->Write();
+		h_totalQ2->Write();
+		h_mcEnergy1->Write();
+		h_mcEnergy2->Write();
+		h_dist_cas->Write();
+		h_nHits1->Write();
+		h_nHits2->Write();
+	}
 }
 
 int SaveCascadeJSON(int eventID, UnifiedEvent& event)
@@ -177,6 +195,7 @@ bool IsActiveChannel(int OMID)
 {
 	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && (gSectionMask?gSectionMask->GetChannelStatus(OMID):true));
 }
+
 
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
 {
@@ -311,6 +330,89 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	unifiedEvent.mcPosition.SetX(cascade->position[0]);
 	unifiedEvent.mcPosition.SetY(cascade->position[1]);
 	unifiedEvent.mcPosition.SetZ(cascade->position[2]);
+}
+
+void TransformToUnifiedEvent(mcDoubleCascade* doubleCascade, UnifiedEvent &unifiedEvent)	//double cascades MC
+{
+	unifiedEvent.hits.clear();
+	unifiedEvent.nHits = 0;
+	unifiedEvent.qTotal = 0;
+	unifiedEvent.q1Total = 0;
+	unifiedEvent.q2Total = 0;
+	int nHits = 0;
+	int nNoiseHits = 0;
+	unifiedEvent.mcEnergy = doubleCascade->e1+doubleCascade->e2;
+	unifiedEvent.mcEnergy1 = doubleCascade->e1;
+	unifiedEvent.mcEnergy2 = doubleCascade->e2;
+	unifiedEvent.mcPhi = doubleCascade->phi+TMath::Pi();
+	if (unifiedEvent.mcPhi > 2*TMath::Pi())
+		unifiedEvent.mcPhi -= 2*TMath::Pi();
+	unifiedEvent.mcTheta = TMath::Pi()-TMath::ACos(doubleCascade->cosTheta);
+	unifiedEvent.mcPosition1.SetX(doubleCascade->r1[0]);
+	unifiedEvent.mcPosition1.SetY(doubleCascade->r1[1]);
+	unifiedEvent.mcPosition1.SetZ(doubleCascade->r1[2]);
+	unifiedEvent.mcPosition2.SetX(doubleCascade->r2[0]);
+	unifiedEvent.mcPosition2.SetY(doubleCascade->r2[1]);
+	unifiedEvent.mcPosition2.SetZ(doubleCascade->r2[2]);
+	unifiedEvent.mcCascadesDist = doubleCascade->distance;
+	for (int i = 0; i < doubleCascade->nHits1; ++i)
+	{
+		nHits++;
+		unifiedEvent.hits.push_back(UnifiedHit{doubleCascade->chID1[i]-1,doubleCascade->t1[doubleCascade->chID1[i]-1],(doubleCascade->q1[doubleCascade->chID1[i]-1]),-1,false,1});
+		unifiedEvent.qTotal += (doubleCascade->q1[doubleCascade->chID1[i]-1]);
+		unifiedEvent.q1Total += (doubleCascade->q1[doubleCascade->chID1[i]-1]);
+
+	}
+	for (int i = 0; i < doubleCascade->nHits2; ++i)
+	{
+		nHits++;
+		unifiedEvent.hits.push_back(UnifiedHit{doubleCascade->chID2[i]-1,doubleCascade->t2[doubleCascade->chID2[i]-1],(doubleCascade->q2[doubleCascade->chID2[i]-1]),-1,false,2});
+		unifiedEvent.qTotal += (doubleCascade->q2[doubleCascade->chID2[i]-1]);
+		unifiedEvent.q2Total += (doubleCascade->q2[doubleCascade->chID2[i]-1]);
+
+
+	}
+	
+	unifiedEvent.nHits_1 = doubleCascade->nHits1;
+	unifiedEvent.nHits_2 = doubleCascade->nHits2;
+	int count=0;
+	for (int i = 0; i < (nHits-count); ++i)
+	{
+		for (int j = i+1; j < (nHits-count); ++j)
+		{
+			if(unifiedEvent.hits[i].noise == false && unifiedEvent.hits[j].noise == false)
+			{
+				if(unifiedEvent.hits[i].OMID == unifiedEvent.hits[j].OMID && TMath::Abs(unifiedEvent.hits[i].time - unifiedEvent.hits[j].time) < cgDoublePulseTimeWindow)
+				{
+					if(unifiedEvent.hits[i].time<=unifiedEvent.hits[j].time)
+					{
+						unifiedEvent.hits[i].charge = unifiedEvent.hits[i].charge + unifiedEvent.hits[j].charge;
+						if(unifiedEvent.hits[i].MCflag != unifiedEvent.hits[j].MCflag)
+						{
+							unifiedEvent.hits[i].MCflag = 3;
+						}
+						unifiedEvent.hits.erase(unifiedEvent.hits.begin()+j);
+						count++;
+
+					}
+					else
+					{
+						unifiedEvent.hits[j].charge == unifiedEvent.hits[i].charge + unifiedEvent.hits[j].charge;
+						if(unifiedEvent.hits[i].MCflag != unifiedEvent.hits[j].MCflag)
+						{
+							unifiedEvent.hits[j].MCflag = 3;
+						}
+						unifiedEvent.hits.erase(unifiedEvent.hits.begin()+i);
+						count++;
+					}
+				}
+			}
+		}
+
+	}
+	unifiedEvent.nHits = nHits-count+nNoiseHits;
+	unifiedEvent.nNoiseHits = nNoiseHits;
+	unifiedEvent.nSignalHits = nHits-count-nNoiseHits;
 }
 
 int GenerateNoise(UnifiedEvent &event)
@@ -462,6 +564,16 @@ void PrintRunInfoMCCascades(const char* filePath, TChain* events)
 {
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "MC Data: Zhan-Arys' cascades" << endl;
+	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  0 << endl;
+    cout << "! " << events->GetEntries() << " " << 0 << "  " << 0 << endl;
+
+	std::cout << std::string(81,'*') << std::endl;
+}
+
+void PrintRunInfoMCDoubleCascades(const char* filePath, TChain* events)
+{
+	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
+	cout << "MC Data: Zhan-Arys' Double Cascades" << endl;
 	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  0 << endl;
     cout << "! " << events->GetEntries() << " " << 0 << "  " << 0 << endl;
 
@@ -808,6 +920,21 @@ bool CheckInputParamsExpData()
     	std::cout << "You cannot use -e and -n flags together" << std::endl;
     	return false;
     }
+    return true;
+}
+
+bool CheckInputParamsMCDoubleCascades()
+{
+	if (gFileInputFolder == "")
+	{
+		std::cout << "Set MC input folder with -f" << std::endl;
+		return false;
+	}
+	// if (gMCNu && gMCMu)
+	// {
+	// 	std::cout << "ERROR: You can't process both MC neutrinos and MC muons at once!" << std::endl;
+	// 	return false;
+	// }
     return true;
 }
 
@@ -1588,6 +1715,13 @@ bool NFilterPassed(UnifiedEvent &event)
 {
 	h_nHits->Fill(event.nHits);
 	h_totalQ->Fill(event.qTotal);
+	if(gInputType==4)
+	{
+		h_nHits1->Fill(event.nHits_1);
+		h_nHits2->Fill(event.nHits_2);
+		h_totalQ1->Fill(event.q1Total);
+		h_totalQ2->Fill(event.q2Total);
+	}
 	if (event.nHits >= gNCut && event.qTotal > gQTotalCut)
 	{
 		return true;
@@ -2467,6 +2601,12 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	if (!NFilterPassed(event))
 		return -1;
 	h_mcEnergy->Fill(event.mcEnergy);
+	if(gInputType==4)
+	{
+		h_mcEnergy1->Fill(event.mcEnergy1);
+		h_mcEnergy2->Fill(event.mcEnergy2);
+		h_dist_cas->Fill(event.mcCascadesDist);
+	}
 	h_mcTheta->Fill(event.mcTheta);
 	h_mcPhi->Fill(event.mcPhi);
 	eventStats->nNFilter++;
@@ -2480,20 +2620,22 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nSixThrees++;
 
 	EstimateInitialPosMatrix(event.position,event.time);
-
+	// cout<<endl;
 	event.chi2AfterCaus = FitCascPos(event.position,event.time);
 	h_chi2Caus->Fill(event.chi2AfterCaus);
+	// cout<<"event.chi2AfterCaus  "<<event.chi2AfterCaus <<endl;
 	if (event.chi2AfterCaus > gQCutChi2)
 		return -3;
 	eventStats->nQFilterChi2++;
 
 	event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
-
 	event.nStringsAfterTFilter = GetNStrings();
 	event.mcNTrackHitsAfterTFilter = GetNTrackHits(event);
 	h_nHitsTFilter->Fill(event.nHitsAfterTFilter);
 	h_nStringsTFilter->Fill(GetNStrings());
 	h_nHitsChange->Fill(event.nHitsAfterTFilter-event.nHitsAfterCaus);
+	// cout<<"event.nHitsAfterTFilter-event.nHitsAfterCaus "<<event.nHitsAfterTFilter-event.nHitsAfterCaus<<endl;
+	// cout<<"event.nHitsAfterTFilter "<<event.nHitsAfterTFilter<<endl;
 	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff || event.nHitsAfterTFilter < gNCutT)
 	// if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff && event.nHitsAfterTFilter <)
 		return -4;
@@ -2502,6 +2644,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	event.chi2AfterTFilter = FitCascPos(event.position,event.time);
 	// cout<<"TFilterChi2 "<<event.chi2AfterTFilter<<endl;
 	h_chi2TFilter->Fill(event.chi2AfterTFilter);
+	// cout<<"event.chi2AfterTFilter "<<event.chi2AfterTFilter<<endl;
 	if (event.chi2AfterTFilter > gTCutChi2)
 		return -5;
 	eventStats->nTFilterChi2++;
@@ -2524,7 +2667,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	}
 
 	h_likelihood->Fill(event.likelihood);
-
+	// cout<<"event.likelihood "<<event.likelihood<<endl;
 	if (event.likelihood > (gUseNonHitLikelihoodTerm?gLikelihoodCut/6:gLikelihoodCut))
 		return -6;
 
@@ -2547,7 +2690,6 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	{
 		SaveServiceInfo(event);
 	}
-
 	return 0;
 }
 
@@ -2806,6 +2948,107 @@ bool IsUncontained(mcCascade* cascade, int near, int far)
 	else
 		return false;
 }
+	
+int ProcessMCDoubleCascades()
+{
+	if (!CheckInputParamsMCDoubleCascades()) // Check input parameters
+	{
+		return -1;
+	}
+
+	cout << "Processing MC Double Cascades Data" << endl;
+
+	TString filePath = Form("%s/ntau_double_cascades_00*.root",gFileInputFolder.c_str());
+	TChain* mcFiles = new TChain("h11");
+	mcFiles->Add(filePath.Data());
+	if (mcFiles->GetEntries() == 0)
+	{
+		std::cout << "Files: " << filePath << " were not found!" << endl;
+    	return -2;
+	}
+
+	// Sets necessary pointers to access data through TChain
+	mcDoubleCascade* doubleCascade = new mcDoubleCascade;
+	mcFiles->SetBranchAddress("jch1",&doubleCascade->nHits1);
+	mcFiles->SetBranchAddress("jch2",&doubleCascade->nHits2);
+	mcFiles->SetBranchAddress("Npmt1",doubleCascade->chID1);
+	mcFiles->SetBranchAddress("Npmt2",doubleCascade->chID2);
+	mcFiles->SetBranchAddress("tre1",doubleCascade->t1);
+	mcFiles->SetBranchAddress("tre2",doubleCascade->t2);
+	mcFiles->SetBranchAddress("are1",doubleCascade->q1);
+	mcFiles->SetBranchAddress("are2",doubleCascade->q2);
+	mcFiles->SetBranchAddress("cost",&doubleCascade->cosTheta);
+	mcFiles->SetBranchAddress("fj",&doubleCascade->phi);
+	mcFiles->SetBranchAddress("xtr1",doubleCascade->r1);
+	mcFiles->SetBranchAddress("xtr2",doubleCascade->r2);
+	mcFiles->SetBranchAddress("Esh1",&doubleCascade->e1);
+	mcFiles->SetBranchAddress("Esh2",&doubleCascade->e2);
+	mcFiles->SetBranchAddress("sh_dist",&doubleCascade->distance);
+	mcFiles->SetBranchAddress("xar",&doubleCascade->xar);
+	mcFiles->SetBranchAddress("yar",&doubleCascade->yar);
+	mcFiles->SetBranchAddress("zar",&doubleCascade->zar);
+
+	PrintRunInfoMCDoubleCascades(filePath,mcFiles);
+
+	if (ReadInputParamFiles() == -1)
+		return -3;
+
+	TString outputFileName = "";
+	if (App::Output == "")
+    	outputFileName = gFileInputFolder;
+    else
+    	outputFileName =  App::Output.Data();
+
+	outputFileName += "/recDoubleCascResults.root";
+	TFile* outputFile = new TFile(outputFileName,"RECREATE");
+	TDirectory *cdTree = outputFile->mkdir("Tree");
+	UnifiedEvent unifiedEvent;
+	TTree* t_RecDoubleCasc = new TTree("t_RecDoubleCasc","Reconstructed Double Cascades");
+	InitializeOutputTTree(t_RecDoubleCasc,unifiedEvent);
+	TDirectory *cdHist = outputFile->mkdir("Histograms");
+	TDirectory *cdVis = outputFile->mkdir("Visualizations");
+   	cdVis->cd();
+
+	EventStats* eventStats = new EventStats();
+	eventStats->nEntries = (gNEventsProcessed == -1)?mcFiles->GetEntries():gNEventsProcessed;
+
+	int nProcessed = 0;
+	// cout<<"nEntries "<<eventStats->nEntries<<endl;
+	for (int i = 0; i < eventStats->nEntries; ++i)
+	{
+		if (eventStats->nEntries > 10 && i%(eventStats->nEntries/10) == 0)
+		{
+			cout << round((double)(i)/eventStats->nEntries*100) << "% ";
+			cout << std::flush;
+		}
+		mcFiles->GetEntry(i);
+		// if (cascade->showerEnergy > 1000 || i % 100 != 0 || !IsContained(cascade))
+		// 	continue;
+
+		nProcessed++;
+		unifiedEvent.eventID = i;
+		TransformToUnifiedEvent(doubleCascade,unifiedEvent);
+		GenerateNoise(unifiedEvent);
+		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
+		if (status == 0)
+			t_RecDoubleCasc->Fill();
+		h_exitStatus->Fill(status);
+	}
+
+	cout << endl;
+	eventStats->nEntries = nProcessed;
+
+	PrintEventStats(eventStats);
+	cdHist->cd();
+	SaveHistograms();
+	cdTree->cd();
+	t_RecDoubleCasc->Write();
+	delete t_RecDoubleCasc;
+	// delete mcFiles;
+	outputFile->Close();
+
+    return 0;
+		}
 
 int ProcessMCCascades()
 {
@@ -3017,6 +3260,9 @@ int main(int argc, char** argv)
     	case 2:
     	case 3:
     		ProcessMCData();
+    		break;
+    	case 4:
+    		ProcessMCDoubleCascades();
     		break;
     	default:
     		break;

@@ -36,6 +36,14 @@ struct mcCascade
 	unsigned short chID[288];
 };
 
+// structure neccessary for the reading of the Zhan-Arys double cascade simulations
+struct mcDoubleCascade
+{
+	int nHits1, nHits2;
+	float e1, e2, cosTheta, phi, r1[3], r2[3], q1[288], t1[288], q2[288], t2[288], distance, xar[288], yar[288], zar[288];
+	unsigned short chID1[288], chID2[288];
+};
+
 // structure holding unified hit
 struct UnifiedHit
 {
@@ -44,7 +52,7 @@ struct UnifiedHit
   double charge;
   double expectedCharge;
   bool noise;
-  int MCflag;
+  int MCflag; //in MC DC case label of cascade
 
   	// equality comparison. doesn't modify object. therefore const.
     bool operator==(const UnifiedHit& a) const
@@ -64,6 +72,8 @@ struct UnifiedEvent
 	int eventID = -1;
 	std::vector<UnifiedHit> hits;
 	double mcEnergy = -1;
+	double mcEnergy1 = -1;
+	double mcEnergy2 = -1;
 	double mcTheta = -1;
 	double mcPhi = -1;
 	int mcNTrackHitsAfterTFilter = -1;
@@ -72,7 +82,11 @@ struct UnifiedEvent
 	double trackTheta = -1;
 	double trackPhi = -1;
 	TVector3 mcPosition;
+	TVector3 mcPosition1;
+	TVector3 mcPosition2;
 	int nHits = -1;
+	int nHits_1 = -1;
+	int nHits_2 = -1;
 	int nSignalHits = -1;
 	int nNoiseHits = -1;
 	double energy = -1;
@@ -97,6 +111,9 @@ struct UnifiedEvent
 	double chi2AfterCaus = -1;
 	double chi2AfterTFilter = -1;
 	double qTotal = -1;
+	double q1Total = -1;
+	double q2Total = -1;
+	double mcCascadesDist = -1;
 };
 
 extern int gNEventsProcessed;
@@ -153,6 +170,9 @@ extern bool gLaserRun;
 
 extern const double gLatDet;
 extern const double gLonDet;
+
+extern double cgDoublePulseTimeWindow; //ns
+
 
 void parseOpts(int argc, char** argv);
 void readRC(const char* rcpath);
