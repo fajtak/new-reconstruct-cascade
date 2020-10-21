@@ -1,4 +1,9 @@
-25.09.2020 - git commit ---
+21.10.2020 - git commit ---
+	* memory leaks in the eventVis fixed
+	* hits TFilter cut returned
+	* minor changes to studyMCCascade.C
+
+25.09.2020 - git commit d974548c7720887d4c754cf2cf547445f3742e42
 	* 20 hits TFilter cut removed
 	* studyMCCascade.C root script added
 

@@ -53,6 +53,7 @@ TVirtualFitter* fMinuit;
 
 
 TH2F* h_xyPosition = new TH2F("h_xyPosition","XY position;X [m];Y [m]",100,-500,500,100,-500,500);
+TH1F* h_energy = new TH1F("h_energy","Energy; E [TeV]; NoE [#]",1000,0,10000);
 TH1F* h_overallCharge = new TH1F("h_overallCharge","Overall charge; Q [p.e.]; NoE [#]",10000,0,100000);
 TH1F* h_overallChargeWithNoise = new TH1F("h_overallChargeWithNoise","Overall charge (noise included); Q [p.e.]; NoE [#]",10000,0,100000);
 TH2F* h_overallChargeVsEnergy = new TH2F("h_overallChargeVsEnergy","Overall charge vs Cascade energy; log(Q[p.e]);log_{10}(E_{sh}[GeV])",700,0,7,100,0,10);
@@ -168,6 +169,11 @@ TH1F* h_zFilterAll = new TH1F("h_zFilterAll","Vertical distribution of the recon
 TH1F* h_qFilter = new TH1F("h_qFilter","Distribution of the QRatios; R [%]; NoE [#]",110,0,110);
 TH1F* h_branchFilter = new TH1F("h_branchFilter","Distribution of the Branch differences; Up-Down [# hits]; NoE [#]",150,-50,100);
 TH1F* h_closeHitsFilter = new TH1F("h_closeHitsFilter","Distribution of number of hit close OMs",20,0,20);
+
+TH2D* h_likelihoodEnergy = new TH2D("h_likelihoodEnergy","Likelihood minimum value vs. Energy;log_{10}(E_{sh}[GeV]);Likelihood [#]",100,0,10,300,0,300);
+TH2D* h_likelihoodNHits = new TH2D("h_likelihoodNHits","Likelihood minimum value vs. nReco hits;N_{hits} [#];Likelihood [#]",200,0,200,300,0,300);
+TH2D* h_likelihoodMismatchAngle = new TH2D("h_likelihoodMismatchAngle","Likelihood minimum value vs. mismatch angle;Mismatch angle [deg.];Likelihood [#]",180,0,180,300,0,300);
+
 
 TH1F* h_zFilterCum;
 TH1F* h_zFilterCumInv;
@@ -479,7 +485,7 @@ double FitMatrixDirection(TVector3 &R2, double &T2, double &energy, double &thet
 	fMinuit->SetParameter(1,"LED Y",R2.Y(),1,-750,750);
 	fMinuit->SetParameter(2,"LED Z",R2.Z(),1,-750,750);
 	fMinuit->SetParameter(3,"Time",T2,1,-10000,50000);
-	fMinuit->SetParameter(4,"Energy",energy,1,0,10000);
+	fMinuit->SetParameter(4,"Energy",energy,1,0,20000);
 	fMinuit->SetParameter(5,"Theta",theta,0.1,0,TMath::Pi());
 	fMinuit->SetParameter(6,"Phi",phi,0.1,0,2*TMath::Pi());
 
@@ -1108,7 +1114,7 @@ double LikelihoodFilterPassedGrid(TVector3 &matrixPosition, double &matrixTime, 
 {
 	int nThetaSteps = 4;
 	int nPhiSteps = 6;
-	int nEnergySteps = 4;
+	int nEnergySteps = 5;
 	// cout << "In likelihood" << endl;
 	double lowestLog = 10000;
 	for (int k = 0; k < nThetaSteps-1; ++k)
@@ -1480,7 +1486,7 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 	int nCutPassingEvents = 0;
 	int nLogEvents = 0;
 
-	int containmentDistance = 140;
+	int containmentDistance = 60;
 	for (int i = 0; i < nEntries; ++i)
 	{
 		if (i%(nEntries/10) == 0)
@@ -1490,12 +1496,13 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 		}
 		tree->GetEntry(i);
 
-		// if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 1000 || i % 250 != 0)
-		if (!IsUncontained(cascade,60,200) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 1000 != 0)
+		if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 500 != 0)
+		// if (!IsUncontained(cascade,60,200) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 1000 != 0)
 		// if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000)
 		{
 			continue;
 		}
+		h_energy->Fill(cascade->showerEnergy);
 		h_notRecEnerAll->Fill(TMath::Log10(cascade->showerEnergy*1000));
 		h_notRecDistAll->Fill(TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2)));
 		h_notRecThetaAll->Fill((TMath::Pi()-TMath::ACos(cascade->cosTheta))/TMath::Pi()*180);
@@ -1672,12 +1679,12 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 			cascDirRec.SetTheta(cascadeTheta);
 			cascDirRec.SetPhi(cascadePhi);
 
-			if (likelihood > 3)
+			if (likelihood < 3)
 			{
 				h_mismatchAngleWell->Fill(cascDirRec.Angle(cascDirTrue)/TMath::Pi()*180);
+				nLogEvents++;
 				// continue;
 			}
-			nLogEvents++;
 
 
 			h_mismatchAngle->Fill(cascDirRec.Angle(cascDirTrue)/TMath::Pi()*180);
@@ -1710,6 +1717,9 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 			h_mcVsRecoPhi->Fill(cascadePhiTrue/TMath::Pi()*180,cascadePhi/TMath::Pi()*180);
 			h_mcVsRecoEnergy->Fill(TMath::Log10(cascadeEnergyTrue*1000),TMath::Log10(cascadeEnergy*1000));
 
+			h_likelihoodEnergy->Fill(TMath::Log10(cascadeEnergyTrue*1000),likelihood);
+			h_likelihoodNHits->Fill(g_pulses.size(),likelihood);
+			h_likelihoodMismatchAngle->Fill(cascDirRec.Angle(cascDirTrue)/TMath::Pi()*180,likelihood);
 		}
 
 		h_zFilter->Fill(matrixPosition.Z());
@@ -1827,6 +1837,9 @@ void DrawHistograms()
 	h_overallCharge->Draw();
 	h_overallChargeWithNoise->SetLineColor(kGreen);
 	h_overallChargeWithNoise->Draw("same");
+
+	TCanvas* c_energy = new TCanvas("c_energy","Energy",800,600);
+	h_energy->Draw();
 
 	TCanvas* c_nHitStrings = new TCanvas("c_nHitStrings","Results",800,600);
 	h_nHitStrings->Draw();
@@ -2195,6 +2208,15 @@ void DrawHistograms()
 	h_mismatchAngle1Noise->Draw();
 	c_nNoiseHits->cd(4);
 	h_mismatchAngle2Noise->Draw();
+
+	TCanvas* c_likelihoodEnergy = new TCanvas("c_likelihoodEnergy","LikelihoodEnergy",800,600);
+	h_likelihoodEnergy->Draw("colz");
+
+	TCanvas* c_likelihoodNHits = new TCanvas("c_likelihoodNHits","LikelihoodNHits",800,600);
+	h_likelihoodNHits->Draw("colz");
+
+	TCanvas* c_likelihoodMismatchAngle = new TCanvas("c_likelihoodMismatchAngle","LikelihoodMismatchAngle",800,600);
+	h_likelihoodMismatchAngle->Draw("colz");
 }
 
 void SaveHistograms(int noiseRateInkHz, int initEstTechnique, bool useNoise, bool useChi2, bool mcData = false, bool likeMultiFit = false)
@@ -2247,6 +2269,7 @@ void SaveHistograms(int noiseRateInkHz, int initEstTechnique, bool useNoise, boo
 
 
 	h_overallCharge->Write();
+	h_energy->Write();
 	h_overallChargeWithNoise->Write();
 	h_overallChargeVsEnergy->Write();
 	h_overallChargeVsEnergy->ProfileX()->Write();
@@ -2354,6 +2377,11 @@ void SaveHistograms(int noiseRateInkHz, int initEstTechnique, bool useNoise, boo
 	h_closeHitsFilterCumInv->Write();
 
 	h_nNoiseHits->Write();
+
+	h_likelihoodEnergy->Write();
+	h_likelihoodNHits->Write();
+	h_likelihoodMismatchAngle->Write();
+
 	delete outputFile;
 }
 

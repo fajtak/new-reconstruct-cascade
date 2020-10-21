@@ -2138,6 +2138,8 @@ void ScanLogLikelihoodEnergy(int eventID,UnifiedEvent &event)
 	c_energyLikelihoodScan->Write();
 
 	delete c_energyLikelihoodScan;
+	delete g_energyLikelihoodScan;
+	delete g_trueEnergy;
 }
 
 void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
@@ -2203,6 +2205,7 @@ void ScanLogLikelihoodDirection(int eventID, UnifiedEvent &event)
 	c_positionLikelihoodScan->Write();
 
 	delete c_positionLikelihoodScan;
+	delete g_positionLikelihoodScan;
 	delete g_truePosition;
 	delete g_fitPosition;
 }
@@ -2269,6 +2272,7 @@ void ScanLogLikelihoodDirectionCircular(int eventID, UnifiedEvent &event)
 	c_positionLikelihoodScan->Write();
 
 	delete c_positionLikelihoodScan;
+	delete g_positionLikelihoodScan;
 	delete g_truePosition;
 	delete g_fitPosition;
 }
@@ -2490,8 +2494,8 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	h_nHitsTFilter->Fill(event.nHitsAfterTFilter);
 	h_nStringsTFilter->Fill(GetNStrings());
 	h_nHitsChange->Fill(event.nHitsAfterTFilter-event.nHitsAfterCaus);
-	// if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff || event.nHitsAfterTFilter < gNCutT)
-	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff)
+	if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff || event.nHitsAfterTFilter < gNCutT)
+	// if (event.nHitsAfterTFilter-event.nHitsAfterCaus < gNCutDiff && event.nHitsAfterTFilter <)
 		return -4;
 	eventStats->nTFilter++;
 
