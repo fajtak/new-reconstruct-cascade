@@ -1761,6 +1761,12 @@ double SingleLikelihoodFilterPassed(UnifiedEvent &event)
 
 double MultipleLikelihoodFilterPassed(UnifiedEvent &event)
 {
+	int nPar = 0;
+	double* gin = new double(0);
+	double likelihoodValue = 0;
+	double cascadeParameters[7];
+	int iflag = 0;
+
 	// cout << "In likelihood" << endl;
 	int nThetaSteps = gLikelihoodThetaSteps;
 	int nPhiSteps = gLikelihoodPhiSteps;
@@ -1788,6 +1794,21 @@ double MultipleLikelihoodFilterPassed(UnifiedEvent &event)
 					event.energySigma = cascadeEnergySigma;
 					event.thetaSigma = cascadeThetaSigma;
 					event.phiSigma = cascadePhiSigma;
+
+					cascadeParameters[0] = event.position.X();
+					cascadeParameters[1] = event.position.Y();
+					cascadeParameters[2] = event.position.Z();
+					cascadeParameters[3] = event.time;
+					cascadeParameters[4] = event.energy;
+					cascadeParameters[5] = event.theta;
+					cascadeParameters[6] = event.phi;
+
+					if (gUseNonHitLikelihoodTerm)
+					{
+						gUseNonHitLikelihoodTerm = false;
+						logLikelihood(nPar,gin,event.likelihoodHitOnly,cascadeParameters,iflag);
+						gUseNonHitLikelihoodTerm = true;
+					}
 				}
 				// cout << k << " " << l << " " << recentLog  << " " << cascadeEnergy << " " << cascadeTheta << " " << cascadePhi << endl;
 			}
@@ -2439,6 +2460,63 @@ int CountTrackHits(UnifiedEvent &event)
 	return nHitsMax;
 }
 
+int CountTrackHitsSegment(UnifiedEvent &event, int angleSegment = 20)
+{
+	TVector3 cascDir(0,0,1);
+	int nHits = 0;
+	int nHitsMax = 0;
+	double charge = 0;
+	double chargeMax = 0;
+
+	int startTheta = (event.theta*TMath::RadToDeg() - angleSegment < 0)?0:event.theta*TMath::RadToDeg() - angleSegment;
+	int endTheta = (event.theta*TMath::RadToDeg() + angleSegment > 180)?180:event.theta*TMath::RadToDeg() + angleSegment;
+
+	int startPhi = event.phi*TMath::RadToDeg() - angleSegment;
+	int endPhi = event.phi*TMath::RadToDeg() + angleSegment;
+
+	for (int i = startTheta; i < endTheta+1; ++i)
+	{
+		for (int j = startPhi; j < endPhi+1; ++j)
+		{
+			nHits = 0;
+			charge = 0;
+			cascDir.SetTheta(i*TMath::DegToRad());
+			cascDir.SetPhi(j*TMath::DegToRad());
+			cascDir.SetMag(1);
+
+			for (int k = 0; k < event.nHits; ++k)
+			{
+				bool inGPulses = false;
+				for (int l = 0; l < gPulses.size(); ++l)
+				{
+					if (gPulses[l]==event.hits[k])
+					{
+						inGPulses = true;
+						break;
+					}
+				}
+				if(inGPulses)
+					continue;
+				double timeRes = event.hits[k].time - TrackExpectedTime(event,cascDir,event.hits[k].OMID);
+				if (timeRes < 50 && timeRes > -100)
+				{
+					nHits++;
+					charge += event.hits[k].charge;
+				}
+			}
+			if (charge > chargeMax)
+			{
+				nHitsMax = nHits;
+				chargeMax = charge;
+				event.trackCharge = chargeMax;
+				event.trackTheta = i*TMath::DegToRad();
+				event.trackPhi = j*TMath::DegToRad();
+			}
+		}
+	}
+	return nHitsMax;
+}
+
 
 // 	int nPoints = 0;
 
@@ -2506,6 +2584,9 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -5;
 	eventStats->nTFilterChi2++;
 
+	if (event.position.Z() > gZCut)
+		return -6;
+
 	h_nHitsTrack->Fill(TrackFilter(event,event.position,event.time));
 
 	event.energy = TMath::Power(10,3.30123+0.0447574*gPulses.size()-0.000135729*gPulses.size()*gPulses.size())/1000;
@@ -2525,13 +2606,15 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 	h_likelihood->Fill(event.likelihood);
 
-	if (event.likelihood > (gUseNonHitLikelihoodTerm?gLikelihoodCut/6:gLikelihoodCut))
-		return -6;
+	double likelihoodCut = gLikelihoodCut + 7*(TMath::Log(event.energy*1000)-3);
+
+	if (event.likelihood > (gUseNonHitLikelihoodTerm?likelihoodCut/6:likelihoodCut))
+		return -7;
 
 	eventStats->nLikelihoodFilter++;
 	if (!gLaserRun)
 	{
-		event.nTrackHits = CountTrackHits(event);
+		event.nTrackHits = CountTrackHitsSegment(event);
 		EventVisualization(i,event,event.position,event.time);
 		ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
 		event.correctedEnergy = GetCorrectedEnergy(event.energy);
@@ -2578,6 +2661,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("eventTime","TTimeStamp",&event.eventTime);
 	outputTree->Branch("time",&event.time);
 	outputTree->Branch("likelihood",&event.likelihood);
+	outputTree->Branch("likelihoodHitOnly",&event.likelihoodHitOnly);
 	outputTree->Branch("mcEnergy",&event.mcEnergy);
 	outputTree->Branch("mcTheta",&event.mcTheta);
 	outputTree->Branch("mcPhi",&event.mcPhi);

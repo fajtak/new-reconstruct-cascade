@@ -51,6 +51,8 @@ void SaveResults(int inputFile)
 		suffix = "muatm_may19_nonHit";
 	if (inputFile == 4)
 		suffix = "muatm_jun20_nonHit";
+	if (inputFile == 8)
+		suffix = "muatm_jun20_val";
 	TString outputFileName = Form("../../results/mcResults_%s.root",suffix.Data());
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 
@@ -166,6 +168,9 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		case 7:
 			filesDir = Form("%s/mc/cascades/recCascResults_multiFit.root",env_p);
 			break;
+		case 8:
+			filesDir = Form("%s/mc/muatm_jun20_val/recCascResults.root",env_p);
+			break;
 		default:
 			break;
 	}
@@ -229,7 +234,8 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_dirError->Fill(mismatchAngle,directionSigma);
 		h_mismatchAngle->Fill(mismatchAngle);
 
-		if (directionSigma > 20 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
+		// if (directionSigma > 20 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
+		if (!IsContained(position,40) || nHitsAfterTFilter < 20 || position->Z() > 240)
 			continue;
 
 
@@ -248,8 +254,9 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 
 		if (energy > 100 && highEnergy)
 		{
-			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " Et = " << mcEnergy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << endl;
+			cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " Et = " << mcEnergy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " Q = " << qTotal << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
+			cout << (*mcPosition).X() << " " << (*mcPosition).Y() << " " << (*mcPosition).Z() << endl;
 			g_cascadeXY->SetPoint(nHighEnergyEvents,position->X(),position->Y());
 			nHighEnergyEvents++;
 		}

@@ -90,6 +90,7 @@ struct UnifiedEvent
 	double time = -1;
 	double mcFlagID = -1;
 	double likelihood = -1;
+	double likelihoodHitOnly = -1;
 	int nHitsAfterCaus = -1;
 	int nHitsAfterTFilter = -1;
 	int nStringsAfterCaus = -1;
@@ -142,6 +143,7 @@ extern int gNCutT;
 extern int gNCutDiff;
 extern double gTCutChi2;
 extern double gLikelihoodCut;
+extern double gZCut;
 extern int   gDirFitType;
 extern bool gUseEOSRead;
 extern bool gUseNewFolderStructure;

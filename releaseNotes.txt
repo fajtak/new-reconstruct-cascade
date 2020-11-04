@@ -1,4 +1,14 @@
-21.10.2020 - git commit ---
+04.11.2020 - git commit ---
+	* DatastudyRecCas.C and MCstudyRecCas.C now take into account also uncontained cascades
+	* MCstudyUnconRecCas.C added to study uncontained cascades
+	* studyMCCascade.C extended
+	* compareDataMCCascades.C updated
+	* new gZCut to suppress muon tracks implemented, default value 250 m
+	* likelihoodHitOnly added to TTree and calculated for every reconstructed cascade
+	* CountTrackHitsSegment() implemented according to Zuzana's study and used as default
+	* likelihoodCut is now growing function with respect to energy
+
+21.10.2020 - git commit 32f30ea0a735c49515b81857de561b3a26542b0b
 	* memory leaks in the eventVis fixed
 	* hits TFilter cut returned
 	* minor changes to studyMCCascade.C

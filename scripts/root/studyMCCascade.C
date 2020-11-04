@@ -54,6 +54,7 @@ TVirtualFitter* fMinuit;
 
 TH2F* h_xyPosition = new TH2F("h_xyPosition","XY position;X [m];Y [m]",100,-500,500,100,-500,500);
 TH1F* h_energy = new TH1F("h_energy","Energy; E [TeV]; NoE [#]",1000,0,10000);
+TH2F* h_energyDistance = new TH2F("h_energyDistance","Energy vs. Distance;E [TeV];L [m]",1000,0,10000,200,0,200);
 TH1F* h_overallCharge = new TH1F("h_overallCharge","Overall charge; Q [p.e.]; NoE [#]",10000,0,100000);
 TH1F* h_overallChargeWithNoise = new TH1F("h_overallChargeWithNoise","Overall charge (noise included); Q [p.e.]; NoE [#]",10000,0,100000);
 TH2F* h_overallChargeVsEnergy = new TH2F("h_overallChargeVsEnergy","Overall charge vs Cascade energy; log(Q[p.e]);log_{10}(E_{sh}[GeV])",700,0,7,100,0,10);
@@ -173,6 +174,7 @@ TH1F* h_closeHitsFilter = new TH1F("h_closeHitsFilter","Distribution of number o
 TH2D* h_likelihoodEnergy = new TH2D("h_likelihoodEnergy","Likelihood minimum value vs. Energy;log_{10}(E_{sh}[GeV]);Likelihood [#]",100,0,10,300,0,300);
 TH2D* h_likelihoodNHits = new TH2D("h_likelihoodNHits","Likelihood minimum value vs. nReco hits;N_{hits} [#];Likelihood [#]",200,0,200,300,0,300);
 TH2D* h_likelihoodMismatchAngle = new TH2D("h_likelihoodMismatchAngle","Likelihood minimum value vs. mismatch angle;Mismatch angle [deg.];Likelihood [#]",180,0,180,300,0,300);
+TH2D* h_likelihoodCharge = new TH2D("h_likelihoodCharge","Likelihood minimum value vs. charge;Q [p.e.];Likelihood [#]",1000,0,500000,300,0,300);
 
 
 TH1F* h_zFilterCum;
@@ -545,6 +547,21 @@ bool IsUncontained(mcCascade* cascade, int near, int far)
 		return true;
 	else
 		return false;
+}
+
+double Distance(mcCascade* cascade)
+{
+	return TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2)+TMath::Power(cascade->position[2],2));
+}
+
+double DistanceXY(mcCascade* cascade)
+{
+	return TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2));
+}
+
+double DistanceZ(mcCascade* cascade)
+{
+	return cascade->position[2];
 }
 
 double CountCharge(mcCascade*cascade,double &noiseCharge)
@@ -1495,9 +1512,10 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 			cout << std::flush;
 		}
 		tree->GetEntry(i);
+		h_energyDistance->Fill(cascade->showerEnergy,DistanceXY(cascade));
 
-		if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 500 != 0)
-		// if (!IsUncontained(cascade,60,200) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 1000 != 0)
+		if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 250 != 0)
+		// if (!IsUncontained(cascade,120,140) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 250 != 0)
 		// if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000)
 		{
 			continue;
@@ -1720,6 +1738,7 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 			h_likelihoodEnergy->Fill(TMath::Log10(cascadeEnergyTrue*1000),likelihood);
 			h_likelihoodNHits->Fill(g_pulses.size(),likelihood);
 			h_likelihoodMismatchAngle->Fill(cascDirRec.Angle(cascDirTrue)/TMath::Pi()*180,likelihood);
+			h_likelihoodCharge->Fill(overallCharge,likelihood);
 		}
 
 		h_zFilter->Fill(matrixPosition.Z());
@@ -2217,6 +2236,13 @@ void DrawHistograms()
 
 	TCanvas* c_likelihoodMismatchAngle = new TCanvas("c_likelihoodMismatchAngle","LikelihoodMismatchAngle",800,600);
 	h_likelihoodMismatchAngle->Draw("colz");
+
+	TCanvas* c_likelihoodCharge = new TCanvas("c_likelihoodMismatchAngle","LikelihoodCharge",800,600);
+	h_likelihoodCharge->Draw("colz");
+
+	TCanvas* c_energyDistance = new TCanvas("c_energyDistance","EnergyDistance",800,600);
+	h_energyDistance->Draw("colz");
+
 }
 
 void SaveHistograms(int noiseRateInkHz, int initEstTechnique, bool useNoise, bool useChi2, bool mcData = false, bool likeMultiFit = false)
@@ -2381,6 +2407,8 @@ void SaveHistograms(int noiseRateInkHz, int initEstTechnique, bool useNoise, boo
 	h_likelihoodEnergy->Write();
 	h_likelihoodNHits->Write();
 	h_likelihoodMismatchAngle->Write();
+	h_likelihoodCharge->Write();
+	h_energyDistance->Write();
 
 	delete outputFile;
 }

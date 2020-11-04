@@ -103,7 +103,7 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 
 
 	// TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
-	TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20_nonHit.root","READ");
+	TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20_val.root","READ");
 	TH1F* newMcNHits  = (TH1F*)newMcData->Get("h_nHits");
 	newMcNHits->SetTitle("NEW Muon group MC");
 	newMcNHits->SetLineColor(kBlue);
