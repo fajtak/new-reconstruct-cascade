@@ -1,4 +1,7 @@
-04.11.2020 - git commit ---
+05.11.2020 - git commit ---
+	* CountTrackHitsSegment extended for 46 m and 1.5p.e. cuts
+
+04.11.2020 - git commit bd515df86b7b581762b1ea258e997050b535dab1
 	* DatastudyRecCas.C and MCstudyRecCas.C now take into account also uncontained cascades
 	* MCstudyUnconRecCas.C added to study uncontained cascades
 	* studyMCCascade.C extended

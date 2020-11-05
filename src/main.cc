@@ -2406,6 +2406,13 @@ double TrackExpectedTime(UnifiedEvent &event, TVector3 &cascDir, int OMID)
 	return expTime;
 }
 
+double TrackExpectedDistance(UnifiedEvent &event, TVector3 &cascDir, int OMID)
+{
+	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
+	double lLong = sPerp/TMath::Tan(0.719887);
+	return TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2));
+}
+
 int CountTrackHits(UnifiedEvent &event)
 {
 	int nThetaSteps = 180;
@@ -2468,6 +2475,10 @@ int CountTrackHitsSegment(UnifiedEvent &event, int angleSegment = 20)
 	double charge = 0;
 	double chargeMax = 0;
 
+	event.trackCharge = 0;
+	event.trackTheta = 0;
+	event.trackPhi = 0;
+
 	int startTheta = (event.theta*TMath::RadToDeg() - angleSegment < 0)?0:event.theta*TMath::RadToDeg() - angleSegment;
 	int endTheta = (event.theta*TMath::RadToDeg() + angleSegment > 180)?180:event.theta*TMath::RadToDeg() + angleSegment;
 
@@ -2486,6 +2497,10 @@ int CountTrackHitsSegment(UnifiedEvent &event, int angleSegment = 20)
 
 			for (int k = 0; k < event.nHits; ++k)
 			{
+				if (event.hits[k].charge < 1.5)
+					continue;
+				if (TrackExpectedDistance(event,cascDir,event.hits[k].OMID) > 46)
+					continue;
 				bool inGPulses = false;
 				for (int l = 0; l < gPulses.size(); ++l)
 				{
