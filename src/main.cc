@@ -17,6 +17,7 @@
 #include "TH1D.h"
 #include "TChain.h"
 #include "TGraph2D.h"
+#include "TF1.h"
 
 //BARS dependencies
 #include "BARS.h"

@@ -1,4 +1,7 @@
 05.11.2020 - git commit ---
+	* TF1 fix
+
+05.11.2020 - git commit 408a54e0cec3e07db9d9d187e56f2ecf55c95444
 	* CountTrackHitsSegment extended for 46 m and 1.5p.e. cuts
 
 04.11.2020 - git commit bd515df86b7b581762b1ea258e997050b535dab1
