@@ -2498,8 +2498,8 @@ int CountTrackHitsSegment(UnifiedEvent &event, int angleSegment = 20)
 
 			for (int k = 0; k < event.nHits; ++k)
 			{
-				if (event.hits[k].charge < 1.5)
-					continue;
+				// if (event.hits[k].charge < 1.5)
+					// continue;
 				if (TrackExpectedDistance(event,cascDir,event.hits[k].OMID) > 46)
 					continue;
 				bool inGPulses = false;

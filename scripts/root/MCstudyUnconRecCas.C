@@ -43,9 +43,9 @@ TH2F* h_horDistVsMisEne = new TH2F("h_horDistVsMisEne","Horizontal distance vs. 
 TH1F* h_misEne = new TH1F("h_misEne","Mismatch energy",100,0,10);
 TH1F* h_horDist100TeV = new TH1F("h_horDist100TeV","Horizontal distance for cascades above 100 TeV",200,0,200);
 TH1F* h_horDist100TeVTrue = new TH1F("h_horDist100TeVTrue","Horizontal distance for cascades above 100 TeV",200,0,200);
-TH1F* h_horDist60TeV = new TH1F("h_horDist60TeV","Horizontal distance for cascades above 60 TeV",200,0,200);
-TH1F* h_horDist60TeVTrue = new TH1F("h_horDist60TeVTrue","Horizontal distance for cascades above 60 TeV",200,0,200);
-TH2F* h_nHitsVsMisAngle = new TH2F("h_nHitsVsMisAngle","Number of hits vs. mismatch angle",50,0,100,180,0,180);
+TH1F* h_horDist60TeV = new TH1F("h_horDist60TeV","Horizontal distance for cascades above 60 TeV; Distance [m]; NoE [#]",200,0,200);
+TH1F* h_horDist60TeVTrue = new TH1F("h_horDist60TeVTrue","Horizontal distance for cascades above 60 TeV; Distance [m]; NoE [#]",200,0,200);
+TH2F* h_nHitsVsMisAngle = new TH2F("h_nHitsVsMisAngle","Number of hits vs. mismatch angle; N_{hits} [#]; Mean mismatch angle [deg.]",50,0,100,180,0,180);
 
 
 void SaveResults(int inputFile)
