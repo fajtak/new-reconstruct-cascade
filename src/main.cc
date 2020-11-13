@@ -970,8 +970,8 @@ int ReadGeometryMC(TChain* event)
 	{
 		gOMpositions[i] = geomMC->At(i)->GetPosition();
 		nOKOMs++;
-		if ((i > 35 && i < 60) || (i > 71 && i < 84) || i == 130 || i == 131 || i == 245 || i == 246 || i == 247 || i == 256)
-			gOMqCal[i] = -1;
+		// if ((i > 35 && i < 60) || (i > 71 && i < 84) || i == 130 || i == 131 || i == 245 || i == 246 || i == 247 || i == 256)
+		// 	gOMqCal[i] = -1;
 	}
 	return nOKOMs;
 }
@@ -986,8 +986,10 @@ int ReadDeadOMs()
 			{
 				case 0:
 					deadOMs = {36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,72,73,74,75,76,77,78,79,80,81,82,83,130,131,245,246,247,256};
+					break;
 				default:
 					cerr << "There are no DeadOMs defined for season " << BARS::App::Season << " cluster " << BARS::App::Season << ". Check ReadDeadOMs()!" << endl;
+					break;
 			}
 			break;
 		case 2019:
@@ -995,16 +997,22 @@ int ReadDeadOMs()
 			{
 				case 0:
 					deadOMs = {192,193,194,195,196,197,198,199,200,201,202,203,211,212,213,214,215,155};
+					break;
 				case 1:
 					deadOMs = {35,216,217,218,219,220,221,222,223,224,225,226,227,266,270};
+					break;
 				case 2:
 					deadOMs = {};
+					break;
 				case 3:
 					deadOMs = {};
+					break;
 				case 4:
 					deadOMs = {};
+					break;
 				default:
 					cerr << "There are no DeadOMs defined for season " << BARS::App::Season << " cluster " << BARS::App::Season << ". Check ReadDeadOMs()!" << endl;
+					break;
 			}
 			break;
 		default:
