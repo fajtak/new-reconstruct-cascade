@@ -8,6 +8,7 @@
 #include "TH2F.h"
 #include "TVector3.h"
 #include "TMath.h"
+#include "TStyle.h"
 
 #include <iostream>
 
@@ -45,7 +46,10 @@ TH1F* h_horDist100TeV = new TH1F("h_horDist100TeV","Horizontal distance for casc
 TH1F* h_horDist100TeVTrue = new TH1F("h_horDist100TeVTrue","Horizontal distance for cascades above 100 TeV",200,0,200);
 TH1F* h_horDist60TeV = new TH1F("h_horDist60TeV","Horizontal distance for cascades above 60 TeV; Distance [m]; NoE [#]",200,0,200);
 TH1F* h_horDist60TeVTrue = new TH1F("h_horDist60TeVTrue","Horizontal distance for cascades above 60 TeV; Distance [m]; NoE [#]",200,0,200);
+TH2F* h_dist100TeV = new TH2F("h_dist100Tev","Distance for cascades above 100 TeV",100,0,200,300,-300,300);
 TH2F* h_nHitsVsMisAngle = new TH2F("h_nHitsVsMisAngle","Number of hits vs. mismatch angle; N_{hits} [#]; Mean mismatch angle [deg.]",50,0,100,180,0,180);
+TH2F* h_nHitsVsMisAngleContained = new TH2F("h_nHitsVsMisAngleContained","Number of hits vs. mismatch angle; N_{hits} [#]; Mean mismatch angle [deg.]",50,0,100,180,0,180);
+TH2F* h_nHitsVsMisAngleUncontained = new TH2F("h_nHitsVsMisAngleUncontained","Number of hits vs. mismatch angle; N_{hits} [#]; Mean mismatch angle [deg.]",50,0,100,180,0,180);
 
 
 void SaveResults(int inputFile)
@@ -138,6 +142,9 @@ void DrawResults()
 	h_horDist100TeVTrue->Draw("same");
 	h_horDist100TeVTrue->SetLineColor(kRed);
 
+	TCanvas* c_dist100TeV = new TCanvas("c_dist100TeV","Dist100TeV",800,600);
+	h_dist100TeV->Draw("colz");
+
 	TCanvas* c_horDist60TeV = new TCanvas("c_horDist60TeV","HorDist60TeV",800,600);
 	h_horDist60TeV->Draw();
 	h_horDist60TeVTrue->Draw("same");
@@ -148,6 +155,12 @@ void DrawResults()
 
 	TCanvas* c_nHitsVsMisAngleProf = new TCanvas("c_nHitsVsMisAngleProf","NHitsMisAngleProf",800,600);
 	h_nHitsVsMisAngle->ProfileX()->Draw();
+	TProfile* con = h_nHitsVsMisAngleContained->ProfileX();
+	con->SetMarkerColor(kBlue);
+	con->Draw("same");
+	TProfile* uncon = h_nHitsVsMisAngleUncontained->ProfileX();
+	uncon->SetMarkerColor(kRed);
+	uncon->Draw("same");
 }
 
 bool IsContained(TVector3* position, double distFromCluster = 0)
@@ -229,6 +242,7 @@ int MCstudyUnconRecCas(int inputFile = 0)
 
 	for (int i = 0; i < reconstructedCascades.GetEntries(); ++i)
 	{
+		gStyle->SetPalette(100);
 		reconstructedCascades.GetEntry(i);
 
 		// h_nHitsFull->Fill(nHits);
@@ -248,7 +262,10 @@ int MCstudyUnconRecCas(int inputFile = 0)
 			continue;
 
 		if (energy > 100)
+		{
 			h_horDist100TeV->Fill(horDist);
+			h_dist100TeV->Fill(horDist,position->Z());
+		}
 		if (mcEnergy > 100)
 			h_horDist100TeVTrue->Fill(horDist);
 		if (energy > 60)
@@ -262,6 +279,11 @@ int MCstudyUnconRecCas(int inputFile = 0)
 		h_horDistVsMisAngle->Fill(horDist,mismatchAngle);
 		h_horDistVsMisEne->Fill(horDist,energy/mcEnergy);
 		h_nHitsVsMisAngle->Fill(nHitsAfterTFilter,mismatchAngle);
+		if (IsContained(position))
+			h_nHitsVsMisAngleContained->Fill(nHitsAfterTFilter,mismatchAngle);
+		else
+			h_nHitsVsMisAngleUncontained->Fill(nHitsAfterTFilter,mismatchAngle);
+
 		h_misEne->Fill(energy/mcEnergy);
 		nProcessedEvents++;
 		// h_dirError->Fill(mismatchAngle,directionSigma);

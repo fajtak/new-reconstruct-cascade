@@ -533,7 +533,7 @@ void SetFitter(void)
 
 bool IsContained(mcCascade* cascade, int distance = 60)
 {
-	if (TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2)) < distance && TMath::Abs(cascade->position[2]) < 263+(distance-60))
+	if (TMath::Sqrt(TMath::Power(cascade->position[0],2)+TMath::Power(cascade->position[1],2)) < distance && TMath::Abs(cascade->position[2]) < 263)
 		return true;
 	else
 		return false;
@@ -1503,7 +1503,7 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 	int nCutPassingEvents = 0;
 	int nLogEvents = 0;
 
-	int containmentDistance = 60;
+	int containmentDistance = 200;
 	for (int i = 0; i < nEntries; ++i)
 	{
 		if (i%(nEntries/10) == 0)
@@ -1514,7 +1514,7 @@ int DoTheMagicMCCascades(TChain* tree, mcCascade* cascade, int noiseRateInkHz, i
 		tree->GetEntry(i);
 		h_energyDistance->Fill(cascade->showerEnergy,DistanceXY(cascade));
 
-		if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 250 != 0)
+		if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 100 || cascade->showerEnergy > 1000 || i % 250 != 0)
 		// if (!IsUncontained(cascade,120,140) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000 || i % 250 != 0)
 		// if (!IsContained(cascade,containmentDistance) || cascade->showerEnergy < 0 || cascade->showerEnergy > 10000)
 		{
@@ -2413,7 +2413,7 @@ void SaveHistograms(int noiseRateInkHz, int initEstTechnique, bool useNoise, boo
 	delete outputFile;
 }
 
-int studyMCCascade(int noiseRateInkHz = 50, int initEstTechnique = 2, bool useNoise = true, bool chi2 = true, bool likelihoodMultiFit = false)
+int studyMCCascade(int noiseRateInkHz = 50, int initEstTechnique = 2, bool useNoise = true, bool chi2 = true, bool likelihoodMultiFit = true)
 {
 	clock_t begin = clock();
 	TChain* mcFiles = new TChain("h11");

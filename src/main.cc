@@ -829,6 +829,17 @@ bool CheckInputParamsMCCascades()
 
 bool CheckInputParamsMCData()
 {
+	if (BARS::App::Season == -1)
+    {
+    	std::cout << "Set season with -s" << std::endl;
+    	return false;
+    }
+
+    if (BARS::App::Cluster == -1)
+    {
+    	std::cout << "Set cluster with -c" << std::endl;
+    	return false;
+    }
 	if (gFileInputFolder == "")
 	{
 		std::cout << "Set MC input folder with -f" << std::endl;
@@ -963,6 +974,50 @@ int ReadGeometryMC(TChain* event)
 			gOMqCal[i] = -1;
 	}
 	return nOKOMs;
+}
+
+int ReadDeadOMs()
+{
+	std::vector<int> deadOMs;
+	switch (BARS::App::Season)
+	{
+		case 2016:
+			switch (BARS::App::Cluster)
+			{
+				case 0:
+					deadOMs = {36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,72,73,74,75,76,77,78,79,80,81,82,83,130,131,245,246,247,256};
+				default:
+					cerr << "There are no DeadOMs defined for season " << BARS::App::Season << " cluster " << BARS::App::Season << ". Check ReadDeadOMs()!" << endl;
+			}
+			break;
+		case 2019:
+			switch (BARS::App::Cluster)
+			{
+				case 0:
+					deadOMs = {192,193,194,195,196,197,198,199,200,201,202,203,211,212,213,214,215,155};
+				case 1:
+					deadOMs = {35,216,217,218,219,220,221,222,223,224,225,226,227,266,270};
+				case 2:
+					deadOMs = {};
+				case 3:
+					deadOMs = {};
+				case 4:
+					deadOMs = {};
+				default:
+					cerr << "There are no DeadOMs defined for season " << BARS::App::Season << " cluster " << BARS::App::Season << ". Check ReadDeadOMs()!" << endl;
+			}
+			break;
+		default:
+			cerr << "There are no DeadOMs defined for season " << BARS::App::Season << ". Check ReadDeadOMs()!" << endl;
+			return -1;
+	}
+
+	for (int i = 0; i < deadOMs.size(); ++i)
+	{
+		gOMqCal[deadOMs[i]] = -1;
+	}
+	// BARS::App::Cluster
+	return 0;
 }
 
 int ReadGeometryMCCascades()
@@ -1398,6 +1453,14 @@ int ReadInputParamFiles(TChain* events)
     if (ReadNoiseProbability() == -1)
 	{
 		std::cout << "Problem with NoiseProbability File file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Dead OMs ... ";
+	cout << std::flush;
+    if (ReadDeadOMs() == -1)
+	{
+		std::cout << "Problem with Dead OMs!" << std::endl;
 		return -1;
 	}
 	cout << "DONE!" << endl;
@@ -2052,32 +2115,45 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 	double par[7]{cascPos.X(),cascPos.Y(),cascPos.Z(),0,energy,theta,phi};
 
 	int nHitsPerString[8]{0};
+	int nSatHitsPerString[8]{0};
 	TGraph* g_MeasQ[gNStrings];
+	TGraph* g_satPulses[gNStrings];
 	TGraph* g_DeadOM[gNStrings];
 	TGraph* g_ExpQ[gNStrings];
 	TMultiGraph* mg_QSum[gNStrings];
 
 	int nOMsPerString = gNOMs/gNStrings;
 
-	for(int k = 0; k < gPulses.size(); k++)
-	{
-		nHitsPerString[gPulses[k].OMID/36]++;
-	}
+	// for(int k = 0; k < gPulses.size(); k++)
+	// {
+	// 	if(gUseChargeSatCorrection && gPulses[i].charge > 100)
+	// 		nSatHitsPerString[gPulses[k].OMID/36]
+
+	// 	nHitsPerString[gPulses[k].OMID/36]++;
+	// }
 	for (int i = 0; i < gNStrings; ++i)
 	{
-		g_MeasQ[i] = new TGraph(nHitsPerString[i]);
-		g_ExpQ[i] = new TGraph(nHitsPerString[i]);
+		g_MeasQ[i] = new TGraph();
+		g_satPulses[i] = new TGraph();
+		g_ExpQ[i] = new TGraph();
 		g_DeadOM[i] = new TGraph();
 		mg_QSum[i] = new TMultiGraph(Form("mg_%d",i),Form("String_%d; OM ID [#]; Charge [p.e.]",i+1));
-		nHitsPerString[i] = 0;
+		// nHitsPerString[i] = 0;
 	}
 	for(int k = 0; k < gPulses.size(); k++)
 	{
 		int stringID = gPulses[k].OMID/36;
-		g_MeasQ[stringID]->SetPoint(nHitsPerString[stringID],gPulses[k].OMID,gPulses[k].charge);
+		if(gUseChargeSatCorrection && gPulses[k].charge > 100)
+		{
+			g_satPulses[stringID]->SetPoint(nSatHitsPerString[stringID],gPulses[k].OMID,gPulses[k].charge);
+			nSatHitsPerString[stringID]++;
+		}else
+		{
+			g_MeasQ[stringID]->SetPoint(nHitsPerString[stringID],gPulses[k].OMID,gPulses[k].charge);
+			nHitsPerString[stringID]++;
+		}
 		GetParameters(par,gPulses[k].OMID,tableParameters);
 		gPulses[k].expectedCharge = GetInterpolatedValue(tableParameters)*110000000*energy;
-		nHitsPerString[stringID]++;
 	}
 
 	for (int i = 0; i < gNOMs; ++i)
@@ -2095,11 +2171,14 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 	{
 		cCharge->cd(i+1);
 		mg_QSum[i]->Add(g_MeasQ[i],"P");
+		mg_QSum[i]->Add(g_satPulses[i],"P");
 		mg_QSum[i]->Add(g_ExpQ[i],"P");
 		mg_QSum[i]->Add(g_DeadOM[i],"P");
 		mg_QSum[i]->Draw("AP");
 		g_MeasQ[i]->SetMarkerStyle(20);
 		g_MeasQ[i]->SetMarkerColor(kBlue);
+		g_satPulses[i]->SetMarkerStyle(24);
+		g_satPulses[i]->SetMarkerColor(kBlue);
 		g_ExpQ[i]->SetMarkerStyle(20);
 		g_ExpQ[i]->SetMarkerColor(kGreen);
 		g_DeadOM[i]->SetMarkerStyle(20);

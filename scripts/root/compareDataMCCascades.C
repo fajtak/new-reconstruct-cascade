@@ -12,14 +12,64 @@
 
 #include <iostream>
 
-int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuration = 429.406, double newMcDataDuration = 355.833)
-// int compareDataMCCascades(double realDataDuration = 237.632, double mcDataDuration = 431.076, double newMcDataDuration = 136.845)
+int compareDataMCCascades(int clusterID)
 {
 	bool showFull = false;
-	// bool showFull = true;
+	bool showTwoMC = false;
+	double mcDataDuration = 0;
+	TString mcFile2 = "../../results/mcResults_muatm_jun20_val.root";
+	double realDataDuration = 0;
+	double newMcDataDuration = 0;
+	TString dataFile = "";
+	TString newMcFile = "";
 
-	// TFile* mcData = new TFile("../../results/mcResults_muatm_may19.root","READ");
-	TFile* mcData = new TFile("../../results/mcResults_muatm_may19_nonHit.root","READ");
+	switch(clusterID)
+	{
+		case -1:
+			// All Clusters
+			realDataDuration = 306.8*1.1;
+			newMcDataDuration = 167.48;
+			dataFile = "../../results/mcResults_data_y19c-1.root";
+			newMcFile = "../../results/mcResults_muatm_sep20_cluster-1.root";
+			break;
+		case 0:
+			// Cluster1
+			realDataDuration = 64.064*1;
+			newMcDataDuration = 33.43;
+			dataFile = "../../results/mcResults_data_y19c0.root";
+			newMcFile = "../../results/mcResults_muatm_sep20_cluster0.root";
+			break;
+		case 1:
+			// Cluster2
+			realDataDuration = 68.50*1.5;
+			newMcDataDuration = 33.53;
+			dataFile = "../../results/mcResults_data_y19c1.root";
+			newMcFile = "../../results/mcResults_muatm_sep20_cluster1.root";
+			break;
+		case 2:
+			// Cluster3
+			realDataDuration = 65.12*1.7;
+			newMcDataDuration = 33.43;
+			dataFile = "../../results/mcResults_data_y19c2.root";
+			newMcFile = "../../results/mcResults_muatm_sep20_cluster2.root";
+			break;
+		case 3:
+			// Cluster4
+			realDataDuration = 61.26*1.5;
+			newMcDataDuration = 33.53;
+			dataFile = "../../results/mcResults_data_y19c3.root";
+			newMcFile = "../../results/mcResults_muatm_sep20_cluster3.root";
+			break;
+		case 4:
+			// Cluster5
+			realDataDuration = 47.5416*2.0;
+			newMcDataDuration = 33.56;
+			dataFile = "../../results/mcResults_data_y19c4.root";
+			newMcFile = "../../results/mcResults_muatm_sep20_cluster4.root";
+			break;
+	}
+
+	TFile* mcData = new TFile(mcFile2,"READ");
 	TH1F* mcNHits  = (TH1F*)mcData->Get("h_nHits");
 	mcNHits->SetTitle("Muon group MC");
 	mcNHits->SetLineColor(kRed);
@@ -103,7 +153,7 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 
 
 	// TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20.root","READ");
-	TFile* newMcData = new TFile("../../results/mcResults_muatm_jun20_val.root","READ");
+	TFile* newMcData = new TFile(newMcFile,"READ");
 	TH1F* newMcNHits  = (TH1F*)newMcData->Get("h_nHits");
 	newMcNHits->SetTitle("NEW Muon group MC");
 	newMcNHits->SetLineColor(kBlue);
@@ -186,7 +236,7 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	// mclikelihoodFull->Scale(1/(newMcDataDuration*24*3600));
 
 
-	TFile* realData = new TFile("../../results/mcResults_data_y16c0.root","READ");
+	TFile* realData = new TFile(dataFile,"READ");
 	// TFile* realData = new TFile("../../results/mcResults_data_y18c-1.root","READ");
 	// TFile* realData = new TFile("../../results/mcResults_data_y19c-1.root","READ");
 	TH1F* realNHits  = (TH1F*)realData->Get("h_nHits");
@@ -275,7 +325,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	cout << "Data: " << realTheta->Integral()*realDataDuration*24*3600 << endl;
 
 	THStack* s_nHits = new THStack("s_nHits","; N_{hits} [#];dN/dN_{hits} [Hz / 5 hits]");
-	s_nHits->Add(mcNHits,"HIST");
+	if (showTwoMC)
+		s_nHits->Add(mcNHits,"HIST");
 	s_nHits->Add(newMcNHits,"HIST");
 	s_nHits->Add(realNHits,"");
 
@@ -285,7 +336,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_nHitsTFilter = new THStack("s_nHitsTFilter","; N_{hits}^{reco} [#];dN/dN_{hits}^{reco} [Hz / 2 hits]");
-	s_nHitsTFilter->Add(mcNHitsTFilter,"HIST");
+	if (showTwoMC)
+		s_nHitsTFilter->Add(mcNHitsTFilter,"HIST");
 	s_nHitsTFilter->Add(newMcNHitsTFilter,"HIST");
 	s_nHitsTFilter->Add(realNHitsTFilter,"");
 
@@ -295,7 +347,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_nStringsTFilter = new THStack("s_nStringsTFilter","; N_{strings}^{reco} [#];dN/dN_{strings}^{reco} [Hz]");
-	s_nStringsTFilter->Add(mcNStringsTFilter,"HIST");
+	if (showTwoMC)
+		s_nStringsTFilter->Add(mcNStringsTFilter,"HIST");
 	s_nStringsTFilter->Add(newMcNStringsTFilter,"HIST");
 	s_nStringsTFilter->Add(realNStringsTFilter,"");
 
@@ -305,7 +358,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_energy = new THStack("s_energy",";E_{rec} [TeV];dN/dE_{rec} [Hz / 5 TeV]");
-	s_energy->Add(mcEnergy,"HIST");
+	if (showTwoMC)
+		s_energy->Add(mcEnergy,"HIST");
 	s_energy->Add(newMcEnergy,"HIST");
 	s_energy->Add(realEnergy,"");
 
@@ -315,7 +369,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_theta = new THStack("s_theta",";#theta_{rec} [deg.];dN/d#theta_{rec} [Hz / 5 deg]");
-	s_theta->Add(mcTheta,"HIST");
+	if (showTwoMC)
+		s_theta->Add(mcTheta,"HIST");
 	s_theta->Add(newMcTheta,"HIST");
 	s_theta->Add(realTheta,"");
 
@@ -334,7 +389,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	mcThetaScaled->SetLineWidth(2);
 
 	THStack* s_thetaScaled = new THStack("s_thetaScaled",";#theta_{rec} [deg.];dN/d#theta_{rec} [Hz / 5 deg]");
-	s_thetaScaled->Add(mcThetaScaled,"HIST");
+	if (showTwoMC)
+		s_thetaScaled->Add(mcThetaScaled,"HIST");
 	s_thetaScaled->Add(newMcThetaScaled,"HIST");
 	s_thetaScaled->Add(realTheta,"");
 
@@ -344,7 +400,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_phi = new THStack("s_phi",";#phi_{rec} [deg.];dN/d#phi_{rec} [Hz / 10 deg]");
-	s_phi->Add(mcPhi,"HIST");
+	if (showTwoMC)
+		s_phi->Add(mcPhi,"HIST");
 	s_phi->Add(newMcPhi,"HIST");
 	s_phi->Add(realPhi,"");
 
@@ -354,7 +411,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_qTotal = new THStack("s_qTotal",";Q [p.e.];dN/dQ [Hz / 200 p.e.]");
-	s_qTotal->Add(mcQTotal,"HIST");
+	if (showTwoMC)
+		s_qTotal->Add(mcQTotal,"HIST");
 	s_qTotal->Add(newMcQTotal,"HIST");
 	s_qTotal->Add(realQTotal,"");
 
@@ -364,7 +422,8 @@ int compareDataMCCascades(double realDataDuration = 228.97, double mcDataDuratio
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	THStack* s_likelihood = new THStack("s_likelihood",";L [#];dN/dL [Hz / 0.2]");
-	s_likelihood->Add(mclikelihood,"HIST");
+	if (showTwoMC)
+		s_likelihood->Add(mclikelihood,"HIST");
 	s_likelihood->Add(newMclikelihood,"HIST");
 	s_likelihood->Add(reallikelihood,"");
 

@@ -38,7 +38,7 @@ TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mi
 TH1F* h_mismatchAngle = new TH1F("h_mismatchAngle",";Mismatch angle [deg.]; NoE [#]",180,0,180);
 
 
-void SaveResults(int inputFile)
+void SaveResults(int inputFile, int clusterID)
 {
 	TString suffix = "";
 	if (inputFile == 0)
@@ -53,6 +53,10 @@ void SaveResults(int inputFile)
 		suffix = "muatm_jun20_nonHit";
 	if (inputFile == 8)
 		suffix = "muatm_jun20_val";
+	if (inputFile == 9)
+		suffix = "muatm_sep20";
+	if (clusterID != -2)
+		suffix += Form("_cluster%d",clusterID);
 	TString outputFileName = Form("../../results/mcResults_%s.root",suffix.Data());
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 
@@ -123,6 +127,16 @@ bool IsContained(TVector3* position, double distFromCluster = 0)
 		return false;
 }
 
+bool IsUncontained(TVector3* position, double near, double far)
+{
+	double horizontalDist = TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2));
+	double verticalDist = TMath::Abs(position->Z());
+	if ((horizontalDist < far && horizontalDist > near && verticalDist < 263) || (horizontalDist < far && verticalDist < 263+(far-60) && verticalDist > 263+(near-60)))
+		return true;
+	else
+		return false;
+}
+
 double GetReconstructionError(double theta, double phi, double mcTheta, double mcPhi)
 {
 	TVector3 recDir(0,0,1);
@@ -136,7 +150,7 @@ double GetReconstructionError(double theta, double phi, double mcTheta, double m
 	return recDir.Angle(mcDir);
 }
 
-int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = true)
+int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, bool highEnergy = true)
 {
 	TChain reconstructedCascades("Tree/t_RecCasc");
 
@@ -171,16 +185,35 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		case 8:
 			filesDir = Form("%s/mc/muatm_jun20_val/recCascResults.root",env_p);
 			break;
+		case 9:
+			filesDir = Form("%s/mc/muatm_sep20/recCascResults.root",env_p);
+			break;
 		default:
 			break;
 	}
 
-	reconstructedCascades.Add(filesDir);
+
+	if (clusterID != -2)
+	{
+		int startID = clusterID!=-1?clusterID:0;
+		int endID = clusterID!=-1?clusterID+1:10;
+
+		int index = filesDir.Index("recCasc");
+		for (int i = startID; i < endID; ++i)
+		{
+			TString tempDir = filesDir;
+			tempDir.Insert(index-1,Form("/cluster%d",i));
+			reconstructedCascades.Add(tempDir);
+		}
+	}else
+	{
+		reconstructedCascades.Add(filesDir);
+	}
 
 	int runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter;
 	double energy,theta,phi,mcEnergy,mcTheta,mcPhi;
 	double energySigma,thetaSigma,phiSigma,directionSigma;
-	double chi2AfterCaus, chi2AfterTFilter, time, likelihood, qTotal;
+	double chi2AfterCaus, chi2AfterTFilter, time, likelihood, likelihoodHitOnly, qTotal;
 	TVector3* position = new TVector3();
 	TVector3* mcPosition = new TVector3();
 
@@ -207,6 +240,7 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 	reconstructedCascades.SetBranchAddress("mcPhi", &mcPhi);
 	reconstructedCascades.SetBranchAddress("mcPosition", &mcPosition);
 	reconstructedCascades.SetBranchAddress("likelihood", &likelihood);
+	reconstructedCascades.SetBranchAddress("likelihoodHitOnly", &likelihoodHitOnly);
 	reconstructedCascades.SetBranchAddress("qTotal", &qTotal);
 
 	// reconstructedCascades.Print();
@@ -234,8 +268,8 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 		h_dirError->Fill(mismatchAngle,directionSigma);
 		h_mismatchAngle->Fill(mismatchAngle);
 
-		// if (directionSigma > 20 ||!IsContained(position) || nHitsAfterTFilter < 20 || position->Z() > 240)
-		if (!IsContained(position,40) || nHitsAfterTFilter < 20 || position->Z() > 240)
+		// if (!IsContained(position,0) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
+		if (!IsUncontained(position,60,100) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
 			continue;
 
 
@@ -290,7 +324,7 @@ int MCstudyRecCas(int inputFile = 0, bool upGoing = false, bool highEnergy = tru
 	}
 
 	DrawResults();
-	SaveResults(inputFile);
+	SaveResults(inputFile,clusterID);
 
 	cout << nProcessedEvents << endl;
 
