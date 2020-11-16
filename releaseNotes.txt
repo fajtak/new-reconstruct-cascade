@@ -1,4 +1,7 @@
-13.11.2020 - git commit ---
+16.11.2020 - git commit ---
+	* histogram with OMIDs used in the reconstruction added
+
+13.11.2020 - git commit e15066a2f11ea68050240857637124a765607183
 	* Dead OM fix
 
 13.11.2020 - git commit 546f1cc16ff321d3d58413e23d3b55954aa4d454

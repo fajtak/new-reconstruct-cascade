@@ -48,6 +48,7 @@ TH1D* h_chi2TFilter = new TH1D("h_chi2TFilter","#chi^{2} of the position fit aft
 TH1D* h_nHitsChange = new TH1D("h_nHitsChange","Change in the number of hits after TFilter;#delta N_{hits} [#];NoE [#]",200,-50,150);
 TH1D* h_exitStatus = new TH1D("h_exitStatus","Exit status of the event;#Status [#];NoE [#]",20,-10,10);
 TH1D* h_nHitsTrack = new TH1D("h_nHitsTrack","Number of track hits; N_{hits} [#]; NoE [#]",100,0,100);
+TH1D* h_OMIDinReco = new TH1D("h_OMIDinReco","OMID of hits used in reconstruction; OMID [#]; NoE [#]",300,0,300);
 
 TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood value; #mathcal{L}; NoE [#]",100,0,100);
 TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000,0,1000);
@@ -92,6 +93,7 @@ void SaveHistograms()
 	h_mcPhi->Write();
 	h_exitStatus->Write();
 	h_nHitsTrack->Write();
+	h_OMIDinReco->Write();
 }
 
 int SaveCascadeJSON(int eventID, UnifiedEvent& event)
@@ -1588,6 +1590,7 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
         		continue;
         	// if (gOMpositions[cascade->chID[i]-1].Z()-cascPos.Z() < -140 || gOMpositions[cascade->chID[i]-1].Z()-cascPos.Z() > 180)
         		// continue;
+        	h_OMIDinReco->Fill(event.hits[i].OMID);
         	gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
         	nPulses++;
         }
