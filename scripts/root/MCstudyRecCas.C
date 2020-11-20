@@ -36,6 +36,7 @@ TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
 TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mismatch angle [deg.];Estimated Error [deg.]",100,0,100,50,0,25);
 TH1F* h_mismatchAngle = new TH1F("h_mismatchAngle",";Mismatch angle [deg.]; NoE [#]",180,0,180);
+TH1F* h_energyRatio = new TH1F("h_energyRatio",";E_{reco}/E_{mc} [1]; NoE [#]",1000,0,100);
 
 
 void SaveResults(int inputFile, int clusterID)
@@ -116,6 +117,9 @@ void DrawResults()
 
 	TCanvas* c_mismatchAngle = new TCanvas("c_mismatchAngle","MismatchAngle",800,600);
 	h_mismatchAngle->Draw();
+
+	TCanvas* c_energyRatio = new TCanvas("c_energyRatio","EnergyRatio",800,600);
+	h_energyRatio->Draw();
 
 }
 
@@ -266,12 +270,19 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 
 		double mismatchAngle = GetReconstructionError(theta,phi,mcTheta,mcPhi)/TMath::Pi()*180;
 		h_dirError->Fill(mismatchAngle,directionSigma);
-		h_mismatchAngle->Fill(mismatchAngle);
+		// if (mismatchAngle > 120 && mismatchAngle < 160)
+		// {
+		// 	cout << "High mismatch angle " << runID << " EventID: " << eventID << " E = " << energy << " Et = " << mcEnergy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " Tt = " << mcTheta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " Pt = " << mcPhi/TMath::Pi()*180 << " Q = " << qTotal << endl;
+		// 	cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
+		// 	cout << (*mcPosition).X() << " " << (*mcPosition).Y() << " " << (*mcPosition).Z() << endl;
+		// }
 
-		// if (!IsContained(position,0) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
-		if (!IsUncontained(position,60,100) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
+		if (!IsContained(position,40) || likelihoodHitOnly > 3)
+		// if (!IsUncontained(position,60,100) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 10)
 			continue;
 
+		h_mismatchAngle->Fill(mismatchAngle);
+		h_energyRatio->Fill(energy/mcEnergy);
 
 
 		// if (directionSigma > 10 || nHitsAfterTFilter < 30)

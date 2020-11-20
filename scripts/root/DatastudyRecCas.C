@@ -203,6 +203,9 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 				case 6:
 					filesDir = Form("%s/dataGidra/exp%d/cluster%d/",env_p,j,i);
 					break;
+				case 7:
+					filesDir = Form("%s/dataGidraFull/exp20%d/cluster%d/",env_p,j,i);
+					break;
 			}
 			cout << filesDir << endl;
 
@@ -311,8 +314,8 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_likelihoodFull->Fill(likelihood);
 
 
-		// if (!IsContained(position,0) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
-		if (!IsUncontained(position,60,100) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
+		if (!IsContained(position,40) || likelihoodHitOnly > 3)
+		// if (!IsUncontained(position,60,100) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 3)
 			continue;
 
 			// cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " (" << position->X() << "," << position->Y() << "," << position->Z() << ")" << endl;

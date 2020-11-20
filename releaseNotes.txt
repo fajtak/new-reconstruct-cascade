@@ -1,4 +1,12 @@
-16.11.2020 - git commit ---
+20.11.2020 - git commit ---
+	* minor changes to a lot of C scripts
+	* waveformVis.C improved
+	* added waveformCompare.C that can compare real and expected waveforms
+	* better masking of non-active channels
+	* service flag -b now exports also information about hits necessary for the waveformComparison
+	* likelihood cut error with natural logarithm fixed
+
+16.11.2020 - git commit 24d234636e249b5436c2fc47dd90e50d7708157f
 	* histogram with OMIDs used in the reconstruction added
 
 13.11.2020 - git commit e15066a2f11ea68050240857637124a765607183

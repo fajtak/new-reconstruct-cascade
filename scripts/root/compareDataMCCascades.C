@@ -27,43 +27,43 @@ int compareDataMCCascades(int clusterID)
 	{
 		case -1:
 			// All Clusters
-			realDataDuration = 306.8*1.1;
-			newMcDataDuration = 167.48;
+			realDataDuration = 306.8;
+			newMcDataDuration = 167.48/1.5;
 			dataFile = "../../results/mcResults_data_y19c-1.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster-1.root";
 			break;
 		case 0:
 			// Cluster1
-			realDataDuration = 64.064*1;
-			newMcDataDuration = 33.43;
+			realDataDuration = 64.064;
+			newMcDataDuration = 33.36/1.086;
 			dataFile = "../../results/mcResults_data_y19c0.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster0.root";
 			break;
 		case 1:
 			// Cluster2
-			realDataDuration = 68.50*1.5;
-			newMcDataDuration = 33.53;
+			realDataDuration = 68.50;
+			newMcDataDuration = 33.53/1.359;
 			dataFile = "../../results/mcResults_data_y19c1.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster1.root";
 			break;
 		case 2:
 			// Cluster3
-			realDataDuration = 65.12*1.7;
-			newMcDataDuration = 33.43;
+			realDataDuration = 65.12;
+			newMcDataDuration = 33.43/1.69;
 			dataFile = "../../results/mcResults_data_y19c2.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster2.root";
 			break;
 		case 3:
 			// Cluster4
-			realDataDuration = 61.26*1.5;
-			newMcDataDuration = 33.53;
+			realDataDuration = 61.26;
+			newMcDataDuration = 33.53/1.53;
 			dataFile = "../../results/mcResults_data_y19c3.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster3.root";
 			break;
 		case 4:
 			// Cluster5
-			realDataDuration = 47.5416*2.0;
-			newMcDataDuration = 33.56;
+			realDataDuration = 47.5416;
+			newMcDataDuration = 33.56/2.00;
 			dataFile = "../../results/mcResults_data_y19c4.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster4.root";
 			break;
@@ -108,7 +108,7 @@ int compareDataMCCascades(int clusterID)
 	TH1F* mclikelihood  = (TH1F*)mcData->Get("h_likelihood");
 	mclikelihood->SetTitle("Muon group MC");
 	mclikelihood->SetLineColor(kRed);
-	mclikelihood->Rebin(2);
+	// mclikelihood->Rebin(2);
 	mclikelihood->Scale(1/(mcDataDuration*24*3600));
 	TH1F* mcNHitsFull  = (TH1F*)mcData->Get("h_nHitsFull");
 	mcNHitsFull->SetTitle("Muon group MC");
@@ -148,7 +148,7 @@ int compareDataMCCascades(int clusterID)
 	TH1F* mclikelihoodFull  = (TH1F*)mcData->Get("h_likelihoodFull");
 	mclikelihoodFull->SetTitle("Muon group MC");
 	mclikelihoodFull->SetLineColor(kRed);
-	mclikelihoodFull->Rebin(2);
+	// mclikelihoodFull->Rebin(2);
 	mclikelihoodFull->Scale(1/(mcDataDuration*24*3600));
 
 
@@ -192,7 +192,7 @@ int compareDataMCCascades(int clusterID)
 	TH1F* newMclikelihood  = (TH1F*)newMcData->Get("h_likelihood");
 	newMclikelihood->SetTitle("NEW Muon group MC");
 	newMclikelihood->SetLineColor(kBlue);
-	newMclikelihood->Rebin(2);
+	// newMclikelihood->Rebin(2);
 	newMclikelihood->Scale(1/(newMcDataDuration*24*3600));
 	// TH1F* mcNHitsFull  = (TH1F*)newMcData->Get("h_nHitsFull");
 	// mcNHitsFull->SetTitle("NEW Muon group MC");
@@ -277,7 +277,7 @@ int compareDataMCCascades(int clusterID)
 	TH1F* reallikelihood  = (TH1F*)realData->Get("h_likelihood");
 	reallikelihood->SetTitle("Data");
 	reallikelihood->SetMarkerStyle(kFullCircle);
-	reallikelihood->Rebin(2);
+	// reallikelihood->Rebin(2);
 	reallikelihood->Scale(1/(realDataDuration*24*3600));
 	TH1F* realNHitsFull  = (TH1F*)realData->Get("h_nHitsFull");
 	realNHitsFull->SetTitle("Data");
@@ -317,7 +317,7 @@ int compareDataMCCascades(int clusterID)
 	TH1F* reallikelihoodFull  = (TH1F*)realData->Get("h_likelihoodFull");
 	reallikelihoodFull->SetTitle("Data");
 	reallikelihoodFull->SetMarkerStyle(kFullCircle);
-	reallikelihoodFull->Rebin(2);
+	// reallikelihoodFull->Rebin(2);
 	reallikelihoodFull->Scale(1/(realDataDuration*24*3600));
 
 	cout << "Background expected: " << mcTheta->Integral()*realDataDuration*24*3600 << endl;
@@ -421,7 +421,7 @@ int compareDataMCCascades(int clusterID)
 	s_qTotal->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	THStack* s_likelihood = new THStack("s_likelihood",";L [#];dN/dL [Hz / 0.2]");
+	THStack* s_likelihood = new THStack("s_likelihood",";L [#];dN/dL [Hz / 0.1]");
 	if (showTwoMC)
 		s_likelihood->Add(mclikelihood,"HIST");
 	s_likelihood->Add(newMclikelihood,"HIST");

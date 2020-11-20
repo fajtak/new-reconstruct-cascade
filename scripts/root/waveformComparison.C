@@ -145,12 +145,35 @@ int waveformVis(int sdc, int eventID)
 	return 0;
 }
 
-int waveformVis(int OMID)
+const int gNOMs = 288;
+double gOMtimeCal[gNOMs] = {0};
+double gOMchargeCal[gNOMs] = {0};
+TVector3 gOMpositions[gNOMs];
+
+struct Hit
+{
+	int OMID;
+	double time;
+	double expTime;
+	double charge;
+	double expCharge;
+	TMultiGraph* waveform;
+};
+
+vector<Hit> hits;
+
+TString calibFilePath = "/Data/BaikalData/exp19_barsv051/cluster1/0112/calib.txt";
+TString timeResFilePath = "/Data/BaikalData/exp19_barsv051/cluster1/0112/timeRes.txt";
+TString outputFilePath = "/Data/BaikalData/exp19_barsv051/cluster1/0112/waveforms/waveforms.root";
+TString pngOutputFilePath = "/Data/BaikalData/exp19_barsv051/cluster1/0112/waveforms/";
+
+TMultiGraph* WaveformVis(int OMID, int pulseID)
 {
 	BGeomTel2019_2* geomConfig = new BGeomTel2019_2();
 	int fileSdC = geomConfig->GetSdc(OMID/12);
 	int sectionOMID = OMID%12;
 	TString inputFile = Form("/Data/BaikalData/exp19_barsv051/cluster1/0112/i0112.raw.events.%d.root",fileSdC);
+	// TString inputFile = Form("/Data/BaikalData/exp16_barsv051/cluster0/0070/f0070.raw.events.%d.sorted.root",fileSdC);
 
 	TFile* file = new TFile(inputFile,"READ");
 
@@ -160,13 +183,13 @@ int waveformVis(int OMID)
     BRawMasterHeader* rawMasterHeader = NULL;
     tree->SetBranchAddress("BRawMasterHeader.", &rawMasterHeader);
 
-    TCanvas* myCan = new TCanvas("myCan","Results",800,600);
-    TMultiGraph* mg_waveforms = new TMultiGraph("mg_waveforms","Waveforms;Time [FADC channels];Amplitude [FADC channels]");
-    TLegend* myLegend = new TLegend(0.6,0.7,0.9,0.9);
+    // TCanvas* myCan = new TCanvas("myCan","Results",800,600);
+    TMultiGraph* mg_waveforms = new TMultiGraph(Form("OM_%d",OMID),"Waveforms;Time [FADC channels];Amplitude [FADC channels]");
+    // TLegend* myLegend = new TLegend(0.6,0.7,0.9,0.9);
 
 	tree->GetEntry(364888);
 
-	cout << rawMasterData->GetNumSamples() << endl;
+	// cout << rawMasterData->GetNumSamples() << endl;
 	TGraph* graphs[rawMasterData->GetNumSamples()];
 
 	for (int i = 0; i < rawMasterData->GetNumSamples(); ++i)
@@ -178,12 +201,16 @@ int waveformVis(int OMID)
 
 		graphs[i] = new TGraph();
 	    graphs[i]->SetName(Form("graphs_%d",i));
-		graphs[i]->SetLineColor(i+1);
-		graphs[i]->SetMarkerColor(i+1);
-		graphs[i]->SetMarkerStyle(i+21);
+	    graphs[i]->SetTitle(Form("OMID_%d, Q = %.1f, T = %.1f",OMID,hits[pulseID].charge,hits[pulseID].time));
+		// graphs[i]->SetLineColor(i+1);
+		graphs[i]->SetLineColor(kRed);
+		// graphs[i]->SetMarkerColor(i+1);
+		graphs[i]->SetMarkerColor(kRed);
+		// graphs[i]->SetMarkerStyle(i+21);
+		graphs[i]->SetMarkerStyle(21);
 		graphs[i]->SetMarkerSize(0.9);
 
-		cout << i << " Nbins: " << sample->GetNbins() << " " << sample->GetNch()<< " " << sample->GetOffset() << endl;
+		// cout << i << " Nbins: " << sample->GetNbins() << " " << sample->GetNch()<< " " << sample->GetOffset() << endl;
 
 		Int_t nbins = sample->GetNbins();
 		Short_t *data = sample->GetData();
@@ -207,78 +234,152 @@ int waveformVis(int OMID)
 			charge += data[k]-pedestal;
 		}
 
+		bool saveGraph = false;
+
 		graphs[i]->Set(nbins);
 		for(Int_t n = 0; n < nbins; n++) {
-			graphs[i]->SetPoint(n, n+offset, data[n]-pedestal);
+			if (TMath::Abs(5*(n+offset-512)-gOMtimeCal[OMID] - hits[pulseID].time) < 100)
+				saveGraph = true;
+			graphs[i]->SetPoint(n, 5*(n+offset-512)-gOMtimeCal[OMID], data[n]-pedestal);
 		}
 
-		mg_waveforms->Add(graphs[i]);
-		myLegend->AddEntry(graphs[i],Form("graphs_%d",i),"l");
+		if (saveGraph)
+			mg_waveforms->Add(graphs[i]);
+		// myLegend->AddEntry(graphs[i],Form("graphs_%d",i),"l");
 	}
 
-	mg_waveforms->Draw("APL");
-	myLegend->Draw();
-
-	// graph->Draw();
-	// graph->GetXaxis()->SetTitle("Time [FADC channels]");
-	// graph->GetYaxis()->SetTitle("Amplitude [FADC channels]");
-	// graph->SetTitle("Comparison of different fitting functions");
-	// myCan->Update();
-
-	return 0;
-
-}
-
-
-	// cout << rawMasterData->GetNumSamples() << endl;
-
-	// BRawFADCSample* sample = rawMasterData->GetFADCSample(0);
-
-	// cout << sample->GetNbins() << endl;
-
-	// Int_t nbins = sample->GetNbins();
-	// Short_t *data = sample->GetData();
-	// double pedestal = 0;
-	// int amplitude = 0;
-	// int charge = 0;
-	// int amplitudeBin = 0;
-	// for (int k = 0; k < c_nPed; ++k)
-	// {
-	// 	pedestal += data[k];
-	// }
-	// pedestal /= c_nPed;
-	// for (int k = 0; k < nbins; ++k)
-	// {
-	// 	if (data[k]-pedestal > amplitude)
-	// 	{
-	// 		amplitude = data[k]-pedestal;
-	// 		amplitudeBin = k;
-	// 	}
-	// 	charge += data[k]-pedestal;
-	// }
-	// // if (amplitude-pedestal > 70	|| amplitude-pedestal < 65)
-	// if (charge < 0)
-	// 	cout << "NEGATIVE CHARGE!" << endl;
-
-	// graph->Set(nbins);
-	// for(Int_t n = 0; n < nbins; n++) {
-	// 	graph->SetPoint(n, n, data[n]-pedestal);
-	// }
-	// fitFunc->SetParameters(0,amplitude/0.37,amplitudeBin,2.2);
-	// graph->Fit(fitFunc,"W");
-	// graph->Fit(fitFunc2,"W+");
-	// graph->Fit(fitFunc3,"W+");
-	// // cout << "amplitude = " << amplitude << " charge = " << charge << endl;
-	// graph->Draw();
-	// graph->GetXaxis()->SetTitle("Time [FADC channels]");
-	// graph->GetYaxis()->SetTitle("Amplitude [FADC channels]");
-	// graph->SetTitle("Comparison of different fitting functions");
-	// myCan->Update();
-
-	// TLegend* myLegend = new TLegend(0.6,0.7,0.9,0.9);
-	// myLegend->AddEntry(fitFunc,"Gumpbel function, #chi^{2}/NDF = 0.32","l");
-	// myLegend->AddEntry(fitFunc2,"Gaussian function, #chi^{2}/NDF = 2.86","l");
-	// myLegend->AddEntry(fitFunc3,"Landau function, #chi^{2}/NDF = 2.19","l");
+	// mg_waveforms->Draw("APL");
 	// myLegend->Draw();
 
- //    return 0;
+	// graph->Draw();
+	// graph->GetXaxis()->SetTitle("Time [FADC channels]");
+	// graph->GetYaxis()->SetTitle("Amplitude [FADC channels]");
+	// graph->SetTitle("Comparison of different fitting functions");
+	// myCan->Update();
+
+	return mg_waveforms;
+}
+
+int GumbelVis(int pulseID)
+{
+	// cout << hits[0].OMID << " " << hits[0].charge << " " << hits[0].time << endl;
+	TF1* gump = new TF1("gump","[0]*exp(-((x-[1]-9.85)/5/[2] + exp(-(x-[1]-9.85)/5/[2])))",hits[pulseID].expTime-50,hits[pulseID].expTime+150);
+
+	gump->SetParameters(hits[pulseID].expCharge*gOMchargeCal[hits[pulseID].OMID]/7/0.368,hits[pulseID].expTime,2.0);
+	TGraph* myGraph = new TGraph(gump);
+	myGraph->SetTitle(Form("Gumbel, Q = %.1f, T = %.1f",hits[pulseID].expCharge,hits[pulseID].expTime));
+	hits[pulseID].waveform->Add(myGraph);
+	return 0;
+}
+
+int ReadCalibFile(TString fileName)
+{
+	ifstream inputCalibFile;
+    inputCalibFile.open(fileName);
+
+    if (!inputCalibFile)
+    {
+    	cerr << "Calib file: " << fileName << " was NOT found. Program termination!" << endl;
+    	return -1;
+  	}
+
+  	int OMID = 0;
+  	double x,y,z = 0;
+
+  	for(int i = 0; i < gNOMs; i++)
+  	{
+  		inputCalibFile >> OMID >> gOMchargeCal[OMID] >> gOMtimeCal[OMID] >> x >> y >> z;
+  		gOMpositions[OMID].SetXYZ(x,y,z);
+	  	// cout << OMID << "\t" << gOMchargeCal[OMID] << "\t" << gOMtimeCal[OMID] << endl;
+	  	OMID++;
+  	}
+
+	inputCalibFile.close();
+	return 0;
+}
+
+int ReadTimeResFile(TString fileName)
+{
+	ifstream inputTimeResFile;
+    inputTimeResFile.open(fileName);
+
+    if (!inputTimeResFile)
+    {
+    	cerr << "TimeRes file: " << fileName << " was NOT found. Program termination!" << endl;
+    	return -1;
+  	}
+
+  	int eventID,OMID;
+  	double timeRes, expectedTime, charge, expectedCharge;
+
+  	while(!inputTimeResFile.eof())
+  	{
+  		inputTimeResFile >> eventID >> OMID >> timeRes >> expectedTime >> charge >> expectedCharge;
+  		if (inputTimeResFile.eof())
+  			break;
+  		hits.push_back(Hit{OMID,expectedTime+timeRes,expectedTime,charge,expectedCharge});
+  	}
+
+	inputTimeResFile.close();
+
+	return 0;
+}
+
+int CreateWaveforms()
+{
+	// cout << "Waveform Vis" << endl;
+	for (int i = 0; i < hits.size(); ++i)
+	{
+		hits[i].waveform = WaveformVis(hits[i].OMID,i);
+	}
+	return 0;
+}
+
+int CreatePulses()
+{
+	// cout << "Gumbel Vis" << endl;
+	for (int i = 0; i < hits.size(); ++i)
+	{
+		// cout << i << endl;
+		GumbelVis(i);
+	}
+	return 0;
+}
+
+int SaveWaveforms()
+{
+	TFile* outputFile = new TFile(outputFilePath,"RECREATE");
+
+	if (!outputFile->IsOpen())
+	{
+		std::cout << "Output File: " << outputFilePath << " can not be recreated!" << endl;
+    	return -1;
+	}
+	// TLegend* myLegend = new TLegend(0.6,0.7,0.9,0.9);
+
+	for (int i = 0; i < hits.size(); ++i)
+	{
+		TCanvas* myCan = new TCanvas(Form("c_OMID_%d",hits[i].OMID),Form("OMID_%d",hits[i].OMID),800,600);
+		hits[i].waveform->Draw("APL");
+
+		myCan->BuildLegend();
+		myCan->Write();
+		myCan->SaveAs(Form("%s/OMID_%d.png",pngOutputFilePath.Data(),hits[i].OMID));
+		// myLegend->Draw();
+		// hits[i].waveform->Write();
+	}
+	return 0;
+}
+
+int waveformComparison()
+{
+	ReadCalibFile(calibFilePath);
+	ReadTimeResFile(timeResFilePath);
+
+	CreateWaveforms();
+	CreatePulses();
+
+	SaveWaveforms();
+
+	return 0;
+}

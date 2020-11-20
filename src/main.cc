@@ -178,7 +178,7 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 
 bool IsActiveChannel(int OMID)
 {
-	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && (gSectionMask?gSectionMask->GetChannelStatus(OMID):true));
+	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMqCal[OMID] - (0)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && (gSectionMask?gSectionMask->GetChannelStatus(OMID):true));
 }
 
 void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
@@ -515,14 +515,15 @@ void chi2(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag) /
 
 int SaveServiceInfo(UnifiedEvent &event)
 {
-	TString outputFileName = "";
+	TString outputFileFolder = "";
 	if (App::Output == "" || App::Output == "a")
 	{
-    	outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	outputFileFolder = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
 	}
     else
-    	outputFileName =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+    	outputFileFolder =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
 
+    TString outputFileName = outputFileFolder;
     outputFileName += "timeRes.txt";
 	ofstream outputTimeResFile;
     outputTimeResFile.open(outputFileName,std::ofstream::app);
@@ -540,26 +541,47 @@ int SaveServiceInfo(UnifiedEvent &event)
 	{
 		// chi calculation (measured - theoretical)
 		double timeRes = gPulses[i].time - ExpectedTime(event.position,event.time,gPulses[i].OMID);
-		outputTimeResFile << gPulses[i].OMID << "\t" << timeRes << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
+		outputTimeResFile << event.eventID << "\t" << gPulses[i].OMID << "\t" << timeRes << "\t" << ExpectedTime(event.position,event.time,gPulses[i].OMID) << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
 	}
 	outputTimeResFile.close();
+
+
+	TString outputCalibFileName = outputFileFolder;
+    outputCalibFileName += "calib.txt";
+    ofstream outputCalibFile;
+    outputCalibFile.open(outputCalibFileName,std::ofstream::app);
+
+	for (int i = 0; i < gNOMs; ++i)
+    {
+    	outputCalibFile << i << "\t" << gOMqCal[i] << "\t" << gOMtimeCal[i] << "\t" << gOMpositions[i].X() << "\t" << gOMpositions[i].Y() << "\t" << gOMpositions[i].Z() << endl;
+    }
+    outputCalibFile.close();
 
 	return 0;
 }
 
 int CleanServiceInfo()
 {
-	TString outputFileName = "";
+	TString outputFileFolder = "";
 	if (App::Output == "" || App::Output == "a")
 	{
-    	outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	outputFileFolder = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
 	}
     else
-    	outputFileName =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+    	outputFileFolder =  Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
 
+    TString outputFileName = outputFileFolder;
     outputFileName += "timeRes.txt";
 	ofstream outputTimeResFile;
     outputTimeResFile.open(outputFileName,std::ofstream::trunc);
+    outputTimeResFile.close();
+
+    TString outputCalibFileName = outputFileFolder;
+    outputCalibFileName += "calib.txt";
+    ofstream outputCalibFile;
+    outputCalibFile.open(outputCalibFileName,std::ofstream::trunc);
+    outputCalibFile.close();
+
     return 0;
 }
 
@@ -2172,7 +2194,7 @@ int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double the
 		int stringID = i/36;
 		GetParameters(par,i,tableParameters);
 		g_ExpQ[stringID]->SetPoint(i%36,i,GetInterpolatedValue(tableParameters)*110000000*energy);
-		if (gOMqCal[i] == -1 || (gSectionMask?gSectionMask->GetChannelStatus(i) == 0:false))
+		if (!IsActiveChannel(i))
 			g_DeadOM[stringID]->SetPoint(g_DeadOM[stringID]->GetN(),i,0);
 	}
 
@@ -2712,7 +2734,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 	h_likelihood->Fill(event.likelihood);
 
-	double likelihoodCut = gLikelihoodCut + 7*(TMath::Log(event.energy*1000)-3);
+	double likelihoodCut = gLikelihoodCut + 7*(TMath::Log10(event.energy*1000)-3);
 
 	if (event.likelihood > (gUseNonHitLikelihoodTerm?likelihoodCut/6:likelihoodCut))
 		return -7;
@@ -2842,10 +2864,6 @@ int ProcessExperimentalData()
 	{
 		return -1;
 	}
-
-	if (gProductionID == "") // Sets default productionID (can be set with "-t" switch )
-		gProductionID = "barsv051";
-
 
 	// Sets the file path and checks its existence
     const char* filePath = "";
@@ -3194,6 +3212,10 @@ int main(int argc, char** argv)
 
     PrintHeader();
     SetFitter();
+
+    if (gProductionID == "") // Sets default productionID (can be set with "-t" switch )
+    	gProductionID = "barsv051";
+
     if (gSaveServiceInfo)
     	CleanServiceInfo();
 

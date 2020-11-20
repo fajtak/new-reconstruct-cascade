@@ -10,7 +10,9 @@
 TH1F* h_cost = new TH1F("h_cost","cos(Theta); cos(Theta); NoE [#]",200,-1,1);
 TH1F* h_astroCascEnergy = new TH1F("h_astroCascEnergy","Astrophysical neutrinos; E [TeV]; NoE [#]",200,0,1000);
 TH1F* h_atmCascEnergy = new TH1F("h_atmCascEnergy","Atmospheric neutrinos; E [TeV]; NoE [#]",200,0,1000);
-TH1F* h_zenithAngle = new TH1F("h_zenithAngle","Zenith Angle; #theta [deg]; NoE [#]",36,0,180);
+TH1F* h_astroZenithAngle = new TH1F("h_astroZenithAngle","Zenith Angle; #theta [deg]; NoE [#]",36,0,180);
+TH1F* h_atmZenithAngle = new TH1F("h_atmZenithAngle","Zenith Angle; #theta [deg]; NoE [#]",36,0,180);
+TH1F* h_nHits = new TH1F("h_nHits","NHits; nHits [#]; NoE [#]",200,0,200);
 TH1F* h_energy = new TH1F("h_energy","",500,0,5);
 
 
@@ -61,10 +63,15 @@ void DrawResults()
 	// h_atmCascEnergy->Draw();
 
 	TCanvas* c_zenithAngle = new TCanvas("c_zenithAngle","Zenith Angle",800,600);
-	h_zenithAngle->Draw();
+	h_atmZenithAngle->Draw();
+	h_astroZenithAngle->Draw("same");
+	h_atmZenithAngle->SetLineColor(kRed);
 
 	TCanvas* c_energy = new TCanvas("c_energy","Energy",800,600);
 	h_energy->Draw();
+
+	TCanvas* c_nHits = new TCanvas("c_nHits","NHits",800,600);
+	h_nHits->Draw();
 
 }
 
@@ -86,8 +93,8 @@ int Cascstudy()
 	mcCascade* cascade = new mcCascade;
 	SetBranches(cascade,mcFiles);
 
-	// double time = 1;
-	double time = 3.15e7/365*230;
+	double time = 1;
+	// double time = 3.15e7/365*306.8;
 	int hitCut = 20;
 	// double ICflux = 4.1e-9;
 	double ICFlux = 1.7e-10;
@@ -98,11 +105,13 @@ int Cascstudy()
 	{
 		mcFiles->GetEntry(i);
 		h_cost->Fill(cascade->cosTheta);
-		h_zenithAngle->Fill(TMath::ACos(cascade->cosTheta)/TMath::Pi()*180,ICFlux*time*cascade->s0*(4*3.14/20/20)/10000*cascade->pweight*cascade->probint*cascade->sp246*(cascade->nHitct>hitCut));
+		h_astroZenithAngle->Fill(TMath::ACos(cascade->cosTheta)/TMath::Pi()*180,ICFlux*time*cascade->s0*(4*3.14/20/20)/10000*cascade->pweight*cascade->probint*cascade->sp246*(cascade->nHitct>hitCut));
+		h_atmZenithAngle->Fill(TMath::ACos(cascade->cosTheta)/TMath::Pi()*180,muonAtmFlux*time*cascade->s0*(4*3.14/20/20)/10000*cascade->pweight*cascade->probint*cascade->spat*(cascade->nHitct>hitCut));
 
 		h_astroCascEnergy->Fill(cascade->showerEnergy,ICFlux*time*cascade->s0*(4*3.14/20/20)/10000*cascade->pweight*cascade->probint*cascade->sp246*(cascade->nHitct>hitCut));
 		h_atmCascEnergy->Fill(cascade->showerEnergy,muonAtmFlux*time*cascade->s0*(4*3.14/20/20)/10000*cascade->pweight*cascade->probint*cascade->spat*(cascade->nHitct>hitCut));
 		h_energy->Fill(TMath::Log10(cascade->showerEnergy));
+		h_nHits->Fill(cascade->nHitct,muonAtmFlux*time*cascade->s0*(4*3.14/20/20)/10000*cascade->pweight*cascade->probint*cascade->spat*(cascade->nHitct>hitCut));
 	}
 
 	DrawResults();
