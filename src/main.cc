@@ -1719,7 +1719,7 @@ bool SixThreeFilterPassed()
 int CountOMs(UnifiedEvent &event)
 {
 	int nOMs = 0;
-	bool hitOMs[gNOMs]{false};
+	vector<bool> hitOMs(gNOMs,false);
 
 	for (int i = 0; i < event.nHits; ++i)
 	{
