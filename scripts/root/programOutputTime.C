@@ -95,6 +95,8 @@ int programOutputTime(int year, int cluster, TString folderPath)
 {
 	// ifstream fileIn(Form("/Data/BaikalData/dataVal/exp%d/cluster%d/programOutput_%d_%d.log",year,cluster,year,cluster));
 	ifstream fileIn(Form("%s/programOutput_%d_%d.log",folderPath.Data(),year,cluster));
+	ofstream fileOut(Form("%s/timeExpositions_%d_%d.log",folderPath.Data(),year,cluster));
+	fileOut << "# RunID \t expTime [s] \t expTime [h] \t expTime [d]" << endl;
 
 	string oneLine;
 	char oneChar;
@@ -154,7 +156,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 				// cout << recentRun << " " << measTimeHours << " "  << measTimeDays << endl;
 			}
 
-			if (nEvents == 0)
+			if (nEvents <= 0)
 				continue;
 
 			nEventsTotal += nEvents;
@@ -163,6 +165,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 			g_nEventsPerRun->SetPoint(nProcessedRuns,recentRun,nEvents);
 			g_nEventsPerSecond->SetPoint(nProcessedRuns,recentRun,nEvents/measTimeHours/3600);
 			g_durationPerRun->SetPoint(nProcessedRuns,recentRun,measTimeDays);
+			fileOut << recentRun << "\t" << measTimeHours*3600 << "\t" << measTimeHours << "\t" << measTimeDays << endl;
 
 			bool runEnded = false;
 			while(!fileIn.eof() && !runEnded)
@@ -236,6 +239,9 @@ int programOutputTime(int year, int cluster, TString folderPath)
 
 	// h_procSpeed->Draw();
 	DrawResults();
+
+	fileIn.close();
+	fileOut.close();
 
 	return 0;
 }

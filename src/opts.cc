@@ -241,7 +241,7 @@ void readRC(const char* rcpath)
 		exit(1);
 	}
 
-	gNCut = env.GetValue("NCut", 70);
+	gNCut = env.GetValue("NCut", 50);
 	gQTotalCut = env.GetValue("QTotalCut", 200.0);
 	gQCut = env.GetValue("QCut", 100.0);
 	gCausQCut = env.GetValue("CausQCut", 1.5);

@@ -29,14 +29,21 @@ TH1F* h_thetaContained = new TH1F("h_thetaContained","Zenith angle, contained ca
 TH2F* h_energyNHits = new TH2F("h_energyNHits","Energy vs NHits; log_{10}(E [TeV]); N_{hits} [#]",50,0,5,100,0,100);
 TH1F* h_qTotal = new TH1F("h_qTotal","Overall deposited charge;Q [p.e.];NoE [#]",1000,0,10000);
 TH1F* h_qTotalFull = new TH1F("h_qTotalFull","Overall deposited charge;Q [p.e.];NoE [#]",1000,0,10000);
-TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood;L [#];NoE [#]",100,0,10);
+TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood;L [#];NoE [#]",1000,0,10);
+TH1F* h_likelihoodHitOnly = new TH1F("h_likelihoodHitOnly","Likelihood;L [#];NoE [#]",100,0,10);
+TH1F* h_chi2 = new TH1F("h_chi2","Chi2;#chi_{2} [1];NoE [#]",100,0,100);
 TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",100,0,10);
 TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
+TH1F* h_horDist = new TH1F("h_horDist","Horizontal distance; #rho [m]; NoE [#]",100,0,100);
+TH2F* h_distQTotal = new TH2F("h_distQTotal","Horizontal distance vs. Qtotal; #rho [m]; QTotal [p.e.]",100,0,100,100,0,3000);
+TH2F* h_distEnergy = new TH2F("h_distEnergy","Horizontal distance vs. Energy; #rho [m]; E [TeV]",100,0,100,100,0,1000);
+TH2F* h_zenithEnergy = new TH2F("h_zenithEnergy","Zenith vs. Energy; #theta [deq]; E [TeV]",180,0,180,100,0,1000);
 TGraph* g_cascadeXY = new TGraph();
 TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
 TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mismatch angle [deg.];Estimated Error [deg.]",100,0,100,50,0,25);
 TH1F* h_mismatchAngle = new TH1F("h_mismatchAngle",";Mismatch angle [deg.]; NoE [#]",180,0,180);
 TH1F* h_energyRatio = new TH1F("h_energyRatio",";E_{reco}/E_{mc} [1]; NoE [#]",1000,0,100);
+TH1F* h_nHitsUpGoing = new TH1F("h_nHitsUpGoing","N_{hits} for up-going events (#theta < 80 deg.); N_{hits} [#]; NoE [#]",100,0,100);
 
 
 void SaveResults(int inputFile, int clusterID)
@@ -56,6 +63,8 @@ void SaveResults(int inputFile, int clusterID)
 		suffix = "muatm_jun20_val";
 	if (inputFile == 9)
 		suffix = "muatm_sep20";
+	if (inputFile == 10)
+		suffix = "nuatm_sep20";
 	if (clusterID != -2)
 		suffix += Form("_cluster%d",clusterID);
 	TString outputFileName = Form("../../results/mcResults_%s.root",suffix.Data());
@@ -69,7 +78,13 @@ void SaveResults(int inputFile, int clusterID)
 	h_phi->Write();
 	h_qTotal->Write();
 	h_likelihood->Write();
+	h_likelihoodHitOnly->Write();
+	h_chi2->Write();
 	h_z->Write();
+	h_horDist->Write();
+	h_distQTotal->Write();
+	h_distEnergy->Write();
+	h_zenithEnergy->Write();
 	h_dirError->Write();
 
 	h_nHitsFull->Write();
@@ -80,6 +95,8 @@ void SaveResults(int inputFile, int clusterID)
 	h_phiFull->Write();
 	h_qTotalFull->Write();
 	h_likelihoodFull->Write();
+
+	h_nHitsUpGoing->Write();
 
 }
 
@@ -102,6 +119,18 @@ void DrawResults()
 	TCanvas* c_z = new TCanvas("c_z","Z position",800,600);
 	h_z->Draw();
 
+	TCanvas* c_horDist = new TCanvas("c_horDist","HorizontalDistance",800,600);
+	h_horDist->Draw();
+
+	TCanvas* c_distQTotal = new TCanvas("c_distQTotal","DistQTotal",800,600);
+	h_distQTotal->Draw("colz");
+
+	TCanvas* c_distEnergy = new TCanvas("c_distEnergy","DistEnergy",800,600);
+	h_distEnergy->Draw("colz");
+
+	TCanvas* c_zenithEnergy = new TCanvas("c_zenithEnergy","ZenithEnergy",800,600);
+	h_zenithEnergy->Draw("colz");
+
 	TCanvas* c_cascadePositions = new TCanvas("c_cascadePositions","Results",800,600);
 
 	g_stringPositions->SetMarkerStyle(20);
@@ -120,6 +149,9 @@ void DrawResults()
 
 	TCanvas* c_energyRatio = new TCanvas("c_energyRatio","EnergyRatio",800,600);
 	h_energyRatio->Draw();
+
+	TCanvas* c_nHitsUpGoing = new TCanvas("c_nHitsUpGoing","NHitsUpGoing",800,600);
+	h_nHitsUpGoing->Draw();
 
 }
 
@@ -191,6 +223,9 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 			break;
 		case 9:
 			filesDir = Form("%s/mc/muatm_sep20/recCascResults.root",env_p);
+			break;
+		case 10:
+			filesDir = Form("%s/mc/nuatm_sep20_root/recCascResults.root",env_p);
 			break;
 		default:
 			break;
@@ -277,8 +312,9 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		// 	cout << (*mcPosition).X() << " " << (*mcPosition).Y() << " " << (*mcPosition).Z() << endl;
 		// }
 
-		if (!IsContained(position,40) || likelihoodHitOnly > 3)
-		// if (!IsUncontained(position,60,100) || nHitsAfterTFilter < 20 || position->Z() > 240 || likelihoodHitOnly > 10)
+		if (!IsContained(position,40) || likelihoodHitOnly > 3 )
+		// if (!IsContained(position,40) || likelihoodHitOnly > 3 || position->Z() > 200)
+		// if (!IsUncontained(position,60,100) || likelihoodHitOnly > 3)
 			continue;
 
 		h_mismatchAngle->Fill(mismatchAngle);
@@ -310,10 +346,13 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		{
 			cout << "Up-going Event - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
+			h_nHitsUpGoing->Fill(nHitsAfterTFilter);
 		}
 
 		// cout << i << " " << runID << " " << eventID << " " << theta  << " " << phi << " " << nHitsAfterTFilter << " " << nStringsAfterTFilter << " " << likelihood << " " << qTotal << endl;
 		// cout << energy << " " << energySigma << " " << directionSigma << endl;
+
+		double horizontalDist = TMath::Sqrt(TMath::Power(position->X(),2)+TMath::Power(position->Y(),2));
 
 		h_nHits->Fill(nHits);
 		h_nHitsAfterTFilter->Fill(nHitsAfterTFilter);
@@ -323,7 +362,14 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		h_phi->Fill(phi/TMath::Pi()*180);
 		h_qTotal->Fill(qTotal);
 		h_likelihood->Fill(likelihood);
+		h_likelihoodHitOnly->Fill(likelihoodHitOnly);
+		h_chi2->Fill(chi2AfterTFilter);
 		h_z->Fill(position->Z());
+
+		h_horDist->Fill(horizontalDist);
+		h_distQTotal->Fill(horizontalDist,qTotal);
+		h_distEnergy->Fill(horizontalDist,energy);
+		h_zenithEnergy->Fill(theta/TMath::Pi()*180,energy);
 
 		// if (IsContained(position))
 		{

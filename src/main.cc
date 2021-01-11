@@ -37,6 +37,7 @@ using namespace BARS;
 using namespace std;
 
 TH1D* h_nHits = new TH1D("h_nHits","Number of hits per event;N_{hits} [#];NoE [#]",300,0,300);
+TH1D* h_nOMs = new TH1D("h_nOMs","Number of hit OMs per event;N_{OMs} [#];NoE [#]",300,0,300);
 TH1D* h_totalQ = new TH1D("h_totalQ","Total charge per event;Q [p.e.];NoE [#]",500,0,5000);
 TH1D* h_qPerHit = new TH1D("h_qPerHit","Charge per hit;Q [p.e.];NoE [#]",500,0,5000);
 TH1D* h_nHitsCaus = new TH1D("h_nHitsCaus","Number of hits per event after causality filter;N_{hits} [#];NoE [#]",300,0,300);
@@ -78,6 +79,7 @@ void InitChargeSaturationFunction()
 void SaveHistograms()
 {
 	h_nHits->Write();
+	h_nOMs->Write();
 	h_totalQ->Write();
 	h_qPerHit->Write();
 	h_nHitsCaus->Write();
@@ -165,7 +167,8 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 	fOutputFile<<"\t\t\t\t\"phi\": "<<std::right<<event.phi<<","<<std::endl;
 	fOutputFile<<"\t\t\t\t\"x\": "<<std::right<<event.position.X()<<","<<std::endl;
 	fOutputFile<<"\t\t\t\t\"y\": "<<std::right<<event.position.Y()<<","<<std::endl;
-	fOutputFile<<"\t\t\t\t\"z\": "<<std::right<<event.position.Z()<<""<<std::endl;
+	fOutputFile<<"\t\t\t\t\"z\": "<<std::right<<event.position.Z()<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"time\": "<<std::right<<event.time<<""<<std::endl;
 	// fOutputFile<<"\t\t\t\t\"time\": "<<std::right<<time<<std::endl;
 	fOutputFile<<"\t\t\t}"<<std::endl;
 	fOutputFile<<"\t\t}]"<<std::endl;
@@ -185,6 +188,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime,
 {
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
+	unifiedEvent.nOMs = 0;
 	unifiedEvent.qTotal = 0;
 	double hitCharge = 0;
 
@@ -221,6 +225,7 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 	unifiedEvent.mcTheta = mcEvent->GetPrimaryParticlePolar()/180*TMath::Pi();
 	// unifiedEvent.mcPhi = mcEvent->GetMuonTrack(0)->GetAzimuthAngle();
 	unifiedEvent.mcPhi = mcEvent->GetPrimaryParticleAzimuth()/180*TMath::Pi();
+	unifiedEvent.mcWeight = mcEvent->GetEventWeight();
 
 	double highestEnergy = 0;
 	int muonID = -1;
@@ -266,6 +271,7 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 	int nHits = 0;
 	int nNoiseHits = 0;
 	unifiedEvent.qTotal = 0;
+
 	for (int i = 0; i < event->NHits(); ++i)
 	{
 		// if (event->Q(i) > 0 && eventMask->GetFlag(i) != 0 && eventMask->GetFlag(i) == unifiedEvent.mcFlagID)
@@ -292,6 +298,7 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
 	unifiedEvent.qTotal = 0;
+	unifiedEvent.nOMs = 0;
 	int nHits = 0;
 	int nNoiseHits = 0;
 	for (int i = 0; i < cascade->nHits; ++i)
@@ -495,6 +502,24 @@ double ExpectedTime(TVector3 cascPos, double cascadeTime,int OMID)
   	return  expectedTime;
 }
 
+double TrackExpectedTime(UnifiedEvent &event, TVector3 &cascDir, int OMID)
+{
+	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
+	// if (sPerp > 150);
+		// return 0;
+	double sLong = (gOMpositions[OMID]-event.position)*(cascDir);
+	double lLong = sPerp/TMath::Tan(0.719887);
+	double expTime = event.time + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
+	return expTime;
+}
+
+double TrackExpectedDistance(UnifiedEvent &event, TVector3 &cascDir, int OMID)
+{
+	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
+	double lLong = sPerp/TMath::Tan(0.719887);
+	return TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2));
+}
+
 // minimization function
 void chi2(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag) //keep all these nonsense parameters
 {
@@ -537,11 +562,21 @@ int SaveServiceInfo(UnifiedEvent &event)
   	// double tableParameters[4]{0};
 	// double par[7]{event.position->X(),event.position->Y(),event.position->Z(),0,event.energy,event.theta,event.phi};
 
+  	TVector3 trackDirection(0,0,1);
+  	trackDirection.SetTheta(1.78);
+  	trackDirection.SetPhi(0.71);
+
+  	// trackDirection.Print();
+
 	for (unsigned int i = 0; i < gPulses.size(); ++i)
 	{
 		// chi calculation (measured - theoretical)
-		double timeRes = gPulses[i].time - ExpectedTime(event.position,event.time,gPulses[i].OMID);
-		outputTimeResFile << event.eventID << "\t" << gPulses[i].OMID << "\t" << timeRes << "\t" << ExpectedTime(event.position,event.time,gPulses[i].OMID) << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
+		double expectedTime = ExpectedTime(event.position,event.time,gPulses[i].OMID);
+		double trackExpectedTime = TrackExpectedTime(event,trackDirection,gPulses[i].OMID);
+		double trackExpectedDistance = TrackExpectedDistance(event,trackDirection,gPulses[i].OMID);
+		// cout << trackExpectedDistance << endl;
+		double timeRes = gPulses[i].time - expectedTime;
+		outputTimeResFile << event.eventID << "\t" << gPulses[i].OMID << "\t" << timeRes+expectedTime << "\t" << expectedTime << "\t" << trackExpectedTime << "\t" << trackExpectedDistance << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
 	}
 	outputTimeResFile.close();
 
@@ -993,9 +1028,9 @@ int ReadGeometryMC(TChain* event)
 	for (int i = 0; i < geomMC->GetNumOMs(); ++i)
 	{
 		gOMpositions[i] = geomMC->At(i)->GetPosition();
+		gOMqCal[i] = 1;
 		nOKOMs++;
 		// if ((i > 35 && i < 60) || (i > 71 && i < 84) || i == 130 || i == 131 || i == 245 || i == 246 || i == 247 || i == 256)
-		// 	gOMqCal[i] = -1;
 	}
 	return nOKOMs;
 }
@@ -1219,8 +1254,8 @@ int ReadQCal(void)
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
-    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	// filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
 
 
 	TString jointFileName(filePath);
@@ -1681,9 +1716,29 @@ bool SixThreeFilterPassed()
 		return false;
 }
 
+int CountOMs(UnifiedEvent &event)
+{
+	int nOMs = 0;
+	bool hitOMs[gNOMs]{false};
+
+	for (int i = 0; i < event.nHits; ++i)
+	{
+		hitOMs[event.hits[i].OMID] = true;
+	}
+
+	for (int i = 0; i < gNOMs; ++i)
+	{
+		nOMs += hitOMs[i];
+	}
+
+	return nOMs;
+}
+
 bool NFilterPassed(UnifiedEvent &event)
 {
 	h_nHits->Fill(event.nHits);
+	event.nOMs = CountOMs(event);
+	h_nOMs->Fill(event.nOMs);
 	h_totalQ->Fill(event.qTotal);
 	if (event.nHits >= gNCut && event.qTotal > gQTotalCut)
 	{
@@ -2508,24 +2563,6 @@ void CalculateEquatorialCoor(UnifiedEvent &event)
 	event.rightAscension = rightAscension*TMath::Pi()/180;
 }
 
-double TrackExpectedTime(UnifiedEvent &event, TVector3 &cascDir, int OMID)
-{
-	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
-	// if (sPerp > 150);
-		// return 0;
-	double sLong = (gOMpositions[OMID]-event.position)*(cascDir);
-	double lLong = sPerp/TMath::Tan(0.719887);
-	double expTime = event.time + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
-	return expTime;
-}
-
-double TrackExpectedDistance(UnifiedEvent &event, TVector3 &cascDir, int OMID)
-{
-	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
-	double lLong = sPerp/TMath::Tan(0.719887);
-	return TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2));
-}
-
 int CountTrackHits(UnifiedEvent &event)
 {
 	int nThetaSteps = 180;
@@ -2769,6 +2806,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("runID",&event.runID);
 	outputTree->Branch("eventID",&event.eventID);
 	outputTree->Branch("nHits",&event.nHits);
+	outputTree->Branch("nOMs",&event.nOMs);
 	outputTree->Branch("nHitsAfterCaus",&event.nHitsAfterCaus);
 	outputTree->Branch("nStringsAfterCaus",&event.nStringsAfterCaus);
 	outputTree->Branch("chi2AfterCaus",&event.chi2AfterCaus);
@@ -2794,6 +2832,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("mcTheta",&event.mcTheta);
 	outputTree->Branch("mcPhi",&event.mcPhi);
 	outputTree->Branch("mcPosition","TVector3",&event.mcPosition);
+	outputTree->Branch("mcWeight",&event.mcWeight);
 	outputTree->Branch("qTotal",&event.qTotal);
 	outputTree->Branch("mcNTrackHitsAfterTFilter",&event.mcNTrackHitsAfterTFilter);
 	outputTree->Branch("nTrackHits",&event.nTrackHits);
@@ -2870,8 +2909,8 @@ int ProcessExperimentalData()
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
-    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	// filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     if (!BARS::App::FileExists(filePath))
     {
     	std::cout << "File: " << filePath << " was not found!" << endl;
@@ -3151,7 +3190,11 @@ int ProcessMCData()
 	else
 		outputFileName = App::Output.Data();
 
-	outputFileName += "/recCascResults.root";
+	if (gEventID == -1)
+		outputFileName += "/recCascResults.root";
+	else
+		outputFileName += Form("/singleRecCasc_%d.root",gEventID);
+
 	TFile* outputFile = new TFile(outputFileName,"RECREATE");
 	TDirectory *cdTree = outputFile->mkdir("Tree");
 	UnifiedEvent unifiedEvent;
@@ -3164,7 +3207,11 @@ int ProcessMCData()
 	EventStats* eventStats = new EventStats();
 	eventStats->nEntries = (gNEventsProcessed == -1)?mcFiles->GetEntries():gNEventsProcessed;
 
-	for (int i = 0; i < eventStats->nEntries; ++i)
+	int startEventID = (gEventID == -1)?0:gEventID;
+	int endEventID = (gEventID == -1)?eventStats->nEntries:gEventID+1;
+	if (gEventID != -1) eventStats->nEntries = 1;
+
+	for (int i = startEventID; i < endEventID; ++i)
 	{
 		if (eventStats->nEntries > 10 && i%(eventStats->nEntries/10) == 0)
 		{

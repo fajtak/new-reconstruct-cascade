@@ -1,4 +1,16 @@
-20.11.2020 - git commit ---
+11.01.2021 - git commit ---
+	* Added MC weights and NHitOMs to the output TTree
+	* Track expected time and distance output for the waveform comparison
+	* Default NCut lowered down to 50 (before 70)
+	* new histograms created in the DataStudyRecCas.C + interesting cascades are saved to txt to be studied with multicluster events
+	* new histograms created in the MCstudyRecCas.C
+	* compareDataMCCascades.C now show also Signal dataset based on the nu_atm MC sample
+	* programOutputTime.C now produces also txt file with exposition times of individual runs
+	* waveformComparison.C is now fully automated
+	* multiclusterEvents.C and studyBackgroundCascades.C newly added
+
+
+20.11.2020 - git commit 74c775e746fdece92767ae216af7d06f8a4d540e
 	* minor changes to a lot of C scripts
 	* waveformVis.C improved
 	* added waveformCompare.C that can compare real and expected waveforms
