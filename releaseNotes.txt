@@ -1,4 +1,7 @@
 11.01.2021 - git commit ---
+	* bug fix 3
+
+11.01.2021 - git commit ddd8c10e79f997e2c2a9908d72458023107f79db
 	* bug fix 2
 	* the first fix was not successful
 

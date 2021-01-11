@@ -1254,8 +1254,8 @@ int ReadQCal(void)
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
-    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	// filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
 
 
 	TString jointFileName(filePath);
@@ -2909,8 +2909,8 @@ int ProcessExperimentalData()
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
-    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    	// filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     if (!BARS::App::FileExists(filePath))
     {
     	std::cout << "File: " << filePath << " was not found!" << endl;
