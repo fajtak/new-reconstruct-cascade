@@ -1,4 +1,7 @@
-11.01.2021 - git commit ---
+11.01.2021 - git commit
+	* bug Fix
+
+11.01.2021 - git commit d3c44f0b6d4f8c9ff66f376e64e7f3526f1c14e4
 	* Added MC weights and NHitOMs to the output TTree
 	* Track expected time and distance output for the waveform comparison
 	* Default NCut lowered down to 50 (before 70)

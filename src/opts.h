@@ -114,7 +114,7 @@ extern BSectionStatus* gSectionMask;
 extern double gLogTable4D[200][351][21][21];
 extern std::vector<double> gNoiseTable;
 extern std::vector<double> gNoiseProbability;
-extern int gNOMs;
+extern const int gNOMs;
 extern const int gNStrings;
 extern std::vector<TVector3> gOMpositions;
 extern std::vector<double> gOMtimeCal;

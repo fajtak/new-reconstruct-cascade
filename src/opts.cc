@@ -21,7 +21,7 @@ TTree* gSectionMaskTree = nullptr;
 double gLogTable4D[200][351][21][21]{0};
 std::vector<double> gNoiseTable;
 std::vector<double> gNoiseProbability;
-int gNOMs = 288;
+const int gNOMs = 288;
 const int gNStrings = 8;
 std::vector<TVector3> gOMpositions(gNOMs);
 std::vector<double> gOMtimeCal(gNOMs,0);
