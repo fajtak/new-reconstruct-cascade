@@ -2777,18 +2777,19 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -7;
 
 	eventStats->nLikelihoodFilter++;
+	event.nTrackHits = CountTrackHitsSegment(event);
+	event.correctedEnergy = GetCorrectedEnergy(event.energy);
+	event.directionSigma = CalculateDirectionError(event);
+	CalculateEquatorialCoor(event);
+
 	if (!gLaserRun)
 	{
-		event.nTrackHits = CountTrackHitsSegment(event);
 		EventVisualization(i,event,event.position,event.time);
 		ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
-		event.correctedEnergy = GetCorrectedEnergy(event.energy);
 		SaveCascadeJSON(i,event);
 		ScanLogLikelihoodEnergy(i,event);
 		ScanLogLikelihoodDirectionCircular(i,event);
 		ScanLogLikelihoodDirection(i,event);
-		event.directionSigma = CalculateDirectionError(event);
-		CalculateEquatorialCoor(event);
 	}
 
 	if (gSaveServiceInfo)

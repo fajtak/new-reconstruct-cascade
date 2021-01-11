@@ -1,4 +1,7 @@
 11.01.2021 - git commit ---
+	* processing without visualizations improved
+
+11.01.2021 - git commit c5fda842b4d8372678a78b3a542e6cd8e933ebb8
 	* bug fix 3
 
 11.01.2021 - git commit ddd8c10e79f997e2c2a9908d72458023107f79db
