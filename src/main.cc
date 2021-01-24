@@ -3013,7 +3013,7 @@ int ProcessExperimentalData()
 		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
-		TransformToUnifiedEvent(impulseTel,eventTime,unifiedEvent);
+		TransformToUnifiedEvent(impulseTel,header->GetTime().AsDouble(),unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
 		if (status == 0)
 			t_RecCasc->Fill();

@@ -23,6 +23,7 @@ TH1F* h_energy = new TH1F("h_energy","Reconstructed energy; E [TeV]; NoE [#]",10
 TH1F* h_energyFull = new TH1F("h_energyFull","Reconstructed energy; E [TeV]; NoE [#]",1000,0,1000);
 TH1F* h_theta = new TH1F("h_theta","Zenith angle (0 = up-going, 180 = down-going); #theta [deg] ",180,0,180);
 TH1F* h_thetaFull = new TH1F("h_thetaFull","Zenith angle (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
+TH1F* h_cosTheta = new TH1F("h_cosTheta","Cosine of the zenith angle; cos(#theta) [1]; NoE [#]",180,-1,1);
 TH1F* h_phi = new TH1F("h_phi","Azimuth angle (0 = East, 90 = North); #phi [deg] ",360,0,360);
 TH1F* h_phiFull = new TH1F("h_phiFull","Azimuth angle (0 = East, 90 = North); #phi [deg] ",360,0,360);
 TH1F* h_thetaContained = new TH1F("h_thetaContained","Zenith angle, contained cascades (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
@@ -35,6 +36,7 @@ TH1F* h_chi2 = new TH1F("h_chi2","Chi2;#chi_{2} [1];NoE [#]",100,0,100);
 TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",100,0,10);
 TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
 TH1F* h_horDist = new TH1F("h_horDist","Horizontal distance; #rho [m]; NoE [#]",100,0,100);
+TH1F* h_nTrackHits = new TH1F("h_nTrackHits","Number of Track Hits; #N_{trackHits} [#]; NoE [#]",30,0,30);
 TH2F* h_distQTotal = new TH2F("h_distQTotal","Horizontal distance vs. Qtotal; #rho [m]; QTotal [p.e.]",100,0,100,100,0,3000);
 TH2F* h_distEnergy = new TH2F("h_distEnergy","Horizontal distance vs. Energy; #rho [m]; E [TeV]",100,0,100,100,0,1000);
 TH2F* h_zenithEnergy = new TH2F("h_zenithEnergy","Zenith vs. Energy; #theta [deq]; E [TeV]",180,0,180,100,0,1000);
@@ -44,6 +46,7 @@ TH2F* h_dirError = new TH2F("h_dirError","Mismatch Angle vs. Estimated Error; Mi
 TH1F* h_mismatchAngle = new TH1F("h_mismatchAngle",";Mismatch angle [deg.]; NoE [#]",180,0,180);
 TH1F* h_energyRatio = new TH1F("h_energyRatio",";E_{reco}/E_{mc} [1]; NoE [#]",1000,0,100);
 TH1F* h_nHitsUpGoing = new TH1F("h_nHitsUpGoing","N_{hits} for up-going events (#theta < 80 deg.); N_{hits} [#]; NoE [#]",100,0,100);
+TH1F* h_energyUpGoing = new TH1F("h_energyUpGoing","Energy for up-going events (#theta < 80 deg.); E [TeV] ; NoE [#]",200,0,200);
 
 
 void SaveResults(int inputFile, int clusterID)
@@ -65,6 +68,10 @@ void SaveResults(int inputFile, int clusterID)
 		suffix = "muatm_sep20";
 	if (inputFile == 10)
 		suffix = "nuatm_sep20";
+	if (inputFile == 11)
+		suffix = "nuatm_sep20";
+	if (inputFile == 12)
+		suffix = "muatm_sep20";
 	if (clusterID != -2)
 		suffix += Form("_cluster%d",clusterID);
 	TString outputFileName = Form("../../results/mcResults_%s.root",suffix.Data());
@@ -75,6 +82,7 @@ void SaveResults(int inputFile, int clusterID)
 	h_nStringsAfterTFilter->Write();
 	h_energy->Write();
 	h_theta->Write();
+	h_cosTheta->Write();
 	h_phi->Write();
 	h_qTotal->Write();
 	h_likelihood->Write();
@@ -82,6 +90,7 @@ void SaveResults(int inputFile, int clusterID)
 	h_chi2->Write();
 	h_z->Write();
 	h_horDist->Write();
+	h_nTrackHits->Write();
 	h_distQTotal->Write();
 	h_distEnergy->Write();
 	h_zenithEnergy->Write();
@@ -105,6 +114,9 @@ void DrawResults()
 	TCanvas* c_nHits = new TCanvas("c_nHits","NHits",800,600);
 	h_nHits->Draw();
 
+	TCanvas* c_nHitsAfterTFilter = new TCanvas("c_nHitsAfterTFilter","NHitsAfterTFilter",800,600);
+	h_nHitsAfterTFilter->Draw();
+
 	TCanvas* c_energy = new TCanvas("c_energy","Energy",800,600);
 	h_energy->Draw();
 
@@ -112,6 +124,9 @@ void DrawResults()
 	h_theta->Draw();
 	h_thetaContained->SetLineColor(kRed);
 	h_thetaContained->Draw("same");
+
+	TCanvas* c_cosTheta = new TCanvas("c_cosTheta","CosTheta",800,600);
+	h_cosTheta->Draw();
 
 	TCanvas* c_energyNHits2 = new TCanvas("c_energyNHits2","EnergyVsNHits2",800,600);
 	h_energyNHits->Draw("colz");
@@ -152,6 +167,9 @@ void DrawResults()
 
 	TCanvas* c_nHitsUpGoing = new TCanvas("c_nHitsUpGoing","NHitsUpGoing",800,600);
 	h_nHitsUpGoing->Draw();
+
+	TCanvas* c_energyUpGoing = new TCanvas("c_energyUpGoing","EnergyUpGoing",800,600);
+	h_energyUpGoing->Draw();
 
 }
 
@@ -227,6 +245,12 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		case 10:
 			filesDir = Form("%s/mc/nuatm_sep20_root/recCascResults.root",env_p);
 			break;
+		case 11:
+			filesDir = Form("/Data/BaikalData/mc/nuatm_sep20_root/recCascResults.root",env_p);
+			break;
+		case 12:
+			filesDir = Form("/Data/BaikalData/mc/muatm_sep20/recCascResults.root",env_p);
+			break;
 		default:
 			break;
 	}
@@ -249,7 +273,7 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		reconstructedCascades.Add(filesDir);
 	}
 
-	int runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter;
+	int runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter, nTrackHits;
 	double energy,theta,phi,mcEnergy,mcTheta,mcPhi;
 	double energySigma,thetaSigma,phiSigma,directionSigma;
 	double chi2AfterCaus, chi2AfterTFilter, time, likelihood, likelihoodHitOnly, qTotal;
@@ -281,6 +305,8 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 	reconstructedCascades.SetBranchAddress("likelihood", &likelihood);
 	reconstructedCascades.SetBranchAddress("likelihoodHitOnly", &likelihoodHitOnly);
 	reconstructedCascades.SetBranchAddress("qTotal", &qTotal);
+	reconstructedCascades.SetBranchAddress("nTrackHits", &nTrackHits);
+
 
 	// reconstructedCascades.Print();
 
@@ -312,7 +338,8 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		// 	cout << (*mcPosition).X() << " " << (*mcPosition).Y() << " " << (*mcPosition).Z() << endl;
 		// }
 
-		if (!IsContained(position,40) || likelihoodHitOnly > 3 )
+		if (!IsContained(position) || likelihoodHitOnly > 1.5 || theta/TMath::Pi()*180 > 80)
+		// if (!IsContained(position) || likelihoodHitOnly > 3)
 		// if (!IsContained(position,40) || likelihoodHitOnly > 3 || position->Z() > 200)
 		// if (!IsUncontained(position,60,100) || likelihoodHitOnly > 3)
 			continue;
@@ -342,11 +369,12 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 			nHighEnergyEvents++;
 		}
 
-		if (theta/TMath::Pi()*180 < 80 && upGoing)
+		if (theta/TMath::Pi()*180 < 80 && upGoing && likelihoodHitOnly < 1.5)
 		{
 			cout << "Up-going Event - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
 			h_nHitsUpGoing->Fill(nHitsAfterTFilter);
+			h_energyUpGoing->Fill(energy);
 		}
 
 		// cout << i << " " << runID << " " << eventID << " " << theta  << " " << phi << " " << nHitsAfterTFilter << " " << nStringsAfterTFilter << " " << likelihood << " " << qTotal << endl;
@@ -359,14 +387,15 @@ int MCstudyRecCas(int inputFile = 0, int clusterID = -2, bool upGoing = false, b
 		h_nStringsAfterTFilter->Fill(nStringsAfterTFilter);
 		h_energy->Fill(energy);
 		h_theta->Fill(theta/TMath::Pi()*180);
+		h_cosTheta->Fill(TMath::Cos(theta)*(-1));
 		h_phi->Fill(phi/TMath::Pi()*180);
 		h_qTotal->Fill(qTotal);
 		h_likelihood->Fill(likelihood);
 		h_likelihoodHitOnly->Fill(likelihoodHitOnly);
 		h_chi2->Fill(chi2AfterTFilter);
 		h_z->Fill(position->Z());
-
 		h_horDist->Fill(horizontalDist);
+		h_nTrackHits->Fill(nTrackHits);
 		h_distQTotal->Fill(horizontalDist,qTotal);
 		h_distEnergy->Fill(horizontalDist,energy);
 		h_zenithEnergy->Fill(theta/TMath::Pi()*180,energy);

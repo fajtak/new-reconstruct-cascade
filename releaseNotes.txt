@@ -1,4 +1,10 @@
-11.01.2021 - git commit ---
+24.01.2021 - git commit ---
+	* unifiedEvent.eventTime fixed. Until now it was the time of the first event in the run and thus equatorial coordinates was wrong
+	* processing scripts slightly changed
+	* multiclusterEvents.C can now save coincidences to the txt file and it also identifies when there should be a coincidence for the cascade
+	* root script trackCascadeTimeDelay.C added. It shows the time delay between hits from cascade and from the track
+
+11.01.2021 - git commit 82790e17a23c34776540dff9700b637d69e1b863
 	* processing without visualizations improved
 
 11.01.2021 - git commit c5fda842b4d8372678a78b3a542e6cd8e933ebb8

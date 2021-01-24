@@ -6,6 +6,7 @@
 #include "TChain.h"
 #include "TH1F.h"
 #include "TCanvas.h"
+#include "TMath.h"
 
 #include "BExtractedImpulseTel.h"
 #include "BMultiJointHeader.h"
@@ -28,6 +29,8 @@ struct InputCascade
 	int nHits;
 	double energy;
 	double likelihood;
+	bool passesCluster;
+	bool coincidenceFound;
 
 	// equality comparison. doesn't modify object. therefore const.
     bool operator==(const InputCascade& a) const
@@ -47,7 +50,7 @@ double yPos[nClusters*nStringsPerCluster] = {-211.35,-235.88,-285.45,-325.83,-31
 
 void PrintCascade(InputCascade &cascade)
 {
-	cout << "Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << endl;
+	cout << "Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << " Theta: " << cascade.theta << "/" << cascade.theta/TMath::Pi()*180 << " Phi: " << cascade.phi << "/" << cascade.phi/TMath::Pi()*180 << " X: " << cascade.x << " Y: " << cascade.y << " Z: " << cascade.z  << endl;
 }
 
 int DrawResults()
@@ -188,12 +191,27 @@ int SaveJSON(BExtractedImpulseTel* impulseTel, int season, int cluster, int run,
 	return 0;
 }
 
+int SaveCoincidences(int cascadeID, BMultiJointHeader* jointHeader,ofstream &multiCoincData)
+{
+	cout << "Saving" << endl;
+	for (int i = 0; i < jointHeader->GetClusters(); ++i)
+	{
+		multiCoincData << cascadeID << "\t" << i << "\t" << jointHeader->GetSeason(i) << "\t" << jointHeader->GetCluster(i) << "\t" << jointHeader->GetRun(i) << "\t" << jointHeader->GetEventIDCC(i) << endl;
+	}
+	return 0;
+}
+
 int multiclusterEvents()
 {
 	TString filePath = "/Data/BaikalData/multicluster/imulticluster.*.root";
 	// TString filePath = "/media/fajtak/Alpha/BaikalData/multicluster/imulticluster.*.root";
 	// TString inputCascadesFile = "../../results/recCasc.txt";
 	TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
+	// TString inputCascadesFile = "../../results/recCasc_y19c-1_Zuzka.txt";
+	TString outputCoincidenceFile = "../../results/multiCoinc_y19c-1.txt";
+
+	ofstream multiCoincData;
+	multiCoincData.open(outputCoincidenceFile);
 
 	if (ReadInputCascades(inputCascadesFile) != 0)
 		return -1;
@@ -218,7 +236,6 @@ int multiclusterEvents()
     int nBigOnes = 0;
 
     for (int i = 0; i < multiclusterFiles->GetEntries(); ++i)
-    // for (int i = 0; i < 100000; ++i)
     {
     	multiclusterFiles->GetEntry(i);
 
@@ -228,7 +245,7 @@ int multiclusterEvents()
     	{
     		h_clusterIDs->Fill(jointHeader->GetCluster(j));
     		h_eventIDs->Fill(jointHeader->GetEventIDCC(j));
-    		InputCascade readEvent{jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j)};
+    		InputCascade readEvent{jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),0,0,0,0,0,0,0,0,false,false};
     		// PrintCascade(readEvent);
    //  		if (jointHeader->GetClusters() > 4)
 			// {
@@ -237,7 +254,7 @@ int multiclusterEvents()
 			// 	SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),0);
 			// 	nBigOnes++;
 			// }
-    		for (int k = 0; k < inputCascades.size(); ++k)
+    		for (unsigned int k = 0; k < inputCascades.size(); ++k)
     		{
     			if (inputCascades[k] == readEvent)
     			{
@@ -248,6 +265,7 @@ int multiclusterEvents()
     				PrintCascade(readEvent);
     				// PrintHits(impulseTel);
     				SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),k);
+    				SaveCoincidences(k,jointHeader,multiCoincData);
     				nMulticlusterEvents++;
     			}
     		}
@@ -259,6 +277,161 @@ int multiclusterEvents()
     cout << "Number of multicluster events: " << nMulticlusterEvents << endl;
     cout << "Number of three cluster events: " << n3clusterEvents << endl;
     cout << "Number of big events: " << nBigOnes << endl;
+
+    multiCoincData.close();
+
+    return 0;
+}
+
+int HorizontalIntersectionExists(double x0, double y0, double ux, double uy, double a0, double b0, double R)
+{
+	// cout<< x0 << "\t" << y0 << "\t" << ux << "\t" << uy << "\t" << a0 << "\t" << b0 << "\t" << R << endl;
+	double a = TMath::Power(ux,2)+TMath::Power(uy,2);
+	double b = (2)*((x0-a0)*ux + (y0-b0)*uy);
+	double c = TMath::Power(x0-a0,2)+TMath::Power(y0-b0,2)-TMath::Power(R,2);
+	double discriminant = TMath::Power(b,2)-4*a*c;
+	double t1 = (-b+TMath::Sqrt(discriminant))/2/a;
+	double t2 = (-b-TMath::Sqrt(discriminant))/2/a;
+	double x1 = x0+t1*ux;
+	double x2 = x0+t2*ux;
+	double y1 = y0+t1*uy;
+	double y2 = y0+t2*uy;
+	if (discriminant < 0)
+	{
+		return 0;
+	}
+	else
+	{
+		// cout<< x0 << "\t" << y0 << "\t" << ux << "\t" << uy << "\t" << a0 << "\t" << b0 << "\t" << R << endl;
+		// cout << a << "\t" << b << "\t" << c << "\t" << discriminant << endl;
+		// cout << t1 << "\t" << t2 << "\t" << x1 << "\t" << y1 << "\t" << x2 << "\t" << y2 << endl;
+		if (t1 > 0)
+			return 1;
+		else
+			return -1;
+	}
+}
+
+bool VerticalIntersectionExists(double z0, double theta, double distance, int returnValue)
+{
+	double z = 0;
+	if (returnValue > 0)
+	{
+		z = z0 + distance/TMath::Tan(theta);
+	}else{
+		z = z0 + distance/TMath::Tan(TMath::Pi()-theta);
+	}
+	// cout << z0 << "\t" << z << "\t" << theta << "\t" << distance << "\t" << returnValue << endl;
+	// if (z > -10 && z < 535)
+	if (z > -10 && z < 535)
+		return true;
+	else
+		return false;
+}
+
+bool PassesThroughOtherCluster(int cascadeID)
+{
+	bool passes = false;
+	int returnValue = 0;
+	int clusterUnderStudy = inputCascades[cascadeID].cluster;
+	double x0 = inputCascades[cascadeID].x+xPos[8*clusterUnderStudy-1];
+	double y0 = inputCascades[cascadeID].y+yPos[8*clusterUnderStudy-1];
+	double z0 = inputCascades[cascadeID].z+262.5;
+	double ux = TMath::Cos(inputCascades[cascadeID].phi);
+	double uy = TMath::Sin(inputCascades[cascadeID].phi);
+	for (int i = 0; i < nClusters; ++i)
+	{
+		if (i+1 == clusterUnderStudy)
+			continue;
+		double a0 = xPos[8*(i+1)-1];
+		double b0 = yPos[8*(i+1)-1];
+		double R = 70;
+		double dist = TMath::Sqrt(TMath::Power(x0-a0,2)+TMath::Power(y0-b0,2));
+		// cout<< x0 << "\t" << y0 << "\t" << ux << "\t" << uy << "\t" << a0 << "\t" << b0 << "\t" << R << endl;
+
+		if ((returnValue = HorizontalIntersectionExists(x0,y0,ux,uy,a0,b0,R)) != 0)
+		{
+			if (VerticalIntersectionExists(z0,inputCascades[cascadeID].theta,dist,returnValue))
+			{
+				cout << i+1 << "\t" << returnValue << endl;
+				passes = true;
+			}
+		}
+	}
+	return passes;
+}
+
+int multiclusterEvents(int dummyID)
+{
+	TString filePath = "/Data/BaikalData/multicluster/imulticluster.*.root";
+	// TString filePath = "/media/fajtak/Alpha/BaikalData/multicluster/imulticluster.*.root";
+	// TString inputCascadesFile = "../../results/recCasc.txt";
+	TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
+
+	if (ReadInputCascades(inputCascadesFile) != 0)
+		return -1;
+
+	TChain* multiclusterFiles = new TChain("Events");
+	multiclusterFiles->Add(filePath);
+	if (multiclusterFiles->GetEntries() == 0)
+	{
+		std::cout << "Files: " << filePath << " were not found!" << endl;
+    	return -2;
+	}
+
+	BExtractedImpulseTel* impulseTel = NULL;
+    multiclusterFiles->SetBranchAddress("BExtractedImpulseTel",&impulseTel);
+    BMultiJointHeader* jointHeader = NULL;
+    multiclusterFiles->SetBranchAddress("BMultiJointHeader",&jointHeader);
+
+    cout << "Number of entries: " << multiclusterFiles->GetEntries() << endl;
+
+	int nPassingCascasdes = 0;
+    for (unsigned int i = 0; i < inputCascades.size(); ++i)
+    {
+    	PrintCascade(inputCascades[i]);
+    	bool studyMore = PassesThroughOtherCluster(i);
+    	if (studyMore)
+    	{
+    		inputCascades[i].passesCluster = true;
+    		nPassingCascasdes++;
+    	}
+    }
+
+	for (int j = 0; j < multiclusterFiles->GetEntries(); ++j)
+	// for (int j = 0; j < 100000; ++j)
+	{
+		multiclusterFiles->GetEntry(j);
+		for (int k = 0; k < jointHeader->GetClusters(); ++k)
+		{
+			InputCascade readEvent{jointHeader->GetSeason(k),jointHeader->GetCluster(k),jointHeader->GetRun(k),(int)jointHeader->GetEventIDCC(k),0,0,0,0,0,0,0,0,false,false};
+
+			for (unsigned int i = 0; i < inputCascades.size(); ++i)
+			{
+				if (inputCascades[i] == readEvent && inputCascades[i].theta < TMath::Pi()/2)
+				{
+					cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
+					PrintCascade(inputCascades[i]);
+					PrintCascade(readEvent);
+					inputCascades[i].coincidenceFound = true;
+					SaveJSON(impulseTel,jointHeader->GetSeason(k),jointHeader->GetCluster(k),jointHeader->GetRun(k),(int)jointHeader->GetEventIDCC(k),i);
+				}
+			}
+		}
+	}
+
+	cout << string(80,'*') << endl;
+	cout << "Strange cascades: " << endl;
+	cout << string(80,'*') << endl;
+	for (int i = 0; i < inputCascades.size(); ++i)
+	{
+		if (inputCascades[i].passesCluster && !inputCascades[i].coincidenceFound)
+		{
+			PrintCascade(inputCascades[i]);
+		}
+	}
+
+    cout << nPassingCascasdes << endl;
 
     return 0;
 }

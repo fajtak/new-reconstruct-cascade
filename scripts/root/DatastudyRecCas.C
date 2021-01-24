@@ -13,10 +13,13 @@
 #include <iostream>
 #include <fstream>
 
-std::vector<double> stringXPositions = {5.22,52.13,57.54,25.17,-29.84,-53.6,-42.32,0};
-std::vector<double> stringYPositions = {62.32,37.15,-13.92,-52.01,-52.36,-7.49,42.74,0};
+// std::vector<double> stringXPositions = {5.22,52.13,57.54,25.17,-29.84,-53.6,-42.32,0};
+// std::vector<double> stringYPositions = {62.32,37.15,-13.92,-52.01,-52.36,-7.49,42.74,0};
 
-vector<vector<vector<int>>> ledMatrixRuns = {{{2,3,4,5,6,7,8,9,10,11,118,119,177,193,194,200,201,228,229,230,231,232,233,234,235,236,237,560,598}},{{},{}},{{7,117,412,429,443,459,474,490,505,520,548,564,579,595},{1,2,3,6,7,37,134,428,450,464,480,495,510,527,540,568,584,599,615,631,647,668},{35,36,117,120,131,151,412,429,443,459,474,489,504,519,520,547,575,591,607,623,644}},{{17,18,37,38,39,40,44,61,77,93,97,111,126,142,158,174,190,203,218,232,247,264,277,292,362,377,392,407,422,437,452,467,484,536,551,566,583,596,611,628,644,661,676,677,693},{8,41,54,56,60,61,77,92,107,123,138,154,169,184,201,215,231,245,260,276,306,375,391,406,421,436,451,466,481,498,553,571,586,603,616,631,648,663,679,694,709},{8,9,10,24,80,93,109,124,139,155,170,185,201,216,233,247,262,276,291,329,330,331,337,406,422,437,453,468,483,498,513,530,594,595,596,597,611,612,629,642,657,674,689,705,720,735},{13,23,36,51,67,82,100,116,131,146,162,179,193,208,222,237,251,268,283,350,367},{13,23,34,50,67,82,86,88,89,90,91,92,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,112,113,114,116,117,118,120,121,122,123,124,129,130,132,137,147,163,180,193,208,222,237,238,253,265,279,363}},{{3,19,32,42,51,52,62,71,82,92,102,122,145,156,165,180},{12,14,24,33,35,42,51,60,69,83,90,111,134,145,146,147,155,156,157,158,159,160,162,164},{9,13,14,17,132,143,153,164,165,167,169,172},{1,15,17,21,26,36,46,58,67,76,86,94,103,112,114},{2,12,17,19,23,24,26,36,44,55,63,73,82,89,98,106,117,131,143,151,160,166,168,175},{18,20,25,31,41,51,62,71,90,110,118,128,130,143,145,154,157,163,166,173,178,185,195,220,232,241,250,260,282,296,301,312,326},{7,10,12,16,17,22,30,40,49,58,67,76,84,93,102,105,113,115,129,131,143,144,149,152,159,165,169,174,177,207,219,228,237,245,254,264,277,281,290,301}}};
+double xPos[40] = {-13.76,32.14,45.06,5.13,-45.03,-76.21,-59.85,-14.47,-195.19,-164.79,-180.08,-227.51,-276.24,-279.59,-248.17,-222.70,-270.25,-228.58,-220.89,-261.89,-309.86,-337.48,-319.74,-282.27,65.85,108.73,113.87,74.19,25.1,-2.48,16.08,58.37,-163.91,-119.26,-113.90,-152.28,-202.59,-230.83,-213.25,-170.30};
+double yPos[40] = {-211.35,-235.88,-285.45,-325.83,-319.82,-281.63,-231.37,-270.17,-340.62,-384.09,-435.13,-450.13,-424.31,-372.59,-337.03,-391.09,-37.36,-65.26,-117.78,-153.57,-146.26,-101.43,-55.24,-96.82,-435.47,-462.39,-514.68,-549.90,-544.25,-500.53,-453,-491.97,-628.26,-656.49,-707.52,-744.24,-738.58,-694.13,-645.06,-685.35};
+
+vector<vector<vector<int>>> ledMatrixRuns = {{{2,3,4,5,6,7,8,9,10,11,118,119,177,193,194,200,201,228,229,230,231,232,233,234,235,236,237,560,598}},{{},{}},{{7,117,412,429,443,459,474,490,505,520,548,564,579,595},{1,2,3,6,7,37,134,428,450,464,480,495,510,527,540,568,584,599,615,631,647,668},{35,36,117,120,131,151,412,429,443,459,474,489,504,519,520,547,575,591,607,623,644}},{{17,18,37,38,39,40,44,61,77,93,97,111,126,142,158,174,190,203,218,232,247,264,277,292,362,377,392,407,422,437,452,467,484,536,551,566,583,596,611,628,644,661,676,677,693},{8,41,54,56,60,61,77,92,107,123,138,154,169,184,201,215,231,245,260,276,306,375,391,406,421,436,451,466,481,498,553,571,586,603,616,631,648,663,679,694,709},{8,9,10,24,80,93,109,124,139,155,170,185,201,216,233,247,262,276,291,329,330,331,337,406,422,437,453,468,483,498,513,530,594,595,596,597,611,612,629,642,657,674,689,705,720,735},{13,23,36,51,67,82,100,116,131,146,162,179,193,208,222,237,251,268,283,350,367},{13,23,34,50,67,82,86,88,89,90,91,92,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,112,113,114,116,117,118,120,121,122,123,124,129,130,132,137,147,163,180,193,208,222,237,238,253,265,279,363,379}},{{3,19,32,42,51,52,62,71,82,92,102,122,145,156,165,180},{12,14,24,33,35,42,51,60,69,83,90,111,134,145,146,147,155,156,157,158,159,160,162,164},{9,13,14,17,132,143,153,164,165,167,169,172},{1,15,17,21,26,36,46,58,67,76,86,94,103,112,114},{2,12,17,19,23,24,26,36,44,55,63,73,82,89,98,106,117,131,143,151,160,166,168,175},{18,20,25,31,41,51,62,71,90,110,118,128,130,143,145,154,157,163,166,173,178,185,195,220,232,241,250,260,282,296,301,312,326,336,346,356,367,384,394},{7,10,12,16,17,22,30,40,49,58,67,76,84,93,102,105,113,115,129,131,143,144,149,152,159,165,169,174,177,207,219,228,237,245,254,264,277,281,290,301}}};
 
 TH1F* h_nHits = new TH1F("h_nHits","Number of hits per Event; N_{hits} [#]; NoE [#]",250,0,250);
 TH1F* h_nHitsFull = new TH1F("h_nHitsFull","Number of hits per Event; N_{hits} [#]; NoE [#]",250,0,250);
@@ -28,6 +31,7 @@ TH1F* h_energy = new TH1F("h_energy","Reconstructed energy; E [TeV]; NoE [#]",10
 TH1F* h_energyFull = new TH1F("h_energyFull","Reconstructed energy; E [TeV]; NoE [#]",1000,0,1000);
 TH1F* h_theta = new TH1F("h_theta","Zenith angle (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
 TH1F* h_thetaFull = new TH1F("h_thetaFull","Zenith angle (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
+TH1F* h_cosTheta = new TH1F("h_cosTheta","Cosine of the zenith angle; cos(#theta) [1]; NoE [#]",180,-1,1);
 TH1F* h_phi = new TH1F("h_phi","Azimuth angle (0 = East, 90 = North); #phi [deg] ",360,0,360);
 TH1F* h_phiFull = new TH1F("h_phiFull","Azimuth angle (0 = East, 90 = North); #phi [deg] ",360,0,360);
 TH1F* h_thetaContained = new TH1F("h_thetaContained","Zenith angle, contained cascades (0 = up-going, 180 down-going); #theta [deg] ",180,0,180);
@@ -40,14 +44,19 @@ TH1F* h_likelihoodFull = new TH1F("h_likelihoodFull","Likelihood;L [#];NoE [#]",
 TH1F* h_chi2 = new TH1F("h_chi2","Chi2;#chi_{2} [1];NoE [#]",100,0,100);
 TH1F* h_z = new TH1F("h_z","Z position; z [m]; NoE [#]",60,-300,300);
 TH1F* h_horDist = new TH1F("h_horDist","Horizontal distance; #rho [m]; NoE [#]",100,0,100);
+TH1F* h_nTrackHits = new TH1F("h_nTrackHits","Number of Track Hits; #N_{trackHits} [#]; NoE [#]",30,0,30);
+
 TGraph* g_cascadeXY = new TGraph();
-TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
+// TGraph* g_stringPositions = new TGraph(8,&stringXPositions[0],&stringYPositions[0]);
+TGraph* g_stringPositions = new TGraph(40,xPos,yPos);
 TH2F* h_distQTotal = new TH2F("h_distQTotal","Horizontal distance vs. Qtotal; #rho [m]; QTotal [p.e.]",100,0,100,100,0,3000);
 TH2F* h_distEnergy = new TH2F("h_distEnergy","Horizontal distance vs. Energy; #rho [m]; E [TeV]",100,0,100,100,0,1000);
 TH2F* h_zenithEnergy = new TH2F("h_zenithEnergy","Zenith vs. Energy; #theta [deq]; E [TeV]",180,0,180,100,0,1000);
 
 TH1F* h_nHitsUpGoing = new TH1F("h_nHitsUpGoing","N_{hits} for up-going events (#theta < 80 deg.); N_{hits} [#]; NoE [#]",100,0,100);
 TH1F* h_energyUpGoing = new TH1F("h_energyUpGoing","Energy for up-going events (#theta < 80 deg.); E [TeV] ; NoE [#]",200,0,200);
+
+TH1F* h_eventRuns = new TH1F("h_eventRuns","Event Run ID; Run ID [#]; NoE [#]",50,0,1000);
 
 int seasonID, clusterID, runID, eventID, nHits, nHitsAfterCaus, nHitsAfterTFilter, nStringsAfterCaus, nStringsAfterTFilter, nTrackHits;
 double energy,theta,phi,mcEnergy,mcTheta,mcPhi;
@@ -73,6 +82,9 @@ void DrawResults()
 	h_theta->Draw();
 	h_thetaContained->SetLineColor(kRed);
 	h_thetaContained->Draw("same");
+
+	TCanvas* c_cosTheta = new TCanvas("c_cosTheta","CosTheta",800,600);
+	h_cosTheta->Draw();
 
 	TCanvas* c_energyNHits2 = new TCanvas("c_energyNHits2","EnergyVsNHits2",800,600);
 	h_energyNHits->Draw("colz");
@@ -108,6 +120,9 @@ void DrawResults()
 	TCanvas* c_energyUpGoing = new TCanvas("c_energyUpGoing","EnergyUpGoing",800,600);
 	h_energyUpGoing->Draw();
 
+	TCanvas* c_EventRuns = new TCanvas("c_EventRuns","EventRuns",800,600);
+	h_eventRuns->Draw();
+
 }
 
 void SaveResults(int year, int cluster)
@@ -120,6 +135,7 @@ void SaveResults(int year, int cluster)
 	h_nStringsAfterTFilter->Write();
 	h_energy->Write();
 	h_theta->Write();
+	h_cosTheta->Write();
 	h_phi->Write();
 	h_qTotal->Write();
 	h_likelihood->Write();
@@ -127,6 +143,7 @@ void SaveResults(int year, int cluster)
 	h_chi2->Write();
 	h_z->Write();
 	h_horDist->Write();
+	h_nTrackHits->Write();
 	h_distQTotal->Write();
 	h_distEnergy->Write();
 	h_zenithEnergy->Write();
@@ -229,10 +246,10 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 			switch(folder)
 			{
 				case 0:
-					filesDir = Form("%s/dataVal/exp%d/cluster%d/",env_p,j,i);
+					filesDir = Form("%s/dataGidra_v1.1/exp20%d/cluster%d/",env_p,j,i);
 					break;
 				case 1:
-					filesDir = Form("%s/dataVM240/exp%d/cluster%d/",env_p,j,i);
+					filesDir = Form("%s/dataGidraGrisha_v1.1/exp20%d/cluster%d/",env_p,j,i);
 					break;
 				case 2:
 					filesDir = Form("%s/dataPerseus/exp%d/cluster%d/",env_p,j,i);
@@ -365,13 +382,14 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_likelihoodFull->Fill(likelihood);
 
 
-		// if (!IsContained(position,40) || likelihoodHitOnly > 3)
-		if (!IsContained(position,40) || likelihoodHitOnly > 3 || nHitsAfterTFilter < 50)
+		if (!IsContained(position) || likelihoodHitOnly > 1.5 || theta/TMath::Pi()*180 > 80)
+		// if (!IsContained(position) || likelihoodHitOnly > 3)
+		// if (!IsContained(position,40) || likelihoodHitOnly > 3 || nHitsAfterTFilter < 50)
 		// if (!IsContained(position,40) || likelihoodHitOnly > 1.5 || position->Z() > 200)
 		// if (!IsUncontained(position,60,100) || likelihoodHitOnly > 3)
 			continue;
 
-			// cout << "Energy above 100 TeV - RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " (" << position->X() << "," << position->Y() << "," << position->Z() << ")" << endl;
+			cout << "Up-going Event - SeasonID: " << seasonID << " ClusterID: " << clusterID << " RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " Lho = " << likelihoodHitOnly << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " Nt = " << nTrackHits << endl;
 
 		// if (nTrackHits > 10)
 			// cout << seasonID << " ClusterID: " << clusterID << " RunID: " << runID << " EventID: " << eventID << endl;
@@ -391,13 +409,14 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		{
 			cout << "Energy above 100 TeV - SeasonID: " << seasonID << " ClusterID: " << clusterID << " RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " Lho = " << likelihoodHitOnly << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " T = " << theta/TMath::Pi()*180 << " P = " << phi/TMath::Pi()*180 << " Q = " << qTotal << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
-			g_cascadeXY->SetPoint(nHighEnergyEvents,position->X(),position->Y());
-			nHighEnergyEvents++;
 		}
+			g_cascadeXY->SetPoint(nHighEnergyEvents,position->X()+xPos[8*(clusterID+1)-1],position->Y()+yPos[8*(clusterID+1)-1]);
+			nHighEnergyEvents++;
 
+		// if (theta/TMath::Pi()*180 < 80 && upGoing && nHitsAfterTFilter > 20 && likelihoodHitOnly < 1.5)
 		if (theta/TMath::Pi()*180 < 80 && upGoing && nHitsAfterTFilter > 20)
 		{
-			cout << "Up-going Event - SeasonID: " << seasonID << " ClusterID: " << clusterID << " RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " Lho = " << likelihoodHitOnly << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << endl;
+			cout << "Up-going Event - SeasonID: " << seasonID << " ClusterID: " << clusterID << " RunID: " << runID << " EventID: " << eventID << " E = " << energy << " L = " << likelihood << " Lho = " << likelihoodHitOnly << " T = " << theta/TMath::Pi()*180 << " S = " << directionSigma << " N = " << nHitsAfterTFilter << " Nt = " << nTrackHits << endl;
 			cout << (*position).X() << " " << (*position).Y() << " " << (*position).Z() << endl;
 			h_nHitsUpGoing->Fill(nHitsAfterTFilter);
 			h_energyUpGoing->Fill(energy);
@@ -420,6 +439,7 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		h_nStringsAfterTFilter->Fill(nStringsAfterTFilter);
 		h_energy->Fill(energy);
 		h_theta->Fill(theta/TMath::Pi()*180);
+		h_cosTheta->Fill(TMath::Cos(theta)*(-1));
 		h_phi->Fill(phi/TMath::Pi()*180);
 		h_qTotal->Fill(qTotal);
 		h_likelihood->Fill(likelihood);
@@ -431,10 +451,12 @@ int DatastudyRecCas(int year, int cluster = -1, int folder = 0, bool upGoing = f
 		filteredCascades->Fill();
 
 		h_horDist->Fill(horizontalDist);
+		h_nTrackHits->Fill(nTrackHits);
 		h_distQTotal->Fill(horizontalDist,qTotal);
 		h_distEnergy->Fill(horizontalDist,energy);
 		h_zenithEnergy->Fill(theta/TMath::Pi()*180,energy);
 			h_energyNHits->Fill(TMath::Log10(energy),nHitsAfterTFilter);
+		h_eventRuns->Fill(runID);
 
 		if (IsContained(position))
 		{

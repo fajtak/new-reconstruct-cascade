@@ -31,8 +31,8 @@ int compareDataMCCascades(int clusterID)
 		case -1:
 			// All Clusters
 			realDataDuration = 306.48;
-			newMcDataDuration = 167.10/1.47;
-			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7*5/3600/24;
+			newMcDataDuration = 167.10/3.5;
+			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7*5/3600/24/2000;
 			dataFile = "../../results/mcResults_data_y19c-1.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster-1.root";
 			signalMcFile = "../../results/mcResults_nuatm_sep20_cluster-1.root";
@@ -40,8 +40,8 @@ int compareDataMCCascades(int clusterID)
 		case 0:
 			// Cluster1
 			realDataDuration = 64.064;
-			newMcDataDuration = 33.36/1.086;
-			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24;
+			newMcDataDuration = 33.36/1.8;
+			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24/3500;
 			dataFile = "../../results/mcResults_data_y19c0.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster0.root";
 			signalMcFile = "../../results/mcResults_nuatm_sep20_cluster0.root";
@@ -49,8 +49,8 @@ int compareDataMCCascades(int clusterID)
 		case 1:
 			// Cluster2
 			realDataDuration = 68.50;
-			newMcDataDuration = 33.46/1.359;
-			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24;
+			newMcDataDuration = 33.46/2.5;
+			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/2/3500;
 			dataFile = "../../results/mcResults_data_y19c1.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster1.root";
 			signalMcFile = "../../results/mcResults_nuatm_sep20_cluster1.root";
@@ -58,8 +58,8 @@ int compareDataMCCascades(int clusterID)
 		case 2:
 			// Cluster3
 			realDataDuration = 65.12;
-			newMcDataDuration = 33.36/1.69;
-			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24;
+			newMcDataDuration = 33.36/2.4;
+			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24/3500;
 			dataFile = "../../results/mcResults_data_y19c2.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster2.root";
 			signalMcFile = "../../results/mcResults_nuatm_sep20_cluster2.root";
@@ -67,8 +67,8 @@ int compareDataMCCascades(int clusterID)
 		case 3:
 			// Cluster4
 			realDataDuration = 61.26;
-			newMcDataDuration = 33.39/1.53;
-			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24;
+			newMcDataDuration = 33.39/2.8;
+			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24/3500;
 			dataFile = "../../results/mcResults_data_y19c3.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster3.root";
 			signalMcFile = "../../results/mcResults_nuatm_sep20_cluster3.root";
@@ -76,8 +76,8 @@ int compareDataMCCascades(int clusterID)
 		case 4:
 			// Cluster5
 			realDataDuration = 47.5416;
-			newMcDataDuration = 33.53/2.00;
-			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24;
+			newMcDataDuration = 33.53/2.8;
+			signalMcDataDuration = 10.5*60*TMath::Pi()*1e7/3600/24/3500;
 			dataFile = "../../results/mcResults_data_y19c4.root";
 			newMcFile = "../../results/mcResults_muatm_sep20_cluster4.root";
 			signalMcFile = "../../results/mcResults_nuatm_sep20_cluster4.root";
@@ -110,6 +110,11 @@ int compareDataMCCascades(int clusterID)
 	mcTheta->SetLineColor(kRed);
 	mcTheta->Rebin(5);
 	mcTheta->Scale(1/(mcDataDuration*24*3600));
+	// TH1F* mcCosTheta  = (TH1F*)mcData->Get("h_cosTheta");
+	// mcCosTheta->SetTitle("Muon group MC");
+	// mcCosTheta->SetLineColor(kRed);
+	// mcCosTheta->Rebin(1);
+	// mcCosTheta->Scale(1/(mcDataDuration*24*3600));
 	TH1F* mcPhi  = (TH1F*)mcData->Get("h_phi");
 	mcPhi->SetTitle("Muon group MC");
 	mcPhi->SetLineColor(kRed);
@@ -194,6 +199,11 @@ int compareDataMCCascades(int clusterID)
 	newMcTheta->SetLineColor(kBlue);
 	newMcTheta->Rebin(5);
 	newMcTheta->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcCosTheta  = (TH1F*)newMcData->Get("h_cosTheta");
+	newMcCosTheta->SetTitle("muatm_sep20");
+	newMcCosTheta->SetLineColor(kBlue);
+	newMcCosTheta->Rebin(1);
+	newMcCosTheta->Scale(1/(newMcDataDuration*24*3600));
 	TH1F* newMcPhi  = (TH1F*)newMcData->Get("h_phi");
 	newMcPhi->SetTitle("muatm_sep20");
 	newMcPhi->SetLineColor(kBlue);
@@ -229,6 +239,11 @@ int compareDataMCCascades(int clusterID)
 	newMcHorDist->SetLineColor(kBlue);
 	newMcHorDist->Rebin(2);
 	newMcHorDist->Scale(1/(newMcDataDuration*24*3600));
+	TH1F* newMcNTrackHits  = (TH1F*)newMcData->Get("h_nTrackHits");
+	newMcNTrackHits->SetTitle("muatm_sep20");
+	newMcNTrackHits->SetLineColor(kBlue);
+	// newMcNTrackHits->Rebin(2);
+	newMcNTrackHits->Scale(1/(newMcDataDuration*24*3600));
 	// TH1F* mcNHitsFull  = (TH1F*)newMcData->Get("h_nHitsFull");
 	// mcNHitsFull->SetTitle("NEW Muon group MC");
 	// mcNHitsFull->SetLineColor(kBlue);
@@ -296,6 +311,11 @@ int compareDataMCCascades(int clusterID)
 	signalMcTheta->SetLineColor(kRed);
 	signalMcTheta->Rebin(5);
 	signalMcTheta->Scale(1/(signalMcDataDuration*24*3600));
+	TH1F* signalMcCosTheta  = (TH1F*)signalMcData->Get("h_cosTheta");
+	signalMcCosTheta->SetTitle("nuatm_sep20");
+	signalMcCosTheta->SetLineColor(kRed);
+	signalMcCosTheta->Rebin(1);
+	signalMcCosTheta->Scale(1/(signalMcDataDuration*24*3600));
 	TH1F* signalMcPhi  = (TH1F*)signalMcData->Get("h_phi");
 	signalMcPhi->SetTitle("nuatm_sep20");
 	signalMcPhi->SetLineColor(kRed);
@@ -331,6 +351,11 @@ int compareDataMCCascades(int clusterID)
 	signalMcHorDist->SetLineColor(kRed);
 	signalMcHorDist->Rebin(2);
 	signalMcHorDist->Scale(1/(signalMcDataDuration*24*3600));
+	TH1F* signalMcNTrackHits  = (TH1F*)signalMcData->Get("h_nTrackHits");
+	signalMcNTrackHits->SetTitle("nuatm_sep20");
+	signalMcNTrackHits->SetLineColor(kRed);
+	// signalMcNTrackHits->Rebin(2);
+	signalMcNTrackHits->Scale(1/(signalMcDataDuration*24*3600));
 
 
 	TFile* realData = new TFile(dataFile,"READ");
@@ -361,6 +386,11 @@ int compareDataMCCascades(int clusterID)
 	realTheta->SetMarkerStyle(kFullCircle);
 	realTheta->Rebin(5);
 	realTheta->Scale(1/(realDataDuration*24*3600));
+	TH1F* realCosTheta  = (TH1F*)realData->Get("h_cosTheta");
+	realCosTheta->SetTitle("Data");
+	realCosTheta->SetMarkerStyle(kFullCircle);
+	realCosTheta->Rebin(1);
+	realCosTheta->Scale(1/(realDataDuration*24*3600));
 	TH1F* realPhi  = (TH1F*)realData->Get("h_phi");
 	realPhi->SetTitle("Data");
 	realPhi->SetMarkerStyle(kFullCircle);
@@ -396,6 +426,11 @@ int compareDataMCCascades(int clusterID)
 	realHorDist->SetMarkerStyle(kFullCircle);
 	realHorDist->Rebin(2);
 	realHorDist->Scale(1/(realDataDuration*24*3600));
+	TH1F* realNTrackHits  = (TH1F*)realData->Get("h_nTrackHits");
+	realNTrackHits->SetTitle("Data");
+	realNTrackHits->SetMarkerStyle(kFullCircle);
+	// realNTrackHits->Rebin(2);
+	realNTrackHits->Scale(1/(realDataDuration*24*3600));
 	TH1F* realNHitsFull  = (TH1F*)realData->Get("h_nHitsFull");
 	realNHitsFull->SetTitle("Data");
 	realNHitsFull->SetMarkerStyle(kFullCircle);
@@ -612,6 +647,17 @@ int compareDataMCCascades(int clusterID)
 	TCanvas* c_horDist = new TCanvas("c_horDist","HorizontalDistance",800,600);
 	gPad->SetGrid();
 	s_horDist->Draw("nostack");
+	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
+
+	THStack* s_nTrackHits = new THStack("s_nTrackHits",";N_{trackHits} [#];dN/dN_{trackHits} [Hz / 1 hit]");
+	if (showSignalMC)
+		s_nTrackHits->Add(signalMcNTrackHits,"HIST");
+	s_nTrackHits->Add(newMcNTrackHits,"HIST");
+	s_nTrackHits->Add(realNTrackHits,"");
+
+	TCanvas* c_nTrackHits = new TCanvas("c_nTrackHits","NTrackHits",800,600);
+	gPad->SetGrid();
+	s_nTrackHits->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
 	if (showFull)
