@@ -415,15 +415,15 @@ int multiclusterEvents(int season, TString multiclusterPath, TString inputCascad
     		{
     			if (inputCascades[k] == readEvent)
     			{
-    				cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
+    				// cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
     				for (int l = 0; l < jointHeader->GetClusters(); ++l)
     				{
     					if (jointHeader->GetCluster(l) != jointHeader->GetCluster(j) )
 	    					h_coincidences->Fill(j,l);
     				}
     				h_coincMultiplicities->Fill(jointHeader->GetClusters());
-    				PrintCascade(inputCascades[k]);
-    				PrintCascade(readEvent);
+    				// PrintCascade(inputCascades[k]);
+    				// PrintCascade(readEvent);
     				inputCascades[k].coincidenceFound = true;
     				inputCascades[k].coincidenceSize = jointHeader->GetClusters();
     				SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),k);
