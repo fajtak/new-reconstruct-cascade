@@ -92,11 +92,11 @@ void SaveResults(int season)
 
 void PrintResults()
 {
-	cout << std::string('*',80) << endl;
+	cout << std::string(80,'*') << endl;
 	cout << "Results: " << endl;
-	for (int i = 0; i < h_coincMultiplicities->GetNbinsX(); ++i)
+	for (int i = 3; i < h_coincMultiplicities->GetNbinsX(); ++i)
 	{
-		cout << i << "\t" << h_coincMultiplicities->GetBinContent(i) << endl;
+		cout << i-1 << "\t" << h_coincMultiplicities->GetBinContent(i) << endl;
 	}
 }
 
@@ -296,7 +296,7 @@ int multiclusterEvents(int season, TString multiclusterPath, TString inputCascad
     				for (int l = 0; l < jointHeader->GetClusters(); ++l)
     				{
     					if (jointHeader->GetCluster(l) != jointHeader->GetCluster(j) )
-	    					h_coincMultiplicities->Fill(j,l);
+	    					h_coincidences->Fill(j,l);
     				}
     				h_coincMultiplicities->Fill(jointHeader->GetClusters());
     				PrintCascade(inputCascades[k]);
