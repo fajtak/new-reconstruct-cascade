@@ -57,7 +57,7 @@ TH1F* h_coincMultiplicities = new TH1F("h_coincMultiplicities","Multiplicities;N
 
 void PrintCascade(InputCascade &cascade)
 {
-	cout << "Size: " << cascade.coincidenceSize << "/" << cascade.expCoincSize << " Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << " Theta: " << cascade.theta << "/" << cascade.theta/TMath::Pi()*180 << " Phi: " << cascade.phi << "/" << cascade.phi/TMath::Pi()*180 << " X: " << cascade.x << " Y: " << cascade.y << " Z: " << cascade.z  << endl;
+	cout << "Size: " << cascade.coincidenceSize << "/" << cascade.expCoincSize << " Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << "NHits: " << cascade.nHits << " Theta: " << cascade.theta << "/" << cascade.theta/TMath::Pi()*180 << " Phi: " << cascade.phi << "/" << cascade.phi/TMath::Pi()*180 << " X: " << cascade.x << " Y: " << cascade.y << " Z: " << cascade.z  << endl;
 }
 
 int DrawResults()
@@ -102,31 +102,48 @@ void PrintResults()
 		cout << i-1 << "\t" << h_coincMultiplicities->GetBinContent(i) << endl;
 	}
 
+	int nCoincidences = 0;
 	cout << "Coincidences: " << endl;
 	for (int i = 0; i < inputCascades.size(); ++i)
 	{
 		if (inputCascades[i].coincidenceFound)
+		{
+			nCoincidences++;
 			PrintCascade(inputCascades[i]);
+		}
 	}
+	cout << "Ncoincidences: " << nCoincidences << endl;
 
+	int nUpgoing = 0;
 	cout << "Up-going: " << endl;
 	for (int i = 0; i < inputCascades.size(); ++i)
 	{
 		if (inputCascades[i].coincidenceFound && inputCascades[i].theta < TMath::Pi()/2)
+		{
+			nUpgoing++;
 			PrintCascade(inputCascades[i]);
+		}
 	}
+	cout << "Nupgoing: " << nUpgoing << endl;
+
+	int nNeutrinos = 0;
 	cout << "Neutrinos: " << endl;
 	for (int i = 0; i < inputCascades.size(); ++i)
 	{
 		if (inputCascades[i].passesCluster && !inputCascades[i].coincidenceFound)
+		{
+			nNeutrinos++;
 			PrintCascade(inputCascades[i]);
+		}
 	}
-	cout << "Strange: " << endl;
-	for (int i = 0; i < inputCascades.size(); ++i)
-	{
-		if (!inputCascades[i].passesCluster && inputCascades[i].coincidenceFound)
-			PrintCascade(inputCascades[i]);
-	}
+	cout << "Nneutrinos: " << nNeutrinos << endl;
+
+	// cout << "Strange: " << endl;
+	// for (int i = 0; i < inputCascades.size(); ++i)
+	// {
+	// 	if (!inputCascades[i].passesCluster && inputCascades[i].coincidenceFound)
+	// 		PrintCascade(inputCascades[i]);
+	// }
 }
 
 int ReadInputCascades(TString fileName)
@@ -149,7 +166,7 @@ int ReadInputCascades(TString fileName)
   		if (inputFile.eof())
   			break;
   		inputCascades.push_back(InputCascade{season,cluster,run,event,theta,phi,x,y,z,nHits,energy,likelihood});
-  		PrintCascade(inputCascades.back());
+  		// PrintCascade(inputCascades.back());
   	}
 
 	inputFile.close();
@@ -340,7 +357,7 @@ bool PassesThroughOtherCluster(int cascadeID)
 			}
 		}
 	}
-	inputCascades[cascadeID].expCoincSize = nPasses;
+	inputCascades[cascadeID].expCoincSize = nPasses+1;
 	return passes;
 }
 
