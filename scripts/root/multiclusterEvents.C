@@ -5,15 +5,14 @@
 #include "TString.h"
 #include "TChain.h"
 #include "TH1F.h"
+#include "TH2F.h"
 #include "TCanvas.h"
 #include "TMath.h"
+#include "TFile.h"
 
 #include "BExtractedImpulseTel.h"
 #include "BMultiJointHeader.h"
 
-TH1F* h_nClusters = new TH1F("h_nClusters","Number of clusters in the coincidence; N_{clusters} [#]; NoE [#]",10,0,10);
-TH1F* h_clusterIDs = new TH1F("h_clusterIDs","Cluster IDs in the coincidence; Cluster ID [1]; NoE [#]",10,0,10);
-TH1F* h_eventIDs = new TH1F("h_eventIDs","Events IDs in the coincidence; Event ID [1]; NoE [#]",1000,0,10000000);
 
 struct InputCascade
 {
@@ -48,6 +47,12 @@ const int nOMsPerCluster = 288;
 double xPos[nClusters*nStringsPerCluster] = {-13.76,32.14,45.06,5.13,-45.03,-76.21,-59.85,-14.47,-195.19,-164.79,-180.08,-227.51,-276.24,-279.59,-248.17,-222.70,-270.25,-228.58,-220.89,-261.89,-309.86,-337.48,-319.74,-282.27,65.85,108.73,113.87,74.19,25.1,-2.48,16.08,58.37,-163.91,-119.26,-113.90,-152.28,-202.59,-230.83,-213.25,-170.30,-500.14,-454.30,-430.70,-456.29,-507.00,-546.56,-544.70,-488.82,-494.67,-455.80,-451.87,-485.72,-538.53,-564.08,-546.77,-503.92};
 double yPos[nClusters*nStringsPerCluster] = {-211.35,-235.88,-285.45,-325.83,-319.82,-281.63,-231.37,-270.17,-340.62,-384.09,-435.13,-450.13,-424.31,-372.59,-337.03,-391.09,-37.36,-65.26,-117.78,-153.57,-146.26,-101.43,-55.24,-96.82,-435.47,-462.39,-514.68,-549.90,-544.25,-500.53,-453,-491.97,-628.26,-656.49,-707.52,-744.24,-738.58,-694.13,-645.06,-685.35,-466.59,-479.59,-526.30,-571.16,-581.96,-547.72,-496.46,-525.08,-181.00,-208.44,-260.83,-296.66,-288.98,-243.64,-195.04,-240.24};
 
+TH1F* h_nClusters = new TH1F("h_nClusters","Number of clusters in the coincidence; N_{clusters} [#]; NoE [#]",10,0,10);
+TH1F* h_clusterIDs = new TH1F("h_clusterIDs","Cluster IDs in the coincidence; Cluster ID [1]; NoE [#]",10,0,10);
+TH1F* h_eventIDs = new TH1F("h_eventIDs","Events IDs in the coincidence; Event ID [1]; NoE [#]",1000,0,10000000);
+TH2F* h_coincidences = new TH2F("h_coincidences","Coincidences;Cluster ID [1]; Cluster ID [2]",10,0,10,10,0,10);
+TH1F* h_coincMultiplicities = new TH1F("h_coincMultiplicities","Multiplicities;N_{clusters} [#]; NoE [#]",10,0,10);
+
 void PrintCascade(InputCascade &cascade)
 {
 	cout << "Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << " Theta: " << cascade.theta << "/" << cascade.theta/TMath::Pi()*180 << " Phi: " << cascade.phi << "/" << cascade.phi/TMath::Pi()*180 << " X: " << cascade.x << " Y: " << cascade.y << " Z: " << cascade.z  << endl;
@@ -64,7 +69,35 @@ int DrawResults()
 	TCanvas* c_eventIDs = new TCanvas("c_eventIDs","EventIDs",800,600);
 	h_eventIDs->Draw();
 
+	TCanvas* c_coincidences = new TCanvas("c_coincidences","Coincidences",800,600);
+	h_coincidences->Draw("colz");
+
+	TCanvas* c_coincMultiplicities = new TCanvas("c_coincMultiplicities","Multiplicities",800,600);
+	h_coincMultiplicities->Draw();
+
 	return 0;
+}
+
+void SaveResults(int season)
+{
+	TString outputFileName = Form("../../results/multicluster_%d.root",season);
+	TFile* outputFile = new TFile(outputFileName,"RECREATE");
+
+	h_eventIDs->Write();
+	h_clusterIDs->Write();
+	h_nClusters->Write();
+	h_coincidences->Write();
+	h_coincMultiplicities->Write();
+}
+
+void PrintResults()
+{
+	cout << std::string('*',80) << endl;
+	cout << "Results: " << endl;
+	for (int i = 0; i < h_coincMultiplicities->GetNbinsX(); ++i)
+	{
+		cout << i << "\t" << h_coincMultiplicities->GetBinContent(i) << endl;
+	}
 }
 
 int ReadInputCascades(TString fileName)
@@ -201,17 +234,17 @@ int SaveCoincidences(int cascadeID, BMultiJointHeader* jointHeader,ofstream &mul
 	return 0;
 }
 
-int multiclusterEvents()
+int multiclusterEvents(int season, TString multiclusterPath, TString inputCascadesFile)
 {
-	TString filePath = "/Data/BaikalData/multicluster/imulticluster.*.root";
+	TString filePath = Form("%s/*multicluster.*.root",multiclusterPath.Data());
 	// TString filePath = "/media/fajtak/Alpha/BaikalData/multicluster/imulticluster.*.root";
 	// TString inputCascadesFile = "../../results/recCasc.txt";
-	TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
+	// TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
 	// TString inputCascadesFile = "../../results/recCasc_y19c-1_Zuzka.txt";
-	TString outputCoincidenceFile = "../../results/multiCoinc_y19c-1.txt";
+	// TString outputCoincidenceFile = "../../results/multiCoinc_y19c-1.txt";
 
-	ofstream multiCoincData;
-	multiCoincData.open(outputCoincidenceFile);
+	// ofstream multiCoincData;
+	// multiCoincData.open(outputCoincidenceFile);
 
 	if (ReadInputCascades(inputCascadesFile) != 0)
 		return -1;
@@ -233,6 +266,7 @@ int multiclusterEvents()
 
     int nMulticlusterEvents = 0;
     int n3clusterEvents = 0;
+    int n4clusterEvents = 0;
     int nBigOnes = 0;
 
     for (int i = 0; i < multiclusterFiles->GetEntries(); ++i)
@@ -259,14 +293,17 @@ int multiclusterEvents()
     			if (inputCascades[k] == readEvent)
     			{
     				cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
-    				if (jointHeader->GetClusters() == 3)
-    					n3clusterEvents++;
+    				for (int l = 0; l < jointHeader->GetClusters(); ++l)
+    				{
+    					if (jointHeader->GetCluster(l) != jointHeader->GetCluster(j) )
+	    					h_coincMultiplicities->Fill(j,l);
+    				}
+    				h_coincMultiplicities->Fill(jointHeader->GetClusters());
     				PrintCascade(inputCascades[k]);
     				PrintCascade(readEvent);
     				// PrintHits(impulseTel);
     				SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),k);
-    				SaveCoincidences(k,jointHeader,multiCoincData);
-    				nMulticlusterEvents++;
+    				// SaveCoincidences(k,jointHeader,multiCoincData);
     			}
     		}
     	}
@@ -274,11 +311,9 @@ int multiclusterEvents()
     }
 
     DrawResults();
-    cout << "Number of multicluster events: " << nMulticlusterEvents << endl;
-    cout << "Number of three cluster events: " << n3clusterEvents << endl;
-    cout << "Number of big events: " << nBigOnes << endl;
-
-    multiCoincData.close();
+    SaveResults(season);
+    PrintResults();
+    // multiCoincData.close();
 
     return 0;
 }
