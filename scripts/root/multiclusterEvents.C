@@ -29,7 +29,9 @@ struct InputCascade
 	double energy;
 	double likelihood;
 	bool passesCluster;
+	int expCoincSize;
 	bool coincidenceFound;
+	int coincidenceSize;
 
 	// equality comparison. doesn't modify object. therefore const.
     bool operator==(const InputCascade& a) const
@@ -55,7 +57,7 @@ TH1F* h_coincMultiplicities = new TH1F("h_coincMultiplicities","Multiplicities;N
 
 void PrintCascade(InputCascade &cascade)
 {
-	cout << "Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << " Theta: " << cascade.theta << "/" << cascade.theta/TMath::Pi()*180 << " Phi: " << cascade.phi << "/" << cascade.phi/TMath::Pi()*180 << " X: " << cascade.x << " Y: " << cascade.y << " Z: " << cascade.z  << endl;
+	cout << "Size: " << cascade.coincidenceSize << "/" << cascade.expCoincSize << " Season: " << cascade.season << " Cluster: " << cascade.cluster << " Run: " << cascade.run << " Event: " << cascade.event << " Theta: " << cascade.theta << "/" << cascade.theta/TMath::Pi()*180 << " Phi: " << cascade.phi << "/" << cascade.phi/TMath::Pi()*180 << " X: " << cascade.x << " Y: " << cascade.y << " Z: " << cascade.z  << endl;
 }
 
 int DrawResults()
@@ -92,11 +94,38 @@ void SaveResults(int season)
 
 void PrintResults()
 {
+	cout << endl;
 	cout << std::string(80,'*') << endl;
 	cout << "Results: " << endl;
 	for (int i = 3; i < h_coincMultiplicities->GetNbinsX(); ++i)
 	{
 		cout << i-1 << "\t" << h_coincMultiplicities->GetBinContent(i) << endl;
+	}
+
+	cout << "Coincidences: " << endl;
+	for (int i = 0; i < inputCascades.size(); ++i)
+	{
+		if (inputCascades[i].coincidenceFound)
+			PrintCascade(inputCascades[i]);
+	}
+
+	cout << "Up-going: " << endl;
+	for (int i = 0; i < inputCascades.size(); ++i)
+	{
+		if (inputCascades[i].coincidenceFound && inputCascades[i].theta < TMath::Pi()/2)
+			PrintCascade(inputCascades[i]);
+	}
+	cout << "Neutrinos: " << endl;
+	for (int i = 0; i < inputCascades.size(); ++i)
+	{
+		if (inputCascades[i].passesCluster && !inputCascades[i].coincidenceFound)
+			PrintCascade(inputCascades[i]);
+	}
+	cout << "Strange: " << endl;
+	for (int i = 0; i < inputCascades.size(); ++i)
+	{
+		if (!inputCascades[i].passesCluster && inputCascades[i].coincidenceFound)
+			PrintCascade(inputCascades[i]);
 	}
 }
 
@@ -234,90 +263,6 @@ int SaveCoincidences(int cascadeID, BMultiJointHeader* jointHeader,ofstream &mul
 	return 0;
 }
 
-int multiclusterEvents(int season, TString multiclusterPath, TString inputCascadesFile)
-{
-	TString filePath = Form("%s/*multicluster.*.root",multiclusterPath.Data());
-	// TString filePath = "/media/fajtak/Alpha/BaikalData/multicluster/imulticluster.*.root";
-	// TString inputCascadesFile = "../../results/recCasc.txt";
-	// TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
-	// TString inputCascadesFile = "../../results/recCasc_y19c-1_Zuzka.txt";
-	// TString outputCoincidenceFile = "../../results/multiCoinc_y19c-1.txt";
-
-	// ofstream multiCoincData;
-	// multiCoincData.open(outputCoincidenceFile);
-
-	if (ReadInputCascades(inputCascadesFile) != 0)
-		return -1;
-
-	TChain* multiclusterFiles = new TChain("Events");
-	multiclusterFiles->Add(filePath);
-	if (multiclusterFiles->GetEntries() == 0)
-	{
-		std::cout << "Files: " << filePath << " were not found!" << endl;
-    	return -2;
-	}
-
-	BExtractedImpulseTel* impulseTel = NULL;
-    multiclusterFiles->SetBranchAddress("BExtractedImpulseTel",&impulseTel);
-    BMultiJointHeader* jointHeader = NULL;
-    multiclusterFiles->SetBranchAddress("BMultiJointHeader",&jointHeader);
-
-    cout << "Number of entries: " << multiclusterFiles->GetEntries() << endl;
-
-    int nMulticlusterEvents = 0;
-    int n3clusterEvents = 0;
-    int n4clusterEvents = 0;
-    int nBigOnes = 0;
-
-    for (int i = 0; i < multiclusterFiles->GetEntries(); ++i)
-    {
-    	multiclusterFiles->GetEntry(i);
-
-    	h_nClusters->Fill(jointHeader->GetClusters());
-
-    	for (int j = 0; j < jointHeader->GetClusters(); ++j)
-    	{
-    		h_clusterIDs->Fill(jointHeader->GetCluster(j));
-    		h_eventIDs->Fill(jointHeader->GetEventIDCC(j));
-    		InputCascade readEvent{jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),0,0,0,0,0,0,0,0,false,false};
-    		// PrintCascade(readEvent);
-   //  		if (jointHeader->GetClusters() > 4)
-			// {
-			// 	cout << "FOUND BIG ONE!!! " << jointHeader->GetClusters() << endl;
-			// 	PrintCascade(readEvent);
-			// 	SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),0);
-			// 	nBigOnes++;
-			// }
-    		for (unsigned int k = 0; k < inputCascades.size(); ++k)
-    		{
-    			if (inputCascades[k] == readEvent)
-    			{
-    				cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
-    				for (int l = 0; l < jointHeader->GetClusters(); ++l)
-    				{
-    					if (jointHeader->GetCluster(l) != jointHeader->GetCluster(j) )
-	    					h_coincidences->Fill(j,l);
-    				}
-    				h_coincMultiplicities->Fill(jointHeader->GetClusters());
-    				PrintCascade(inputCascades[k]);
-    				PrintCascade(readEvent);
-    				// PrintHits(impulseTel);
-    				SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),k);
-    				// SaveCoincidences(k,jointHeader,multiCoincData);
-    			}
-    		}
-    	}
-    	// cout << jointHeader->GetClusters() << endl;
-    }
-
-    DrawResults();
-    SaveResults(season);
-    PrintResults();
-    // multiCoincData.close();
-
-    return 0;
-}
-
 int HorizontalIntersectionExists(double x0, double y0, double ux, double uy, double a0, double b0, double R)
 {
 	// cout<< x0 << "\t" << y0 << "\t" << ux << "\t" << uy << "\t" << a0 << "\t" << b0 << "\t" << R << endl;
@@ -374,6 +319,7 @@ bool PassesThroughOtherCluster(int cascadeID)
 	double z0 = inputCascades[cascadeID].z+262.5;
 	double ux = TMath::Cos(inputCascades[cascadeID].phi);
 	double uy = TMath::Sin(inputCascades[cascadeID].phi);
+	int nPasses = 0;
 	for (int i = 0; i < nClusters; ++i)
 	{
 		if (i+1 == clusterUnderStudy)
@@ -388,20 +334,28 @@ bool PassesThroughOtherCluster(int cascadeID)
 		{
 			if (VerticalIntersectionExists(z0,inputCascades[cascadeID].theta,dist,returnValue))
 			{
-				cout << i+1 << "\t" << returnValue << endl;
+				// cout << i+1 << "\t" << returnValue << endl;
+				nPasses++;
 				passes = true;
 			}
 		}
 	}
+	inputCascades[cascadeID].expCoincSize = nPasses;
 	return passes;
 }
 
-int multiclusterEvents(int dummyID)
+
+int multiclusterEvents(int season, TString multiclusterPath, TString inputCascadesFile)
 {
-	TString filePath = "/Data/BaikalData/multicluster/imulticluster.*.root";
+	TString filePath = Form("%s/*multicluster.*.root",multiclusterPath.Data());
 	// TString filePath = "/media/fajtak/Alpha/BaikalData/multicluster/imulticluster.*.root";
 	// TString inputCascadesFile = "../../results/recCasc.txt";
-	TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
+	// TString inputCascadesFile = "../../results/recCasc_y19c-1.txt";
+	// TString inputCascadesFile = "../../results/recCasc_y19c-1_Zuzka.txt";
+	// TString outputCoincidenceFile = "../../results/multiCoinc_y19c-1.txt";
+
+	// ofstream multiCoincData;
+	// multiCoincData.open(outputCoincidenceFile);
 
 	if (ReadInputCascades(inputCascadesFile) != 0)
 		return -1;
@@ -421,10 +375,10 @@ int multiclusterEvents(int dummyID)
 
     cout << "Number of entries: " << multiclusterFiles->GetEntries() << endl;
 
-	int nPassingCascasdes = 0;
+    int nPassingCascasdes = 0;
     for (unsigned int i = 0; i < inputCascades.size(); ++i)
     {
-    	PrintCascade(inputCascades[i]);
+    	// PrintCascade(inputCascades[i]);
     	bool studyMore = PassesThroughOtherCluster(i);
     	if (studyMore)
     	{
@@ -433,40 +387,57 @@ int multiclusterEvents(int dummyID)
     	}
     }
 
-	for (int j = 0; j < multiclusterFiles->GetEntries(); ++j)
-	// for (int j = 0; j < 100000; ++j)
-	{
-		multiclusterFiles->GetEntry(j);
-		for (int k = 0; k < jointHeader->GetClusters(); ++k)
+    for (int i = 0; i < multiclusterFiles->GetEntries(); ++i)
+    {
+    	if (multiclusterFiles->GetEntries() > 10 && i%(multiclusterFiles->GetEntries()/10) == 0)
 		{
-			InputCascade readEvent{jointHeader->GetSeason(k),jointHeader->GetCluster(k),jointHeader->GetRun(k),(int)jointHeader->GetEventIDCC(k),0,0,0,0,0,0,0,0,false,false};
-
-			for (unsigned int i = 0; i < inputCascades.size(); ++i)
-			{
-				if (inputCascades[i] == readEvent && inputCascades[i].theta < TMath::Pi()/2)
-				{
-					cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
-					PrintCascade(inputCascades[i]);
-					PrintCascade(readEvent);
-					inputCascades[i].coincidenceFound = true;
-					SaveJSON(impulseTel,jointHeader->GetSeason(k),jointHeader->GetCluster(k),jointHeader->GetRun(k),(int)jointHeader->GetEventIDCC(k),i);
-				}
-			}
+			cout << round((double)(i)/multiclusterFiles->GetEntries()*100) << "% ";
+			cout << std::flush;
 		}
-	}
+    	multiclusterFiles->GetEntry(i);
 
-	cout << string(80,'*') << endl;
-	cout << "Strange cascades: " << endl;
-	cout << string(80,'*') << endl;
-	for (int i = 0; i < inputCascades.size(); ++i)
-	{
-		if (inputCascades[i].passesCluster && !inputCascades[i].coincidenceFound)
-		{
-			PrintCascade(inputCascades[i]);
-		}
-	}
+    	h_nClusters->Fill(jointHeader->GetClusters());
 
-    cout << nPassingCascasdes << endl;
+    	for (int j = 0; j < jointHeader->GetClusters(); ++j)
+    	{
+    		h_clusterIDs->Fill(jointHeader->GetCluster(j));
+    		h_eventIDs->Fill(jointHeader->GetEventIDCC(j));
+    		InputCascade readEvent{jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),0,0,0,0,0,0,0,0,false,false};
+    		// PrintCascade(readEvent);
+   //  		if (jointHeader->GetClusters() > 4)
+			// {
+			// 	cout << "FOUND BIG ONE!!! " << jointHeader->GetClusters() << endl;
+			// 	PrintCascade(readEvent);
+			// 	SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),0);
+			// 	nBigOnes++;
+			// }
+    		for (unsigned int k = 0; k < inputCascades.size(); ++k)
+    		{
+    			if (inputCascades[k] == readEvent)
+    			{
+    				cout << "FOUND!!! " << jointHeader->GetClusters() << endl;
+    				for (int l = 0; l < jointHeader->GetClusters(); ++l)
+    				{
+    					if (jointHeader->GetCluster(l) != jointHeader->GetCluster(j) )
+	    					h_coincidences->Fill(j,l);
+    				}
+    				h_coincMultiplicities->Fill(jointHeader->GetClusters());
+    				PrintCascade(inputCascades[k]);
+    				PrintCascade(readEvent);
+    				inputCascades[k].coincidenceFound = true;
+    				inputCascades[k].coincidenceSize = jointHeader->GetClusters();
+    				SaveJSON(impulseTel,jointHeader->GetSeason(j),jointHeader->GetCluster(j),jointHeader->GetRun(j),(int)jointHeader->GetEventIDCC(j),k);
+    				// SaveCoincidences(k,jointHeader,multiCoincData);
+    			}
+    		}
+    	}
+    	// cout << jointHeader->GetClusters() << endl;
+    }
+
+    DrawResults();
+    SaveResults(season);
+    PrintResults();
+    // multiCoincData.close();
 
     return 0;
 }
