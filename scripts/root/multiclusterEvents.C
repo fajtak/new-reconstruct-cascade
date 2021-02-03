@@ -436,7 +436,7 @@ int multiclusterEvents(int season, TString multiclusterPath, TString inputCascad
     				for (int l = 0; l < jointHeader->GetClusters(); ++l)
     				{
     					if (jointHeader->GetCluster(l) != jointHeader->GetCluster(j) )
-	    					h_coincidences->Fill(j,l);
+	    					h_coincidences->Fill(jointHeader->GetCluster(j),jointHeader->GetCluster(l));
     				}
     				h_coincMultiplicities->Fill(jointHeader->GetClusters());
     				// PrintCascade(inputCascades[k]);
