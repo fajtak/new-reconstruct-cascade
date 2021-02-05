@@ -1,4 +1,9 @@
-03.02.2021 - git commit ---
+05.02.2021 - git commit
+	* fixed bug with unifiedEvent.eventTime for new folder structure
+	* also expectedTrackAngle added to the service output for the waveformComparison
+	* waveformComparison.C extended for the trackExpectedAngle
+
+03.02.2021 - git commit 9b76c160e2347c1a95f5b92f69068c6e72e0fcf8
 	* multiclusterEvents bug fix
 
 02.02.2021 - git commit 481f9366622b6b6827a1ff9d3810edbaf6d5eab5

@@ -184,7 +184,7 @@ bool IsActiveChannel(int OMID)
 	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMqCal[OMID] - (0)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && (gSectionMask?gSectionMask->GetChannelStatus(OMID):true));
 }
 
-void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime, UnifiedEvent &unifiedEvent)
+void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &unifiedEvent)
 {
 	unifiedEvent.hits.clear();
 	unifiedEvent.nHits = 0;
@@ -215,7 +215,6 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, double eventTime,
 			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],hitCharge,-1,false,-1});
 		}
 	}
-	unifiedEvent.eventTime = eventTime;
 }
 
 void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eventMask, UnifiedEvent &unifiedEvent)
@@ -520,6 +519,16 @@ double TrackExpectedDistance(UnifiedEvent &event, TVector3 &cascDir, int OMID)
 	return TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2));
 }
 
+double TrackExpectedAngle(UnifiedEvent &event, TVector3 &cascDir, int OMID)
+{
+	double sPerp = (gOMpositions[OMID]-event.position).Perp(cascDir);
+	double sLong = (gOMpositions[OMID]-event.position)*(cascDir);
+	double lLong = sPerp/TMath::Tan(0.719887);
+	TVector3 track = event.position + (sLong-lLong)*cascDir;
+	TVector3 lightUnit = (gOMpositions[OMID] - track).Unit();
+	return lightUnit.Z();
+}
+
 // minimization function
 void chi2(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag) //keep all these nonsense parameters
 {
@@ -574,9 +583,10 @@ int SaveServiceInfo(UnifiedEvent &event)
 		double expectedTime = ExpectedTime(event.position,event.time,gPulses[i].OMID);
 		double trackExpectedTime = TrackExpectedTime(event,trackDirection,gPulses[i].OMID);
 		double trackExpectedDistance = TrackExpectedDistance(event,trackDirection,gPulses[i].OMID);
+		double trackExpectedAngle = TrackExpectedAngle(event,trackDirection,gPulses[i].OMID);
 		// cout << trackExpectedDistance << endl;
 		double timeRes = gPulses[i].time - expectedTime;
-		outputTimeResFile << event.eventID << "\t" << gPulses[i].OMID << "\t" << timeRes+expectedTime << "\t" << expectedTime << "\t" << trackExpectedTime << "\t" << trackExpectedDistance << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
+		outputTimeResFile << event.eventID << "\t" << gPulses[i].OMID << "\t" << timeRes+expectedTime << "\t" << expectedTime << "\t" << trackExpectedTime << "\t" << trackExpectedDistance << "\t" << trackExpectedAngle << "\t" << gPulses[i].charge << "\t" << gPulses[i].expectedCharge << endl;
 	}
 	outputTimeResFile.close();
 
@@ -3013,7 +3023,8 @@ int ProcessExperimentalData()
 		unifiedEvent.clusterID = BARS::App::Cluster;
 		unifiedEvent.runID = BARS::App::Run;
 		unifiedEvent.eventID = i;
-		TransformToUnifiedEvent(impulseTel,header->GetTime().AsDouble(),unifiedEvent);
+		unifiedEvent.eventTime = gUseNewFolderStructure?jointHeader->GetTimeCC().AsDouble():header->GetTime().AsDouble();
+		TransformToUnifiedEvent(impulseTel,unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
 		if (status == 0)
 			t_RecCasc->Fill();

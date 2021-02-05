@@ -9,6 +9,8 @@ double gOMchargeCal[gNOMs] = {0};
 TVector3 gOMpositions[gNOMs];
 int gSecEntryIDs[gNSecs] = {0};
 
+TF1* gf_angularSens = new TF1("gf_angularSens","0.3082 - x*(-0.54192 - x*(0.19831 - 0.04912*x))",-1,1);
+
 struct Hit
 {
 	int OMID;
@@ -16,6 +18,7 @@ struct Hit
 	double expTime;
 	double expTimeTrack;
 	double expDistTrack;
+	double expAngleTrack;
 	double charge;
 	double expCharge;
 	int eventID;
@@ -260,9 +263,11 @@ int GumbelVis(int pulseID, bool showTrackHits)
 	if (showTrackHits)
 	{
 		TF1* gumpTrack = new TF1("gumpTrack","[0]*exp(-((x-[1]-9.85)/5/[2] + exp(-(x-[1]-9.85)/5/[2])))",hits[pulseID].expTimeTrack-50,hits[pulseID].expTimeTrack+150);
-		gumpTrack->SetParameters(100*gOMchargeCal[hits[pulseID].OMID]/7/0.368*TMath::Exp(-hits[pulseID].expDistTrack/23),hits[pulseID].expTimeTrack,2.0);
+		gumpTrack->SetParameters(100*gOMchargeCal[hits[pulseID].OMID]/7/0.368*TMath::Exp(-hits[pulseID].expDistTrack/23)*gf_angularSens->Eval(hits[pulseID].expAngleTrack),hits[pulseID].expTimeTrack,2.0);
+		// gumpTrack->SetParameters(100*gOMchargeCal[hits[pulseID].OMID]/7/0.368*TMath::Exp(-hits[pulseID].expDistTrack/23),hits[pulseID].expTimeTrack,2.0);
 		TGraph* myGraphTrack = new TGraph(gumpTrack);
-		myGraphTrack->SetTitle(Form("GumbelTrack, Q = %.1f, T = %.1f, D = %.1f",100*TMath::Exp(-hits[pulseID].expDistTrack/23),hits[pulseID].expTimeTrack,hits[pulseID].expDistTrack));
+		myGraphTrack->SetTitle(Form("GumbelTrack, Q = %.1f, T = %.1f, D = %.1f",100*TMath::Exp(-hits[pulseID].expDistTrack/23)*gf_angularSens->Eval(hits[pulseID].expAngleTrack),hits[pulseID].expTimeTrack,hits[pulseID].expDistTrack));
+		// myGraphTrack->SetTitle(Form("GumbelTrack, Q = %.1f, T = %.1f, D = %.1f",100*TMath::Exp(-hits[pulseID].expDistTrack/23),hits[pulseID].expTimeTrack,hits[pulseID].expDistTrack));
 		myGraphTrack->SetLineColor(kBlue);
 		myGraphTrack->SetMarkerColor(kBlue);
 		hits[pulseID].waveform->Add(myGraphTrack);
@@ -318,14 +323,14 @@ int ReadTimeResFile(TString dataPath)
   	}
 
   	int eventID,OMID;
-  	double time, expectedTime, expectedTimeTrack, expectedDistanceTrack, charge, expectedCharge;
+  	double time, expectedTime, expectedTimeTrack, expectedDistanceTrack, expectedAngleTrack, charge, expectedCharge;
 
   	while(!inputTimeResFile.eof())
   	{
-  		inputTimeResFile >> eventID >> OMID >> time >> expectedTime >> expectedTimeTrack >> expectedDistanceTrack >> charge >> expectedCharge;
+  		inputTimeResFile >> eventID >> OMID >> time >> expectedTime >> expectedTimeTrack >> expectedDistanceTrack >> expectedAngleTrack >> charge >> expectedCharge;
   		if (inputTimeResFile.eof())
   			break;
-  		hits.push_back(Hit{OMID,time,expectedTime,expectedTimeTrack,expectedDistanceTrack,charge,expectedCharge});
+  		hits.push_back(Hit{OMID,time,expectedTime,expectedTimeTrack,expectedDistanceTrack,expectedAngleTrack,charge,expectedCharge});
   		hits.back().waveform = new TMultiGraph(Form("OM_%d",OMID),"Waveforms;Time [ns];Amplitude [FADC channels]");
   	}
 
