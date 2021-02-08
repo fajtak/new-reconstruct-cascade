@@ -10,7 +10,7 @@
 
 processFiles=()
 
-for runID in {1..9}
+for runID in {1..999}
 do
 	command=$(printf "%04d" $runID)
 	if [ -d "/home/fajtak/data/exp20$1/cluster$2/${command}/" ]; then

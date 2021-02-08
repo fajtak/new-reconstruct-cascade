@@ -1,4 +1,7 @@
-08.02.2021 - git commit
+08.02.2121 - git commit
+	* bug fix 2
+
+08.02.2021 - git commit 03a2cae59ece7cdeeb9213e26329a2814aafa1d4
 	* bug fix
 
 08.02.2021 - git commit 810abf089851d3cb4672c346a72fa70f4c8c5b2b
