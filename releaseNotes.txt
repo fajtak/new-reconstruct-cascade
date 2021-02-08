@@ -1,4 +1,7 @@
 08.02.2021 - git commit
+	* bug fix
+
+08.02.2021 - git commit 810abf089851d3cb4672c346a72fa70f4c8c5b2b
 	* new script to process only new experimental runs with parallel
 
 05.02.2021 - git commit 4bbeaa5d80e7ae30b7f373af9b064c350e328720

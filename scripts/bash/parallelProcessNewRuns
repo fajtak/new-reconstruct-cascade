@@ -13,11 +13,11 @@ processFiles=()
 for runID in {1..9}
 do
 	command=$(printf "%04d" $runID)
-	# if [ -d "/home/fajtak/data/exp20$1/cluster$2/${command}/" ]; then
+	if [ -d "/home/fajtak/data/exp20$1/cluster$2/${command}/" ]; then
 		if [ ! -f "/home/fajtak/data/exp20$1/cluster$2/${command}/recCascResults.root" ]; then
 			processFiles+=( $runID )
 		fi
-	# fi
+	fi
 done
 
 echo "Runs to be processed:"
