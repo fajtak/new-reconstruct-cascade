@@ -1,4 +1,7 @@
-05.02.2021 - git commit
+08.02.2021 - git commit
+	* new script to process only new experimental runs with parallel
+
+05.02.2021 - git commit 4bbeaa5d80e7ae30b7f373af9b064c350e328720
 	* fixed bug with unifiedEvent.eventTime for new folder structure
 	* also expectedTrackAngle added to the service output for the waveformComparison
 	* waveformComparison.C extended for the trackExpectedAngle
