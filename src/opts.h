@@ -154,7 +154,7 @@ extern bool gUseNoiseHitLikelihoodTerm;
 extern bool gUseChargeSatCorrection;
 extern bool gSaveServiceInfo;
 extern bool gLaserRun;
-extern bool gExcudeTrackHits;
+extern bool gExcludeTrackHits;
 
 extern const double gLatDet;
 extern const double gLonDet;

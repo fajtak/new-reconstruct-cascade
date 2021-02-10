@@ -61,7 +61,7 @@ bool gUseNoiseHitLikelihoodTerm = false;
 bool gUseChargeSatCorrection = false;
 bool gSaveServiceInfo = false;
 bool gLaserRun = false;
-bool gExcudeTrackHits = false;
+bool gExcludeTrackHits = false;
 
 //coordinates of the detector converted to radians (assuming east longitude)
 // taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3

@@ -1,4 +1,7 @@
 10.02.2021 - git commit
+	* bug fix
+
+10.02.2021 - git commit b1f8c2d677afd162f55482b921c2bfc15fadf3f0
 	* new flag -d ExcludeTrackHitsMC added
 
 08.02.2021 - git commit b8c9f06e26e2e4c046fefdbc4d2d407c00278578
