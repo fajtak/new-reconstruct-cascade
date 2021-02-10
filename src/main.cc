@@ -276,15 +276,18 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 		// if (event->Q(i) > 0 && eventMask->GetFlag(i) != 0 && eventMask->GetFlag(i) == unifiedEvent.mcFlagID)
 		if (event->Q(i) > 0)
 		{
-			nHits++;
-			unifiedEvent.qTotal += event->Q(i);
 			if (eventMask->GetFlag(i) == 0)
 			{
 				nNoiseHits++;
 				unifiedEvent.hits.push_back(UnifiedHit{event->HitChannel(i),event->T(i),event->Q(i),-1,true,0});
-			}
-			else
+			}else
+			{
+				if (gExcludeTrackHits && eventMask->GetFlag(i) < 0)
+					continue;
 				unifiedEvent.hits.push_back(UnifiedHit{event->HitChannel(i),event->T(i),event->Q(i),-1,false,eventMask->GetFlag(i)});
+			}
+			nHits++;
+			unifiedEvent.qTotal += event->Q(i);
 		}
 	}
 	unifiedEvent.nHits = nHits;

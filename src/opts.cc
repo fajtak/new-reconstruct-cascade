@@ -61,6 +61,7 @@ bool gUseNoiseHitLikelihoodTerm = false;
 bool gUseChargeSatCorrection = false;
 bool gSaveServiceInfo = false;
 bool gLaserRun = false;
+bool gExcudeTrackHits = false;
 
 //coordinates of the detector converted to radians (assuming east longitude)
 // taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3
@@ -222,6 +223,17 @@ static const struct App::ProgramOption_t options_list[]{
 			no_argument,
 			"Switches off production of visualizations and some cuts to speed up laser run processing",
 			[](char* argv) {gLaserRun = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"excludeTracHitsMC", 'd',
+			no_argument,
+			"Switches off the reading of the track hits for MC in the TransformToUnified()",
+			[](char* argv) {gExcludeTrackHits = true;},
 			[]() {;}
 		},
 
