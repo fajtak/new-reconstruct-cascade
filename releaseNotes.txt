@@ -1,4 +1,11 @@
-10.02.2021 - git commit
+19.02.2021 - git commit ---
+	* added folder "configs" with different configurations that can be used for processing
+	* added new likelihood based on the grid approach (Combined)
+	* added cascade energy estimator
+	* bug with cascade Q calibration fixed
+	* estimate initial position fixed (much more equations added - more stable)
+
+10.02.2021 - git commit 52a908b1949beddadc1824001445a5aa4e88e88d
 	* bug fix
 
 10.02.2021 - git commit b1f8c2d677afd162f55482b921c2bfc15fadf3f0
