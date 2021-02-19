@@ -323,6 +323,7 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	unifiedEvent.mcPosition.SetX(cascade->position[0]);
 	unifiedEvent.mcPosition.SetY(cascade->position[1]);
 	unifiedEvent.mcPosition.SetZ(cascade->position[2]);
+	unifiedEvent.mcFlagID = 1;
 }
 
 int GenerateNoise(UnifiedEvent &event)
@@ -390,7 +391,8 @@ void PrintConfig(void)
 	std::cout << "NCutT: " << gNCutT << endl;
 	std::cout << "TFilterChi2Cut: " << gTCutChi2 << endl;
 	std::cout << "LikelihoodCut: " << gLikelihoodCut << endl;
-	std::cout << "LikelihoodFitType: " << gDirFitType << endl;
+	std::cout << "UseMultiDirFit: " << (gDirFitType == 1) << endl;
+	std::cout << "UseGridDirFit: " << (gDirFitType == 2) << endl;
 	std::cout << "LikelihoodThetaSteps: " << gLikelihoodThetaSteps << endl;
 	std::cout << "LikelihoodPhiSteps: " << gLikelihoodPhiSteps << endl;
 	std::cout << "LikelihoodEnergySteps: " << gLikelihoodEnergySteps << endl;
@@ -853,63 +855,6 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 	// f = logLike;
 }
 
-double GetEnergyEstimatorFirst(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag)
-{
-	// cout << "In log" << endl;
-	double logLike = 0;
-	double tableParameters[4]{0};
-	int nExcludedHits = 0;
-	double totalQpeExp = 0;
-	double totalQpeMea = 0;
-	// cout << "Calculating logLike" << endl;
-	// cout << par[0] << " " << par[1] << " " << par[2] << " " << par[3] << " " << par[4] << " " << par[5] << " " << par[6] << endl;
-	for (unsigned int i = 0; i < gPulses.size(); ++i)
-	{
-		if(gUseChargeSatCorrection && gPulses[i].charge > 100)
-		{
-			nExcludedHits++;
-			continue;
-		}
-		// cout << "GPulses: " << gPulses[i].OMID << endl;
-		GetParameters(par,gPulses[i].OMID,tableParameters);
-		// gOMpositions[gPulses[i].OMID].Print();
-		// cout << i << " " << tableParameters[0] << " " << tableParameters[1] << " " << tableParameters[2] << " " << tableParameters[3] << endl;
-		totalQpeExp += GetInterpolatedValue(tableParameters)*110000000;
-		totalQpeMea += gPulses[i].charge;
-	}
-
-	return totalQpeMea/totalQpeExp;
-}
-
-double GetEnergyEstimator(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag)
-{
-	// cout << "In log" << endl;
-	double logLike = 0;
-	double tableParameters[4]{0};
-	int nExcludedHits = 0;
-	double numerator = 0;
-	double denominator = 0;
-	// cout << "Calculating logLike" << endl;
-	// cout << par[0] << " " << par[1] << " " << par[2] << " " << par[3] << " " << par[4] << " " << par[5] << " " << par[6] << endl;
-	for (unsigned int i = 0; i < gPulses.size(); ++i)
-	{
-		if(gUseChargeSatCorrection && gPulses[i].charge > 100)
-		{
-			nExcludedHits++;
-			continue;
-		}
-		// cout << "GPulses: " << gPulses[i].OMID << endl;
-		GetParameters(par,gPulses[i].OMID,tableParameters);
-		// gOMpositions[gPulses[i].OMID].Print();
-		// cout << i << " " << tableParameters[0] << " " << tableParameters[1] << " " << tableParameters[2] << " " << tableParameters[3] << endl;
-		double expectedCharge = GetInterpolatedValue(tableParameters)*110000000;
-		numerator += expectedCharge;
-		denominator += TMath::Power(expectedCharge,2)/gPulses[i].charge;
-	}
-
-	return numerator/denominator;
-}
-
 
 // Function that checks if all arguments necessary for Experimental Data processing have been set
 bool CheckInputParamsExpData()
@@ -1324,6 +1269,7 @@ int ReadQCal(void)
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
+    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
 
 
@@ -1818,50 +1764,6 @@ bool NFilterPassed(UnifiedEvent &event)
 
 double EstimateInitialPosMatrix(TVector3 &cascPos, double &cascTime)
 {
-	int N = gPulses.size()*(gPulses.size()-1)/2;
-	int n = 0;
-
-	TMatrixD A(N,4);
-	TVectorD b(N);
-
-	for (unsigned int i = 0; i < gPulses.size(); ++i)
-	{
-		for (int j = i+1; j < gPulses.size(); ++j)
-		{
-			double temp = TMath::Power(gOMpositions[gPulses[j].OMID].X(),2) - TMath::Power(gOMpositions[gPulses[i].OMID].X(),2);
-			temp += TMath::Power(gOMpositions[gPulses[j].OMID].Y(),2) - TMath::Power(gOMpositions[gPulses[i].OMID].Y(),2);
-			temp += TMath::Power(gOMpositions[gPulses[j].OMID].Z(),2) - TMath::Power(gOMpositions[gPulses[i].OMID].Z(),2);
-			temp -= (TMath::Power(gPulses[j].time,2) - TMath::Power(gPulses[i].time,2))/TMath::Power(gRecCinWater,2);
-			b[n] = temp;
-
-			// cout << cascade->chID[i+1]-1 << " " << cascade->chID[i]-1 << endl;
-			A[n][0] = 2*(gOMpositions[gPulses[j].OMID].X() - gOMpositions[gPulses[i].OMID].X());
-			A[n][1] = 2*(gOMpositions[gPulses[j].OMID].Y() - gOMpositions[gPulses[i].OMID].Y());
-			A[n][2] = 2*(gOMpositions[gPulses[j].OMID].Z() - gOMpositions[gPulses[i].OMID].Z());
-			A[n][3] = -2*(gPulses[j].time - gPulses[i].time)/TMath::Power(gRecCinWater,2);
-			n++;
-		}
-
-	}
-
-	TMatrixD B(4,N);
-	B.Transpose(A);
-	TMatrixD C = (B*A).Invert();
-	TVectorD D = A.T()*b;
-	TVectorD X = C*D;
-
-	// cout << X[0] << " " << X[1] << " " << X[2] << " " << X[3] << endl;
-
-	cascPos[0] = X[0];
-	cascPos[1] = X[1];
-	cascPos[2] = X[2];
-	cascTime = X[3];
-
-	return 0;
-}
-
-double EstimateInitialPosMatrixOld(TVector3 &cascPos, double &cascTime)
-{
 	TMatrixD A(gPulses.size()-1,4);
 	TVectorD b(gPulses.size()-1);
 
@@ -2134,86 +2036,6 @@ double GridLikelihoodFilterPassed(UnifiedEvent &event)
 	return lowestLog;
 }
 
-double CombinedLikelihoodFilterPassed(UnifiedEvent &event)
-{
-	int nPar = 0;
-	double* gin = new double(0);
-	int iflag = 0;
-	double likelihoodValue = 0;
-	double cascadeParameters[7];
-
-	double lowestLog = 1000000;
-
-	cascadeParameters[0] = event.position.X();
-	cascadeParameters[1] = event.position.Y();
-	cascadeParameters[2] = event.position.Z();
-	cascadeParameters[3] = event.time;
-
-	int nThetaSteps = 21;
-	int nPhiSteps = 21;
-	int nEnergySteps = 1;
-
-	for (int k = 0; k < nThetaSteps; ++k)
-	{
-		for (int l = 0; l < nPhiSteps; ++l)
-		{
-			cascadeParameters[4] = 1;
-			// cascadeParameters[4] = TMath::Power(10,k);
-			// cascadeParameters[4] = cascade->showerEnergy;
-			// cascadeParameters[4] = 1+k*50;
-			cascadeParameters[5] = TMath::Pi()/nThetaSteps*(k);
-			cascadeParameters[6] = 2*TMath::Pi()/nPhiSteps*l;
-			cascadeParameters[4] = GetEnergyEstimator(nPar,gin,likelihoodValue,cascadeParameters,iflag);
-			logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
-			// cout << likelihoodValue << " " << cascadeParameters[0] << " " << cascadeParameters[1] << " " << cascadeParameters[2] << endl;
-			if (likelihoodValue < lowestLog)
-			{
-				lowestLog = likelihoodValue;
-				event.energy = cascadeParameters[4];
-				event.theta = cascadeParameters[5];
-				event.phi = cascadeParameters[6];
-			}
-			// cout << k << " " << l << endl;
-		}
-	}
-
-	double cascadeEnergy = event.energy;
-	double cascadeTheta = event.theta;
-	double cascadePhi = event.phi;
-	double cascadeEnergySigma = 0;
-	double cascadeThetaSigma = 0;
-	double cascadePhiSigma = 0;
-	double recentLog = FitCascDirection(event,cascadeEnergy,cascadeTheta,cascadePhi,cascadeEnergySigma,cascadeThetaSigma,cascadePhiSigma);
-	if (recentLog < lowestLog)
-	{
-		lowestLog = recentLog;
-		event.energy = cascadeEnergy;
-		event.theta = cascadeTheta;
-		event.phi = cascadePhi;
-		event.energySigma = cascadeEnergySigma;
-		event.thetaSigma = cascadeThetaSigma;
-		event.phiSigma = cascadePhiSigma;
-
-		cascadeParameters[0] = event.position.X();
-		cascadeParameters[1] = event.position.Y();
-		cascadeParameters[2] = event.position.Z();
-		cascadeParameters[3] = event.time;
-		cascadeParameters[4] = event.energy;
-		cascadeParameters[5] = event.theta;
-		cascadeParameters[6] = event.phi;
-
-		if (gUseNonHitLikelihoodTerm)
-		{
-			gUseNonHitLikelihoodTerm = false;
-			logLikelihood(nPar,gin,event.likelihoodHitOnly,cascadeParameters,iflag);
-			gUseNonHitLikelihoodTerm = true;
-		}
-	}
-
-	event.likelihood = lowestLog;
-	return lowestLog;
-}
-
 int inRange(int roundedEnergy)
 {
     int bin = 0;
@@ -2388,6 +2210,100 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 		delete mg_hitsMatrix[i];
 	}
 	return 0;
+}
+int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
+{
+	TMultiGraph* mg_eventXZ;
+	TGraph* g_noiseHits;
+	TGraph* g_trackHits;
+	TGraph* g_mostEnergeticCascadeHits;
+	TGraph* g_otherCascadesHits;
+	TGraph* g_cascade = new TGraph(1);
+	g_cascade->SetPoint(0,cascPos.X(),cascPos.Z());
+
+	int nNoiseHits{0};
+	int nTrackHits{0};
+	int nMostEnergeticCascadeHits{0};
+	int nOtherCascadeHits{0};
+
+	for(int k = 0; k < gPulses.size(); k++)
+	{
+		if (gPulses[k].MCflag == 0)
+			nNoiseHits++;
+		
+		if (gPulses[k].MCflag == event.mcFlagID)
+			nMostEnergeticCascadeHits++;
+
+		if(gPulses[k].MCflag > 0 && gPulses[k].MCflag != event.mcFlagID)
+			nOtherCascadeHits++;		
+		
+		if(gPulses[k].MCflag < 0) // in case of experimental data, all hits have flag = -1
+			nTrackHits++;		
+	}
+
+	g_noiseHits = new TGraph(nNoiseHits);
+	g_trackHits = new TGraph(nTrackHits);
+	g_mostEnergeticCascadeHits = new TGraph(nMostEnergeticCascadeHits);
+	g_otherCascadesHits = new TGraph(nOtherCascadeHits);
+
+	nNoiseHits = 0;
+	nTrackHits = 0;
+	nMostEnergeticCascadeHits = 0;
+	nOtherCascadeHits = 0;
+
+	for(int k = 0; k < gPulses.size(); k++)
+	{
+		if (gPulses[k].MCflag == 0)
+		{
+			g_noiseHits->SetPoint(nNoiseHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
+			nNoiseHits++;
+		}		
+		if(gPulses[k].MCflag == event.mcFlagID)
+		{
+			g_mostEnergeticCascadeHits->SetPoint(nMostEnergeticCascadeHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
+			nMostEnergeticCascadeHits++;
+		}
+		if (gPulses[k].MCflag > 0 && gPulses[k].MCflag != event.mcFlagID)
+		{
+			g_otherCascadesHits->SetPoint(nOtherCascadeHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
+			nOtherCascadeHits++;
+		}
+		if(gPulses[k].MCflag < 0)
+		{
+			g_trackHits->SetPoint(nTrackHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
+			nTrackHits++;
+		}
+		
+	}
+
+		mg_eventXZ = new TMultiGraph("mgXZ",Form("EventXZ_%d;OM X position [m]; OM Z position [m]",eventID));
+
+		g_noiseHits->SetMarkerStyle(20);
+		g_noiseHits->SetMarkerColor(kMagenta);
+		g_trackHits->SetMarkerStyle(20);
+		g_trackHits->SetMarkerColor(kBlue);
+		g_otherCascadesHits->SetMarkerStyle(20);
+		g_otherCascadesHits->SetMarkerColor(kOrange);
+		g_mostEnergeticCascadeHits->SetMarkerStyle(20);	
+		g_mostEnergeticCascadeHits->SetMarkerColor(kRed);
+		g_cascade->SetMarkerStyle(20);
+		g_cascade->SetMarkerColor(kGreen);
+
+		TCanvas *cEventXZ = new TCanvas(Form("cEventXZ_%d",eventID),Form("cEventXZ_%d",eventID),200,10,600,400);
+
+		mg_eventXZ->Add(g_noiseHits,"P");
+		mg_eventXZ->Add(g_trackHits,"P");
+		mg_eventXZ->Add(g_mostEnergeticCascadeHits,"P");
+		mg_eventXZ->Add(g_otherCascadesHits,"P");
+		mg_eventXZ->Add(g_cascade,"P");
+		mg_eventXZ->Draw("AP");
+
+		cEventXZ->Write();
+		delete cEventXZ;
+
+		delete mg_eventXZ;	
+
+		return 0;
 }
 
 int ChargeVisualization(int eventID, TVector3 cascPos, double energy, double theta, double phi)
@@ -2898,6 +2814,93 @@ int CountTrackHitsSegment(UnifiedEvent &event, int angleSegment = 20)
 // 		nPoints++;
 // 	}
 
+double BranchRatio(UnifiedEvent &event)
+{
+	int upper = 0;
+	int lower = 0;
+	double branchRatio = 0;
+	event.branchRatio = 0;
+	
+	for (int i = 0; i < gPulses.size(); ++i)
+	{
+		if (gOMpositions[gPulses[i].OMID].Z() > event.position.Z())
+			upper++;
+		else
+			lower++;
+	}	
+	branchRatio = (double)upper/lower;
+
+	return branchRatio;
+}
+
+double QRatio(UnifiedEvent &event)
+{
+	event.qRatio = 0;
+	double qRatio = 0;
+	double allCharge = 0;
+
+	for (int i = 0; i < event.nHits; ++i)
+	{
+		allCharge += event.hits[i].charge>0?event.hits[i].charge:0;
+	}
+	double insideCharge = 0;
+
+	for (int i = 0; i < gPulses.size(); ++i)
+	{
+		insideCharge += gPulses[i].charge>0?gPulses[i].charge:0;
+	}
+	
+	qRatio = (double)insideCharge/allCharge*100;
+
+	return qRatio;
+}
+
+struct OMIDdistance
+{
+	int OMID;
+	double distance;
+};
+
+bool compareEntries(OMIDdistance first, OMIDdistance second)
+{
+	return (first.distance <= second.distance);
+}
+int CloseHits(UnifiedEvent &event)
+{
+	int closeHits = 0;
+	double chargeCloseHits = 0;	
+	event.closeHits = 0;
+	event.chargeCloseHits = 0;
+
+	vector<OMIDdistance> vOMIDdistance;	
+
+	for (int i = 0; i < gNOMs; ++i)
+	{
+		if (IsActiveChannel(i) && gOMpositions[i].Z() > event.position.Z())
+		{
+			double OMdistance = (event.position - gOMpositions[i]).Mag();
+			vOMIDdistance.push_back(OMIDdistance{i,OMdistance});
+		}
+	}
+	sort(vOMIDdistance.begin(),vOMIDdistance.end(),compareEntries);
+
+	for (int i = 0; i < 15; ++i)
+	{
+		for (int j = 0; j < gPulses.size(); ++j)
+		{
+			if (gPulses[j].OMID == vOMIDdistance[i].OMID)
+			{
+				chargeCloseHits += gPulses[j].charge;
+				closeHits++;
+				break;
+			}
+		}
+	}
+	event.chargeCloseHits = chargeCloseHits;
+
+	return closeHits;
+}
+
 int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 {
 	if (!NFilterPassed(event))
@@ -2960,20 +2963,21 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		case 2:
 			GridLikelihoodFilterPassed(event);
 			break;
-		case 3:
-			CombinedLikelihoodFilterPassed(event);
-			break;
 	}
 
 	h_likelihood->Fill(event.likelihood);
 
 	double likelihoodCut = gLikelihoodCut + 7*(TMath::Log10(event.energy*1000)-3);
+	
 
 	if (event.likelihood > (gUseNonHitLikelihoodTerm?likelihoodCut/6:likelihoodCut))
 		return -7;
 
 	eventStats->nLikelihoodFilter++;
 	event.nTrackHits = CountTrackHitsSegment(event);
+	event.branchRatio = BranchRatio(event);
+	event.qRatio = QRatio(event);
+	event.closeHits = CloseHits(event);
 	event.correctedEnergy = GetCorrectedEnergy(event.energy);
 	event.directionSigma = CalculateDirectionError(event);
 	CalculateEquatorialCoor(event);
@@ -2981,6 +2985,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	if (!gLaserRun)
 	{
 		EventVisualization(i,event,event.position,event.time);
+		EventVisualizationXZ(i,event,event.position);
 		ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
 		SaveCascadeJSON(i,event);
 		ScanLogLikelihoodEnergy(i,event);
@@ -3036,6 +3041,10 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("trackCharge",&event.trackCharge);
 	outputTree->Branch("trackTheta",&event.trackTheta);
 	outputTree->Branch("trackPhi",&event.trackPhi);
+	outputTree->Branch("branchRatio",&event.branchRatio);
+	outputTree->Branch("qRatio",&event.qRatio);
+	outputTree->Branch("closeHits",&event.closeHits);
+	outputTree->Branch("chargeCloseHits",&event.chargeCloseHits);
 }
 
 bool CheckTreeAndBranches(TTree* tree)
@@ -3106,6 +3115,7 @@ int ProcessExperimentalData()
     if (!gUseNewFolderStructure)
     	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     else
+    	// filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
     	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     if (!BARS::App::FileExists(filePath))
     {
@@ -3315,8 +3325,8 @@ int ProcessMCCascades()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
-		if (cascade->showerEnergy > 1000 || i % 1000 != 0 || !IsContained(cascade,40))
-		// if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsUncontained(cascade,100,120))
+		// if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsContained(cascade))
+		if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsUncontained(cascade,100,120))
 			continue;
 
 		nProcessed++;
@@ -3371,8 +3381,6 @@ int ProcessMCData()
     mcFiles->SetBranchAddress("BEvent.",&event);
     BEventMaskMC* eventMask = NULL;
     mcFiles->SetBranchAddress("MCEventMask.",&eventMask);
-    BExtractedHeader* jointHeader = NULL;
-    mcFiles->SetBranchAddress("BJointHeader.",&jointHeader);
     // BSourceEAS* sourceEAS = NULL;
     // mcFiles->SetBranchAddress("MCEventSource.",&sourceEAS);
     BMCEvent* mcEvent = NULL;
@@ -3418,8 +3426,6 @@ int ProcessMCData()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
-		if (gEventID != -1)
-			cout << mcFiles->GetFile()->GetName() << " " << jointHeader->GetEventID() << endl;
 		unifiedEvent.eventID = i;
 		TransformToUnifiedEvent(event,mcEvent,eventMask,unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);

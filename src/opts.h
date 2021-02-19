@@ -100,6 +100,10 @@ struct UnifiedEvent
 	double chi2AfterCaus = -1;
 	double chi2AfterTFilter = -1;
 	double qTotal = -1;
+	double branchRatio = -1;
+	double qRatio = -1;
+	int closeHits = -1;
+	double chargeCloseHits = -1;
 };
 
 extern int gNEventsProcessed;
