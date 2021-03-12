@@ -67,6 +67,7 @@ struct UnifiedEvent
 	double mcTheta = -1;
 	double mcPhi = -1;
 	double mcWeight = -1;
+	double mcLikelihood = -1;
 	int mcNTrackHitsAfterTFilter = -1;
 	int nTrackHits = -1;
 	double trackCharge = -1;

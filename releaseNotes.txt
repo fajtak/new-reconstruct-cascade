@@ -1,4 +1,10 @@
-07.03.2021 - git commit ---
+12.03.2021 - git commit
+	* Qratio changed to subtract the noise charge
+	* closeHits are calculated from the full 4pi angle
+	* for MC events the ideal MC likelihood is calculated
+	* number of steps in the combinedLikelihood changed to 36x72
+
+07.03.2021 - git commit ddd6aafd8ea315dc14a12bf4df9424da9cd2e3cd
 	* ONCE MORE UPLOADED with Lukas' previous changes!
 	* BranchRatio(), QRatio(), CloseHits() functions added
 	* EventVisualizationXZ() added

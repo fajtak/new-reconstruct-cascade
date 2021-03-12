@@ -854,6 +854,25 @@ void logLikelihood(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t
 	// f = logLike;
 }
 
+double CalculateLikelihood(UnifiedEvent &unifiedEvent)
+{
+	int nPar = 0;
+	double* gin = new double(0);
+	int iflag = 0;
+	double likelihoodValue = 0;
+	double cascadeParameters[7];
+	cascadeParameters[0] = unifiedEvent.mcPosition.X();
+	cascadeParameters[1] = unifiedEvent.mcPosition.Y();
+	cascadeParameters[2] = unifiedEvent.mcPosition.Z();
+	cascadeParameters[3] = 0; // not used in the calculations
+	cascadeParameters[4] = unifiedEvent.mcEnergy;
+	cascadeParameters[5] = unifiedEvent.mcTheta;
+	cascadeParameters[6] = unifiedEvent.mcPhi;
+	logLikelihood(nPar,gin,likelihoodValue,cascadeParameters,iflag);
+
+	return likelihoodValue;
+}
+
 double GetEnergyEstimatorFirst(Int_t &npar, Double_t* gin, Double_t &f, Double_t* par, Int_t iflag)
 {
 	// cout << "In log" << endl;
@@ -2084,6 +2103,7 @@ double MultipleLikelihoodFilterPassed(UnifiedEvent &event)
 	}
 	event.likelihood = lowestLog;
 	// cout << "End likelihood" << endl;
+	delete gin;
 	return lowestLog;
 }
 
@@ -2133,6 +2153,7 @@ double GridLikelihoodFilterPassed(UnifiedEvent &event)
 		}
 	}
 	event.likelihood = lowestLog;
+	delete gin;
 	return lowestLog;
 }
 
@@ -2151,8 +2172,8 @@ double CombinedLikelihoodFilterPassed(UnifiedEvent &event)
 	cascadeParameters[2] = event.position.Z();
 	cascadeParameters[3] = event.time;
 
-	int nThetaSteps = 21;
-	int nPhiSteps = 21;
+	int nThetaSteps = 36;
+	int nPhiSteps = 72;
 	int nEnergySteps = 1;
 
 	for (int k = 0; k < nThetaSteps; ++k)
@@ -2213,6 +2234,7 @@ double CombinedLikelihoodFilterPassed(UnifiedEvent &event)
 	}
 
 	event.likelihood = lowestLog;
+	delete gin;
 	return lowestLog;
 }
 
@@ -2410,15 +2432,15 @@ int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
 	{
 		if (gPulses[k].MCflag == 0)
 			nNoiseHits++;
-		
+
 		if (gPulses[k].MCflag == event.mcFlagID)
 			nMostEnergeticCascadeHits++;
 
 		if(gPulses[k].MCflag > 0 && gPulses[k].MCflag != event.mcFlagID)
-			nOtherCascadeHits++;		
-		
+			nOtherCascadeHits++;
+
 		if(gPulses[k].MCflag < 0) // in case of experimental data, all hits have flag = -1
-			nTrackHits++;		
+			nTrackHits++;
 	}
 
 	g_noiseHits = new TGraph(nNoiseHits);
@@ -2437,7 +2459,7 @@ int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
 		{
 			g_noiseHits->SetPoint(nNoiseHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
 			nNoiseHits++;
-		}		
+		}
 		if(gPulses[k].MCflag == event.mcFlagID)
 		{
 			g_mostEnergeticCascadeHits->SetPoint(nMostEnergeticCascadeHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
@@ -2453,7 +2475,7 @@ int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
 			g_trackHits->SetPoint(nTrackHits,gOMpositions[gPulses[k].OMID].X(),gOMpositions[gPulses[k].OMID].Z());
 			nTrackHits++;
 		}
-		
+
 	}
 
 		mg_eventXZ = new TMultiGraph("mgXZ",Form("EventXZ_%d;OM X position [m]; OM Z position [m]",eventID));
@@ -2464,7 +2486,7 @@ int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
 		g_trackHits->SetMarkerColor(kBlue);
 		g_otherCascadesHits->SetMarkerStyle(20);
 		g_otherCascadesHits->SetMarkerColor(kOrange);
-		g_mostEnergeticCascadeHits->SetMarkerStyle(20);	
+		g_mostEnergeticCascadeHits->SetMarkerStyle(20);
 		g_mostEnergeticCascadeHits->SetMarkerColor(kRed);
 		g_cascade->SetMarkerStyle(20);
 		g_cascade->SetMarkerColor(kGreen);
@@ -2481,7 +2503,7 @@ int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
 		cEventXZ->Write();
 		delete cEventXZ;
 
-		delete mg_eventXZ;	
+		delete mg_eventXZ;
 
 		return 0;
 }
@@ -3000,14 +3022,14 @@ double BranchRatio(UnifiedEvent &event)
 	int lower = 0;
 	double branchRatio = 0;
 	event.branchRatio = 0;
-	
+
 	for (int i = 0; i < gPulses.size(); ++i)
 	{
 		if (gOMpositions[gPulses[i].OMID].Z() > event.position.Z())
 			upper++;
 		else
 			lower++;
-	}	
+	}
 	branchRatio = (double)upper/lower;
 
 	return branchRatio;
@@ -3029,8 +3051,8 @@ double QRatio(UnifiedEvent &event)
 	{
 		insideCharge += gPulses[i].charge>0?gPulses[i].charge:0;
 	}
-	
-	qRatio = (double)insideCharge/allCharge*100;
+
+	qRatio = (double)insideCharge/(allCharge-1.2*(event.nHits-event.nHitsAfterTFilter))*100;
 
 	return qRatio;
 }
@@ -3048,15 +3070,16 @@ bool compareEntries(OMIDdistance first, OMIDdistance second)
 int CloseHits(UnifiedEvent &event)
 {
 	int closeHits = 0;
-	double chargeCloseHits = 0;	
+	double chargeCloseHits = 0;
 	event.closeHits = 0;
 	event.chargeCloseHits = 0;
 
-	vector<OMIDdistance> vOMIDdistance;	
+	vector<OMIDdistance> vOMIDdistance;
 
 	for (int i = 0; i < gNOMs; ++i)
 	{
-		if (IsActiveChannel(i) && gOMpositions[i].Z() > event.position.Z())
+		// if (IsActiveChannel(i) && gOMpositions[i].Z() > event.position.Z())
+		if (IsActiveChannel(i))
 		{
 			double OMdistance = (event.position - gOMpositions[i]).Mag();
 			vOMIDdistance.push_back(OMIDdistance{i,OMdistance});
@@ -3155,6 +3178,9 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	if (event.likelihood > (gUseNonHitLikelihoodTerm?likelihoodCut/6:likelihoodCut))
 		return -7;
 
+	if (event.mcTheta != -1 || event.mcPhi != -1)
+		event.mcLikelihood = CalculateLikelihood(event);
+
 	eventStats->nLikelihoodFilter++;
 	event.nTrackHits = CountTrackHitsSegment(event);
 	event.branchRatio = BranchRatio(event);
@@ -3217,6 +3243,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("mcPhi",&event.mcPhi);
 	outputTree->Branch("mcPosition","TVector3",&event.mcPosition);
 	outputTree->Branch("mcWeight",&event.mcWeight);
+	outputTree->Branch("mcLikelihood",&event.mcLikelihood);
 	outputTree->Branch("qTotal",&event.qTotal);
 	outputTree->Branch("mcNTrackHitsAfterTFilter",&event.mcNTrackHitsAfterTFilter);
 	outputTree->Branch("nTrackHits",&event.nTrackHits);
