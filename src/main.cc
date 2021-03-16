@@ -18,6 +18,7 @@
 #include "TChain.h"
 #include "TGraph2D.h"
 #include "TF1.h"
+#include "TRandom3.h"
 
 //BARS dependencies
 #include "BARS.h"
@@ -230,6 +231,7 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 	int muonID = -1;
 	int cascadeID = -1;
 
+
 	// cout << "New Event" << endl;
 	for (int k = 0; k < mcEvent->GetResponseMuonsN(); ++k)
 	{
@@ -270,6 +272,7 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 	int nHits = 0;
 	int nNoiseHits = 0;
 	unifiedEvent.qTotal = 0;
+	int OMID = 0;
 
 	for (int i = 0; i < event->NHits(); ++i)
 	{
@@ -279,12 +282,14 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 			if (eventMask->GetFlag(i) == 0)
 			{
 				nNoiseHits++;
-				unifiedEvent.hits.push_back(UnifiedHit{event->HitChannel(i),event->T(i),event->Q(i),-1,true,0});
+				OMID = event->HitChannel(i);
+				unifiedEvent.hits.push_back(UnifiedHit{OMID,event->T(i) - gOMtimeCal[OMID],event->Q(i),-1,true,0});
 			}else
 			{
 				if (gExcludeTrackHits && eventMask->GetFlag(i) < 0)
 					continue;
-				unifiedEvent.hits.push_back(UnifiedHit{event->HitChannel(i),event->T(i),event->Q(i),-1,false,eventMask->GetFlag(i)});
+				OMID = event->HitChannel(i);
+				unifiedEvent.hits.push_back(UnifiedHit{OMID,event->T(i) - gOMtimeCal[OMID],event->Q(i),-1,false,eventMask->GetFlag(i)});
 			}
 			nHits++;
 			unifiedEvent.qTotal += event->Q(i);
@@ -306,7 +311,7 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	for (int i = 0; i < cascade->nHits; ++i)
 	{
 		nHits++;
-		unifiedEvent.hits.push_back(UnifiedHit{cascade->chID[i]-1,cascade->time[cascade->chID[i]-1],cascade->charge[cascade->chID[i]-1],-1,false,1});
+		unifiedEvent.hits.push_back(UnifiedHit{cascade->chID[i]-1,cascade->time[cascade->chID[i]-1] - gOMtimeCal[cascade->chID[i]-1],cascade->charge[cascade->chID[i]-1],-1,false,1});
 		unifiedEvent.qTotal += cascade->charge[cascade->chID[i]-1];
 	}
 
@@ -1199,6 +1204,22 @@ int ReadGeometryMCCascades()
 		gOMqCal[i] = 1;
     }
     inputFile.close();
+
+	return 0;
+}
+
+int GenerateMCTimeCal()
+{
+	cout << "Generating MC Time Cal ... ";
+	cout << std::flush;
+    
+	TRandom3 random;
+	for(int i = 0; i < gNOMs; i++)
+	{
+		gOMtimeCal[i] = random.Gaus(0,3);
+	}
+	cout << "DONE!" << endl;
+	
 
 	return 0;
 }
@@ -3020,19 +3041,48 @@ double BranchRatio(UnifiedEvent &event)
 {
 	int upper = 0;
 	int lower = 0;
+	int N = 0;
 	double branchRatio = 0;
 	event.branchRatio = 0;
 
-	for (int i = 0; i < gPulses.size(); ++i)
+	for (int i = 0; i < gNOMs; ++i)
 	{
-		if (gOMpositions[gPulses[i].OMID].Z() > event.position.Z())
+		if (gOMpositions[i].Z() > event.position.Z())
 			upper++;
 		else
 			lower++;
+	}	
+	N  = (upper < lower) ? upper : lower;
+	upper = 0;
+	lower = 0;
+
+	for (int j = 0; j < gPulses.size(); ++j)
+	{
+		if (gOMpositions[gPulses[j].OMID].Z() >= event.position.Z() && upper < N)
+			upper++;
+
+		if(gOMpositions[gPulses[j].OMID].Z() < event.position.Z() && lower < N)
+			lower++;
 	}
-	branchRatio = (double)upper/lower;
+	branchRatio = (lower == 0) ? -1 : ((double)upper/lower);
 
 	return branchRatio;
+}
+double QEarly(UnifiedEvent &event)
+{
+	event.qEarly = 0;
+	double timeRes = 0;
+	double earlyCharge = 0;
+	
+	for (int i = 0; i < event.nHits; ++i)
+	{
+		timeRes = event.hits[i].time - ExpectedTime(event.position, event.time, event.hits[i].OMID);
+
+		if(timeRes > -1000 && timeRes < -40)
+			earlyCharge += event.hits[i].charge;		
+	}
+
+	return earlyCharge;
 }
 
 double QRatio(UnifiedEvent &event)
@@ -3040,6 +3090,7 @@ double QRatio(UnifiedEvent &event)
 	event.qRatio = 0;
 	double qRatio = 0;
 	double allCharge = 0;
+	event.qRecoHits = 0;	
 
 	for (int i = 0; i < event.nHits; ++i)
 	{
@@ -3051,6 +3102,7 @@ double QRatio(UnifiedEvent &event)
 	{
 		insideCharge += gPulses[i].charge>0?gPulses[i].charge:0;
 	}
+	event.qRecoHits = insideCharge;
 
 	qRatio = (double)insideCharge/(allCharge-1.2*(event.nHits-event.nHitsAfterTFilter))*100;
 
@@ -3185,6 +3237,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	event.nTrackHits = CountTrackHitsSegment(event);
 	event.branchRatio = BranchRatio(event);
 	event.qRatio = QRatio(event);
+	event.qEarly = QEarly(event);
 	event.closeHits = CloseHits(event);
 	event.correctedEnergy = GetCorrectedEnergy(event.energy);
 	event.directionSigma = CalculateDirectionError(event);
@@ -3252,6 +3305,8 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("trackPhi",&event.trackPhi);
 	outputTree->Branch("branchRatio",&event.branchRatio);
 	outputTree->Branch("qRatio",&event.qRatio);
+	outputTree->Branch("qRecoHits",&event.qRecoHits);
+	outputTree->Branch("qEarly",&event.qEarly);
 	outputTree->Branch("closeHits",&event.closeHits);
 	outputTree->Branch("chargeCloseHits",&event.chargeCloseHits);
 }
@@ -3504,6 +3559,10 @@ int ProcessMCCascades()
 	if (ReadInputParamFiles() == -1)
 		return -3;
 
+	if(gUseMCTimeCal)
+		GenerateMCTimeCal();
+
+
 	TString outputFileName = "";
 	if (App::Output == "")
     	outputFileName = gFileInputFolder;
@@ -3600,6 +3659,9 @@ int ProcessMCData()
 
     if (ReadInputParamFiles(mcFiles) == -1)
 		return -3;
+
+	if(gUseMCTimeCal)
+		GenerateMCTimeCal();
 
 	TString outputFileName = "";
 	if (App::Output == "")

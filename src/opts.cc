@@ -62,6 +62,7 @@ bool gUseChargeSatCorrection = false;
 bool gSaveServiceInfo = false;
 bool gLaserRun = false;
 bool gExcludeTrackHits = false;
+bool gUseMCTimeCal = false;
 
 //coordinates of the detector converted to radians (assuming east longitude)
 // taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3
@@ -234,6 +235,17 @@ static const struct App::ProgramOption_t options_list[]{
 			no_argument,
 			"Switches off the reading of the track hits for MC in the TransformToUnified()",
 			[](char* argv) {gExcludeTrackHits = true;},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"generateMCTimeCal", 'j',
+			no_argument,
+			"Generate Time Calibrations for MC data/cascades",
+			[](char* argv) {gUseMCTimeCal = true;},
 			[]() {;}
 		},
 

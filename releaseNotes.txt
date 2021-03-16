@@ -1,4 +1,9 @@
-12.03.2021 - git commit
+16.03.2021 - git commit ---
+	* qRecoHits, qEarly added
+	* BranchRatio changed to take into account events near the top of detector
+	* GenerateMCTimeCal added, use with new flag -j
+
+12.03.2021 - git commit a37ba9462f7a6c1157c16b7fbfcb659c0f36656e
 	* Qratio changed to subtract the noise charge
 	* closeHits are calculated from the full 4pi angle
 	* for MC events the ideal MC likelihood is calculated

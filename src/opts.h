@@ -103,6 +103,8 @@ struct UnifiedEvent
 	double qTotal = -1;
 	double branchRatio = -1;
 	double qRatio = -1;
+	double qRecoHits = -1;
+	double qEarly = -1;
 	int closeHits = -1;
 	double chargeCloseHits = -1;
 };
@@ -160,6 +162,7 @@ extern bool gUseChargeSatCorrection;
 extern bool gSaveServiceInfo;
 extern bool gLaserRun;
 extern bool gExcludeTrackHits;
+extern bool gUseMCTimeCal;
 
 extern const double gLatDet;
 extern const double gLonDet;
