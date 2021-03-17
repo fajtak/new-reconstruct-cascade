@@ -56,6 +56,7 @@ TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood value; #mathcal{L}; NoE
 TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000,0,1000);
 TH1F* h_mcTheta = new TH1F("h_mcTheta","MC theta; #theta [deg]; NoE [#]",400,0,4);
 TH1F* h_mcPhi = new TH1F("h_mcPhi","Likelihood value; #phi [deg]; NoE [#]",800,0,8);
+TH1F* h_mcTimeCal = new TH1F("h_mcTimeCal","MC Time Calibrations; timeCal [ns]; NoE [#]",288,-20,20);
 
 TF1* chargeSaturationCurve;
 
@@ -97,6 +98,7 @@ void SaveHistograms()
 	h_exitStatus->Write();
 	h_nHitsTrack->Write();
 	h_OMIDinReco->Write();
+	h_mcTimeCal->Write();
 }
 
 int SaveCascadeJSON(int eventID, UnifiedEvent& event)
@@ -1216,7 +1218,8 @@ int GenerateMCTimeCal()
 	TRandom3 random;
 	for(int i = 0; i < gNOMs; i++)
 	{
-		gOMtimeCal[i] = random.Gaus(0,3);
+		gOMtimeCal[i] = random.Gaus(0,gSigmaMCTimeCal);
+		h_mcTimeCal->Fill(gOMtimeCal[i]);
 	}
 	cout << "DONE!" << endl;
 	
@@ -3041,32 +3044,34 @@ double BranchRatio(UnifiedEvent &event)
 {
 	int upper = 0;
 	int lower = 0;
-	int N = 0;
 	double branchRatio = 0;
 	event.branchRatio = 0;
+	double Zmax = 0;
+	double Zmin = 0;
 
-	for (int i = 0; i < gNOMs; ++i)
-	{
-		if (gOMpositions[i].Z() > event.position.Z())
-			upper++;
-		else
-			lower++;
-	}	
-	N  = (upper < lower) ? upper : lower;
-	upper = 0;
-	lower = 0;
+	double nLayersUpper = int((gOMpositions[35].Z() - event.position.Z())/15.0) + 1;
+	double nLayersLower = int((event.position.Z() - gOMpositions[0].Z())/15.0) + 1;
+	
+	if(nLayersUpper < nLayersLower){
+		Zmax = event.position.Z() + nLayersUpper*15;	
+		Zmin = event.position.Z() - nLayersUpper*15;
+	}else{
+		Zmax = event.position.Z() + nLayersLower*15;
+		Zmin = event.position.Z() - nLayersLower*15;
+	}
 
 	for (int j = 0; j < gPulses.size(); ++j)
-	{
-		if (gOMpositions[gPulses[j].OMID].Z() >= event.position.Z() && upper < N)
+	{		
+		if (gOMpositions[gPulses[j].OMID].Z() >= event.position.Z() && gOMpositions[gPulses[j].OMID].Z() < Zmax)
 			upper++;
 
-		if(gOMpositions[gPulses[j].OMID].Z() < event.position.Z() && lower < N)
+		if(gOMpositions[gPulses[j].OMID].Z() < event.position.Z() && gOMpositions[gPulses[j].OMID].Z() > Zmin)
 			lower++;
 	}
+ 
 	branchRatio = (lower == 0) ? -1 : ((double)upper/lower);
-
 	return branchRatio;
+
 }
 double QEarly(UnifiedEvent &event)
 {
@@ -3559,7 +3564,7 @@ int ProcessMCCascades()
 	if (ReadInputParamFiles() == -1)
 		return -3;
 
-	if(gUseMCTimeCal)
+	if(gSigmaMCTimeCal != -1)
 		GenerateMCTimeCal();
 
 
@@ -3592,6 +3597,8 @@ int ProcessMCCascades()
 			cout << std::flush;
 		}
 		mcFiles->GetEntry(i);
+
+		
 		if (cascade->showerEnergy > 1000 || i % 1000 != 0 || !IsContained(cascade,40))
 		// if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsUncontained(cascade,100,120))
 			continue;
@@ -3660,7 +3667,7 @@ int ProcessMCData()
     if (ReadInputParamFiles(mcFiles) == -1)
 		return -3;
 
-	if(gUseMCTimeCal)
+	if(gSigmaMCTimeCal != -1)
 		GenerateMCTimeCal();
 
 	TString outputFileName = "";

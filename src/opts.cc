@@ -40,6 +40,7 @@ int gLikelihoodThetaSteps = 4; //
 int gLikelihoodPhiSteps = 6;
 int gLikelihoodEnergySteps = 4;
 const double gEnergyCorrectionArray[20] = { 1.67773, 1.56738, 1.53488, 1.42292, 1.34681, 1.33311, 1.30409, 1.31283, 1.3094, 1.28182, 1.26567, 1.27433, 1.24962, 1.24205, 1.26317, 1.22895, 1.23192, 1.21746, 1.22675, 1.13126 };
+double gSigmaMCTimeCal = -1;
 
 int gNCut = -1;
 double gQTotalCut = -1;
@@ -62,7 +63,7 @@ bool gUseChargeSatCorrection = false;
 bool gSaveServiceInfo = false;
 bool gLaserRun = false;
 bool gExcludeTrackHits = false;
-bool gUseMCTimeCal = false;
+
 
 //coordinates of the detector converted to radians (assuming east longitude)
 // taken from https://baikalforum.jinr.ru/t/detector-geographic-coordinates/726/3
@@ -243,9 +244,9 @@ static const struct App::ProgramOption_t options_list[]{
 	{
 		{
 			"generateMCTimeCal", 'j',
-			no_argument,
-			"Generate Time Calibrations for MC data/cascades",
-			[](char* argv) {gUseMCTimeCal = true;},
+			required_argument,
+			"set sigma for MC Time Calibrations",
+			[](char* argv) {gSigmaMCTimeCal = atoi(argv);},
 			[]() {;}
 		},
 

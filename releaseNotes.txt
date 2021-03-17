@@ -1,4 +1,9 @@
-16.03.2021 - git commit ---
+17.03.2021 - git commit ---
+	* BranchRatio changed to count only layers of OMs
+	* MC Time Cal with adjustable sigma  (timeCal according Gaus distribution)
+	* h_mcTimeCal saved
+
+16.03.2021 - git commit 0aab96c72368e38b46ac7a5d6f87c4328968d3c5
 	* qRecoHits, qEarly added
 	* BranchRatio changed to take into account events near the top of detector
 	* GenerateMCTimeCal added, use with new flag -j

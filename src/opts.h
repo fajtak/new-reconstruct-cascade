@@ -162,7 +162,8 @@ extern bool gUseChargeSatCorrection;
 extern bool gSaveServiceInfo;
 extern bool gLaserRun;
 extern bool gExcludeTrackHits;
-extern bool gUseMCTimeCal;
+extern double gSigmaMCTimeCal;
+
 
 extern const double gLatDet;
 extern const double gLonDet;
