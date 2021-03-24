@@ -10,6 +10,6 @@ rm ../logs/processingTime_$1_$2.log
 
 date >> ../logs/processingTime_$1_$2.log
 
-	parallel ./processLocalRun $1 $2 {1} ::: {1..999}
+	parallel ../scripts/bash/processLocalRun $1 $2 {1} ::: {1..999}
 
 date >> ../logs/processingTime_$1_$2.log
