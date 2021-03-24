@@ -1,4 +1,7 @@
-24.03.2021 - git commit ---
+24.03.2021 - git commit
+	* bug fix
+
+24.03.2021 - git commit 8427f9792e8277f53a69fe2e4f6fe2d462369ef2
 	* bash script processLocalRun added
 	* program command line output changed to work more easily with programOutputTime.C
 	* when -i flag is used, the run is processed from the given folder (for the local processing on VM)
