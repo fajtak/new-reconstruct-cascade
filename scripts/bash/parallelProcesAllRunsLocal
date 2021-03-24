@@ -1,0 +1,15 @@
+#!/bin/bash
+# process all joint.event.root files for given year and cluster
+# arguments: year(16,17,18,19), cluster(from zero/0)
+
+[ -z $1 ] && echo "Season info missing" && exit
+[ -z $2 ] && echo "Cluster info missing" && exit
+
+rm ../logs/programOutput_$1_$2_*.log
+rm ../logs/processingTime_$1_$2.log
+
+date >> ../logs/processingTime_$1_$2.log
+
+	parallel ./processLocalRun $1 $2 {1} ::: {1..999}
+
+date >> ../logs/processingTime_$1_$2.log

@@ -1,4 +1,7 @@
 24.03.2021 - git commit ---
+	* bash script parallelProcessAllRunsLocal added
+
+24.03.2021 - git commit 88b0aac4b4548886b288943b0e81698ce96bdd91
 	* bug fix 2
 
 24.03.2021 - git commit 95e7ac877d9f87c3b09db4023ebac7afcab36745
