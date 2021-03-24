@@ -574,7 +574,7 @@ int SaveServiceInfo(UnifiedEvent &event)
 
     if (!outputTimeResFile)
     {
-    	cerr << "Time residual service file: " << outputFileName << " was NOT found. Program termination!" << endl;
+    	cerr << "Time residual service file: " << outputFileName << " was NOT found. Processing of the run " << BARS::App::Run << " terminated!" << endl;
     	return -1;
   	}
 
@@ -1049,7 +1049,7 @@ int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
  	// check if the file is opened
 	if (!geomFile || !geometryTree)
 	{
-		cout<<"No TTree called Event in the geometry was found!"<<endl;
+		cout<<"No TTree called Event in the geometry was found! Processing of the run " << BARS::App::Run << " terminated!" <<endl;
 		return -1;
 	}
 
@@ -1214,7 +1214,7 @@ int GenerateMCTimeCal()
 {
 	cout << "Generating MC Time Cal ... ";
 	cout << std::flush;
-    
+
 	TRandom3 random;
 	for(int i = 0; i < gNOMs; i++)
 	{
@@ -1222,7 +1222,7 @@ int GenerateMCTimeCal()
 		h_mcTimeCal->Fill(gOMtimeCal[i]);
 	}
 	cout << "DONE!" << endl;
-	
+
 
 	return 0;
 }
@@ -1235,7 +1235,7 @@ int ReadTimeCalFile(const char* fileName, double multConst)
 
     if (!inputFile)
     {
-    	cerr << "Calibration file: " << fileName << " was NOT found. Program termination!" << endl;
+    	cerr << "Time calibration file: " << fileName << " was NOT found. Processing of the run " << BARS::App::Run << " terminated!" << endl;
     	return -1;
   	}
 
@@ -1281,7 +1281,7 @@ int ReadTimeCalFileNew(const char* fileName, double multConst)
 
     if (!inputFile)
     {
-    	cerr << "Calibration file: " << fileName << " was NOT found. Program termination!" << endl;
+    	cerr << "Time calibration file: " << fileName << " was NOT found. Processing of the run " << BARS::App::Run << " terminated!" << endl;
     	return -1;
   	}
 
@@ -1365,10 +1365,16 @@ int ReadQCal(void)
 {
 	const char* filePath = "";
 
-    if (!gUseNewFolderStructure)
-    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    else
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+    if (App::Input != "")
+    {
+    	filePath = Form("%s/%s",App::Input.Data(),BARS::Data::Filename(BARS::Data::JOINT));
+    }else
+    {
+    	if (!gUseNewFolderStructure)
+    		filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	else
+    		filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/dqm/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT));
+    }
 
 
 	TString jointFileName(filePath);
@@ -1380,7 +1386,7 @@ int ReadQCal(void)
 
     if (!inputFile)
     {
-    	cerr << "Calibration file: " << chargeFileName << " was NOT found. Program termination!" << endl;
+    	cerr << "Charge calibration file: " << chargeFileName << " was NOT found. Processing of the run " << BARS::App::Run << " terminated!" << endl;
     	return -1;
   	}
 
@@ -1533,14 +1539,20 @@ int ReadNoiseProbability()
 int ReadSectionMask()
 {
 	std::string filePath = "";
-    if (!gUseNewFolderStructure)
-    	filePath = BARS::Data::File(BARS::Data::SECTION_MASK, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    else
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/section/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::SECTION_MASK));
+    if (App::Input != "")
+    {
+    	filePath = Form("%s/%s",App::Input.Data(),BARS::Data::Filename(BARS::Data::SECTION_MASK));
+    }else
+    {
+    	if (!gUseNewFolderStructure)
+    		filePath = BARS::Data::File(BARS::Data::SECTION_MASK, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	else
+    		filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/section/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::SECTION_MASK));
+    }
 
     if (!BARS::App::FileExists(filePath))
     {
-    	std::cout << "File: " << filePath << " was not found!" << endl;
+    	std::cout << "Section mask file: " << filePath << " was not found! Processing of the run " << BARS::App::Run << " terminated!" << endl;
     	return -1;
     }
 
@@ -3051,9 +3063,9 @@ double BranchRatio(UnifiedEvent &event)
 
 	double nLayersUpper = int((gOMpositions[35].Z() - event.position.Z())/15.0) + 1;
 	double nLayersLower = int((event.position.Z() - gOMpositions[0].Z())/15.0) + 1;
-	
+
 	if(nLayersUpper < nLayersLower){
-		Zmax = event.position.Z() + nLayersUpper*15;	
+		Zmax = event.position.Z() + nLayersUpper*15;
 		Zmin = event.position.Z() - nLayersUpper*15;
 	}else{
 		Zmax = event.position.Z() + nLayersLower*15;
@@ -3061,14 +3073,14 @@ double BranchRatio(UnifiedEvent &event)
 	}
 
 	for (int j = 0; j < gPulses.size(); ++j)
-	{		
+	{
 		if (gOMpositions[gPulses[j].OMID].Z() >= event.position.Z() && gOMpositions[gPulses[j].OMID].Z() < Zmax)
 			upper++;
 
 		if(gOMpositions[gPulses[j].OMID].Z() < event.position.Z() && gOMpositions[gPulses[j].OMID].Z() > Zmin)
 			lower++;
 	}
- 
+
 	branchRatio = (lower == 0) ? -1 : ((double)upper/lower);
 	return branchRatio;
 
@@ -3078,13 +3090,13 @@ double QEarly(UnifiedEvent &event)
 	event.qEarly = 0;
 	double timeRes = 0;
 	double earlyCharge = 0;
-	
+
 	for (int i = 0; i < event.nHits; ++i)
 	{
 		timeRes = event.hits[i].time - ExpectedTime(event.position, event.time, event.hits[i].OMID);
 
 		if(timeRes > -1000 && timeRes < -40)
-			earlyCharge += event.hits[i].charge;		
+			earlyCharge += event.hits[i].charge;
 	}
 
 	return earlyCharge;
@@ -3095,7 +3107,7 @@ double QRatio(UnifiedEvent &event)
 	event.qRatio = 0;
 	double qRatio = 0;
 	double allCharge = 0;
-	event.qRecoHits = 0;	
+	event.qRecoHits = 0;
 
 	for (int i = 0; i < event.nHits; ++i)
 	{
@@ -3381,13 +3393,20 @@ int ProcessExperimentalData()
 
 	// Sets the file path and checks its existence
     const char* filePath = "";
-    if (!gUseNewFolderStructure)
-    	filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
-    else
-    	filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    if (App::Input != "")
+    {
+    	filePath = Form("%s/%s",App::Input.Data(),BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    }else
+    {
+    	if (!gUseNewFolderStructure)
+    		filePath = BARS::Data::File(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+    	else
+    		filePath = Form("/eos/baikalgvd/processed/%d/cluster%d/exp/joint/%s/%04d/%s",BARS::App::Season,BARS::App::Cluster+1,gProductionID.c_str(),BARS::App::Run,BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    }
+
     if (!BARS::App::FileExists(filePath))
     {
-    	std::cout << "File: " << filePath << " was not found!" << endl;
+    	std::cout << "Joint file: " << filePath << " was not found! Processing of the run " << BARS::App::Run << " terminated!" << endl;
     	return -2;
     }
 
@@ -3598,7 +3617,7 @@ int ProcessMCCascades()
 		}
 		mcFiles->GetEntry(i);
 
-		
+
 		if (cascade->showerEnergy > 1000 || i % 1000 != 0 || !IsContained(cascade,40))
 		// if (cascade->showerEnergy > 1000 || i % 10000 != 0 || !IsUncontained(cascade,100,120))
 			continue;

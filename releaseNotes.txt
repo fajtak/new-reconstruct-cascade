@@ -1,4 +1,10 @@
-17.03.2021 - git commit ---
+24.03.2021 - git commit ---
+	* bash script processLocalRun added
+	* program command line output changed to work more easily with programOutputTime.C
+	* when -i flag is used, the run is processed from the given folder (for the local processing on VM)
+	* programOutputTime.C improved to work with processing errors from VM as well
+
+17.03.2021 - git commit 3ee7f5317ec2f4d42e8263afbbb5ca89b826edc2
 	* BranchRatio changed to count only layers of OMs
 	* MC Time Cal with adjustable sigma  (timeCal according Gaus distribution)
 	* h_mcTimeCal saved

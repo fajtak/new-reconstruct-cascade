@@ -105,6 +105,8 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	int nNotJointRuns = 0;
 	int nNotBranchesRuns = 0;
 	int nNotTtreeRuns = 0;
+	int nNoCalibFileRuns = 0;
+	int nErrorRuns = 0;
 	int recentRun = 0;
 	int nEvents = 0;
 	int nEventsTotal = 0;
@@ -127,24 +129,45 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	double realTimeMinSum = 0;
 	double userTimeMinSum = 0;
 
+	vector<int> v_shorterRunID;
+	vector<int> v_notJointRunID;
+
 	while(!fileIn.eof())
 	{
 		fileIn >> oneLine;
+		// cout << oneLine;
+		if (oneLine == "<TFile::ReadBuffer>:")
+		{
+			while(oneLine != "user")
+			{
+				fileIn >> oneLine;
+				// cout << oneLine << endl;
+			}
+			nErrorRuns++;
+		}
 		if (oneLine == "shorter")
+		{
 			nShorterRuns++;
+			while(oneLine != "run")
+				fileIn >> oneLine;
+			fileIn >> recentRun;
+			v_shorterRunID.push_back(recentRun);
+		}
 		if (oneLine == "was")
+		{
 			nNotJointRuns++;
+		}
 		if (oneLine == "branches")
 			nNotBranchesRuns++;
 		if (oneLine == "TTree")
 			nNotTtreeRuns++;
 		if (oneLine == "Run:")
 		{
-			nProcessedRuns++;
 			fileIn >> recentRun;
 			// cout << recentRun << endl;
 			fileIn >> oneLine >> nEvents >> measTimeHours >> measTimeDays;
 			// cout << nEvents << " " << measTimeDays << endl;
+			bool fiter = false;
 
 			if (measTimeDays > 0 && measTimeDays < 5)
 			{
@@ -159,18 +182,25 @@ int programOutputTime(int year, int cluster, TString folderPath)
 			if (nEvents <= 0)
 				continue;
 
-			nEventsTotal += nEvents;
-			measTimeDaysTotal += measTimeDays;
-
-			g_nEventsPerRun->SetPoint(nProcessedRuns,recentRun,nEvents);
-			g_nEventsPerSecond->SetPoint(nProcessedRuns,recentRun,nEvents/measTimeHours/3600);
-			g_durationPerRun->SetPoint(nProcessedRuns,recentRun,measTimeDays);
-			fileOut << recentRun << "\t" << measTimeHours*3600 << "\t" << measTimeHours << "\t" << measTimeDays << endl;
-
 			bool runEnded = false;
 			while(!fileIn.eof() && !runEnded)
 			{
 				fileIn >> oneLine;
+				if (oneLine == "NOT" || oneLine == "Wrong")
+				{
+					// cout << "Stopped Run: " << recentRun << endl;
+					nNoCalibFileRuns++;
+					while(oneLine != "user")
+						fileIn >> oneLine;
+					break;
+				}
+				if (oneLine == "<TFile::ReadBuffer>:" || oneLine == "<TBasket::ReadBasketBuffers>:")
+				{
+					while(oneLine != "user")
+						fileIn >> oneLine;
+					nErrorRuns++;
+					break;
+				}
 				if (oneLine == "Welcome")
 				{
 					cout << "Unfinished Run: " << recentRun << endl;
@@ -214,8 +244,21 @@ int programOutputTime(int year, int cluster, TString folderPath)
 					fileIn >> userTimeMin >> oneChar >> userTimeSec;
 					userTimeMinSum += userTimeMin;
 					runEnded = true;
+					nProcessedRuns++;
 				}
 			}
+
+			if (!runEnded)
+				continue;
+
+			nEventsTotal += nEvents;
+			measTimeDaysTotal += measTimeDays;
+
+			g_nEventsPerRun->SetPoint(nProcessedRuns,recentRun,nEvents);
+			g_nEventsPerSecond->SetPoint(nProcessedRuns,recentRun,nEvents/measTimeHours/3600);
+			g_durationPerRun->SetPoint(nProcessedRuns,recentRun,measTimeDays);
+			fileOut << recentRun << "\t" << measTimeHours*3600 << "\t" << measTimeHours << "\t" << measTimeDays << endl;
+
 			g_nNFilterEventsPerSecond->SetPoint(nProcessedRuns,recentRun,nFilter/measTimeHours/3600);
 
 			g_procSpeed->SetPoint(nProcessedRuns,recentRun,nEvents/elapsedTime);
@@ -229,9 +272,16 @@ int programOutputTime(int year, int cluster, TString folderPath)
 
 	cout << "Number of Processed Runs: " << nProcessedRuns << " Number of Events [M#]: " << nEventsTotal/1000000 << " Measurement Time [days] : " << measTimeDaysTotal << endl;
 	cout << "Real time processing [hours]: " << realTimeMinSum/60 << " User time processing [hours]: " << userTimeMinSum/60 << endl;
-	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns + nNotTtreeRuns << endl;
+	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns + nNotTtreeRuns + nNoCalibFileRuns + nErrorRuns << endl;
 	cout << "\tNumber of Processed runs: " << nProcessedRuns << endl;
 	cout << "\tNumber of runs shorter than 2 hours: " << nShorterRuns << endl;
+	// for (int i = 0; i < v_shorterRunID.size(); ++i)
+	// {
+	// 	cout <<"\t" << v_shorterRunID[i];
+	// }
+	cout << endl;
+	cout << "\tNumber of runs without calibration file: " << nNoCalibFileRuns << endl;
+	cout << "\tNumber of error runs: " << nErrorRuns << endl;
 	cout << "\tNumber of runs without joint.events.root: " << nNotJointRuns << endl;
 	cout << "\tNumber of runs without branches: " << nNotBranchesRuns << endl;
 	cout << "\tNumber of runs without TTree: " << nNotTtreeRuns << endl;
