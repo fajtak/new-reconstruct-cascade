@@ -1,4 +1,7 @@
-24.03.2021 - git commit
+24.03.2021 - git commit ---
+	* bug fix 2
+
+24.03.2021 - git commit 95e7ac877d9f87c3b09db4023ebac7afcab36745
 	* bug fix
 
 24.03.2021 - git commit 8427f9792e8277f53a69fe2e4f6fe2d462369ef2
