@@ -7,7 +7,7 @@
 [ -z $3 ] && echo "Run info missing" && exit
 
 fullRunID=$(printf "%04d" $3)
-copyClusterID=$(printf "%d" $runID+1)
+copyClusterID=$(printf "%d" $(($2+1)))
 
 echo $fullRunID
 echo $copyClusterID

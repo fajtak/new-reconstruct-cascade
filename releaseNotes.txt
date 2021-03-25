@@ -1,4 +1,7 @@
-24.03.2021 - git commit ---
+25.03.2021 - git commit ---
+	* bug fix 2 - Eliska found a major error in procesLocalRun script
+
+24.03.2021 - git commit c55a4c5ecc4262fd5ac3fb9e36c1a6bc7ea37b27
 	* bug fix
 
 24.03.2021 - git commit d4e6b4f6fc1fb0635840b060c48e2be16ecde76b
