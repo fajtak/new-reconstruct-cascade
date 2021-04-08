@@ -1,4 +1,7 @@
 08.04.2021 - git commit ---
+	* bug fix
+
+08.04.2021 - git commit 49cb80b13dcb74a716e8cc953e7a73951d418e4f
 	* .gitignore files improved
 	* added parallelProcessAllClustersLocal
 
