@@ -1,4 +1,8 @@
-25.03.2021 - git commit ---
+08.04.2021 - git commit ---
+	* .gitignore files improved
+	* added parallelProcessAllClustersLocal
+
+25.03.2021 - git commit 99041f5bcf89cf934f54bc203f8904eed2d9fd24
 	* bug fix 2 - Eliska found a major error in procesLocalRun script
 
 24.03.2021 - git commit c55a4c5ecc4262fd5ac3fb9e36c1a6bc7ea37b27
