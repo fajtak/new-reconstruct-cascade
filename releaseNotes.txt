@@ -1,4 +1,7 @@
-12.04.2021 - git commit ---
+12.04.2021 - git commit
+	* bug fix
+
+12.04.2021 - git commit e372e19fc050f5d2f5a13bd9704a1634799ed109
 	* processLocalRun extended to work with 2016 and 2018 data as well
 
 08.04.2021 - git commit e1ffd233c2a04fffd47a13b639988d4bb20583e7

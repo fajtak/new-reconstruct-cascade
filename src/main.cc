@@ -3395,7 +3395,10 @@ int ProcessExperimentalData()
     const char* filePath = "";
     if (App::Input != "")
     {
-    	filePath = Form("%s/%s",App::Input.Data(),BARS::Data::Filename(BARS::Data::JOINT_MARKED));
+    	if (!gUseNewFolderStructure)
+	    	filePath = Form("%s/%s",App::Input.Data(),BARS::Data::Filename(BARS::Data::JOINT));
+    	else
+	    	filePath = Form("%s/%s",App::Input.Data(),BARS::Data::Filename(BARS::Data::JOINT_MARKED));
     }else
     {
     	if (!gUseNewFolderStructure)
