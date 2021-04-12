@@ -1,4 +1,7 @@
-12.04.2021 - git commit
+12.04.2021 - git commit ---
+	* bug fix 2
+
+12.04.2021 - git commit 378b62f1263a363e95b517c4ffa769e6de3ad063
 	* bug fix
 
 12.04.2021 - git commit e372e19fc050f5d2f5a13bd9704a1634799ed109
