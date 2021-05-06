@@ -395,6 +395,7 @@ void PrintConfig(void)
 	std::cout << "CausFriendCut: " << gCausFriendCut << endl;
 	std::cout << "CausChi2Cut: " << gQCutChi2 << endl;
 	std::cout << "TCutTimeWindowNs: " << gTCutTimeWindowNs << endl;
+	std::cout << "TCutQThreshold: " << gTCutQThreshold << endl;
 	std::cout << "NCutT: " << gNCutT << endl;
 	std::cout << "TFilterChi2Cut: " << gTCutChi2 << endl;
 	std::cout << "LikelihoodCut: " << gLikelihoodCut << endl;
@@ -1766,7 +1767,7 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 		double distanceToCascade = (cascPos - gOMpositions[event.hits[i].OMID]).Mag();
         double expectedTime = cascTime + distanceToCascade*gRecCinWater;// + scattering_correction;
 
-        if(TMath::Abs(event.hits[i].time-expectedTime) <= 50)
+        if(TMath::Abs(event.hits[i].time-expectedTime) <= gTCutTimeWindowNs && event.hits[i].charge > gTCutQThreshold)
         {
         	if (OMIDAlreadyInGPulses(event.hits[i]))
         		continue;

@@ -1,4 +1,7 @@
-12.04.2021 - git commit ---
+06.05.2021 - git commit
+	* new cut TCutQThreshold can be used to set lower limit on charge of pulses in TFilter
+
+12.04.2021 - git commit 821934379a34b2ba1895a3f2b57816173a7ce078
 	* bug fix 2
 
 12.04.2021 - git commit 378b62f1263a363e95b517c4ffa769e6de3ad063

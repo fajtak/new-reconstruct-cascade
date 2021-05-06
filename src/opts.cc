@@ -48,6 +48,7 @@ double gQCut = -1;
 double gCausQCut = -1;
 int gCausFriendCut = -1;
 double gQCutChi2 = -1;
+double gTCutQThreshold = -1;
 double gTCutTimeWindowNs = -1;
 int gNCutT = -1;
 int gNCutDiff = -1;
@@ -272,6 +273,7 @@ void readRC(const char* rcpath)
 	gCausQCut = env.GetValue("CausQCut", 1.5);
 	gCausFriendCut = env.GetValue("CausFriendCut", 2);
 	gTCutTimeWindowNs = env.GetValue("TCutTimeWindow", 50.0);
+	gTCutQThreshold = env.GetValue("TCutQThreshold",0);
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	gNCutT = env.GetValue("NCutT", 20);
