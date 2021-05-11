@@ -51,6 +51,8 @@ TH1D* h_nHitsChange = new TH1D("h_nHitsChange","Change in the number of hits aft
 TH1D* h_exitStatus = new TH1D("h_exitStatus","Exit status of the event;#Status [#];NoE [#]",20,-10,10);
 TH1D* h_nHitsTrack = new TH1D("h_nHitsTrack","Number of track hits; N_{hits} [#]; NoE [#]",100,0,100);
 TH1D* h_OMIDinReco = new TH1D("h_OMIDinReco","OMID of hits used in reconstruction; OMID [#]; NoE [#]",300,0,300);
+TH1F* h_TFilterHitDistance = new TH1F("h_TFilterHitDistance","Hit distance from the cascade;Distance [m];NoE [#]",600,0,600);
+
 
 TH1F* h_likelihood = new TH1F("h_likelihood","Likelihood value; #mathcal{L}; NoE [#]",100,0,100);
 TH1F* h_mcEnergy = new TH1F("h_mcEnergy","MC energy; E_{mc} [TeV]; NoE [#]",1000,0,1000);
@@ -99,6 +101,7 @@ void SaveHistograms()
 	h_nHitsTrack->Write();
 	h_OMIDinReco->Write();
 	h_mcTimeCal->Write();
+	h_TFilterHitDistance->Write();
 }
 
 int SaveCascadeJSON(int eventID, UnifiedEvent& event)
@@ -396,6 +399,7 @@ void PrintConfig(void)
 	std::cout << "CausChi2Cut: " << gQCutChi2 << endl;
 	std::cout << "TCutTimeWindowNs: " << gTCutTimeWindowNs << endl;
 	std::cout << "TCutQThreshold: " << gTCutQThreshold << endl;
+	std::cout << "TCutDistance: " << gTCutDistance << endl;
 	std::cout << "NCutT: " << gNCutT << endl;
 	std::cout << "TFilterChi2Cut: " << gTCutChi2 << endl;
 	std::cout << "LikelihoodCut: " << gLikelihoodCut << endl;
@@ -1767,10 +1771,11 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 		double distanceToCascade = (cascPos - gOMpositions[event.hits[i].OMID]).Mag();
         double expectedTime = cascTime + distanceToCascade*gRecCinWater;// + scattering_correction;
 
-        if(TMath::Abs(event.hits[i].time-expectedTime) <= gTCutTimeWindowNs && event.hits[i].charge > gTCutQThreshold)
+        if(TMath::Abs(event.hits[i].time-expectedTime) <= gTCutTimeWindowNs && event.hits[i].charge > gTCutQThreshold && distanceToCascade < gTCutDistance)
         {
         	if (OMIDAlreadyInGPulses(event.hits[i]))
         		continue;
+        	h_TFilterHitDistance->Fill(distanceToCascade);
         	// if (gOMpositions[cascade->chID[i]-1].Z()-cascPos.Z() < -140 || gOMpositions[cascade->chID[i]-1].Z()-cascPos.Z() > 180)
         		// continue;
         	h_OMIDinReco->Fill(event.hits[i].OMID);
@@ -3382,6 +3387,26 @@ double FindEventTime(TTree* tree, BJointHeader* header)
 	return startTime;
 }
 
+bool IsLedMatrixRun(TTree* t_RecCasc, UnifiedEvent &event)
+{
+	int nCloseCascades = 0;
+	TVector3 newPos = event.position;
+	// cout << "New Pos: " << t_RecCasc->GetEntries() << endl;
+	// newPos.Print();
+	for (int i = 0; i < t_RecCasc->GetEntries()-1; ++i)
+	{
+		t_RecCasc->GetEntry(i);
+		// event.position.Print();
+		if ((event.position-newPos).Mag() < 5)
+			nCloseCascades++;
+	}
+	// cout << nCloseCascades << endl;
+	if (nCloseCascades > 5)
+		return true;
+	else
+		return false;
+}
+
 // Main function responsible for the processing of the real data
 // required input parameters are seasonID, clusterID, RunID
 // joint.events.root files are found automatically based on the enviroment variables
@@ -3512,13 +3537,16 @@ int ProcessExperimentalData()
 		unifiedEvent.eventTime = gUseNewFolderStructure?jointHeader->GetTimeCC().AsDouble():header->GetTime().AsDouble();
 		TransformToUnifiedEvent(impulseTel,unifiedEvent);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
-		if (status == 0)
-			t_RecCasc->Fill();
 		h_exitStatus->Fill(status);
-		if (eventStats->nLikelihoodFilter > 150 && !gLaserRun)
+		if (status == 0)
 		{
-			std::cout << "Probably LED matrix run. Processing terminated!" << std::endl;
-			break;
+			t_RecCasc->Fill();
+			// if (eventStats->nLikelihoodFilter > 150 && !gLaserRun)
+			if (IsLedMatrixRun(t_RecCasc,unifiedEvent) && !gLaserRun)
+			{
+				std::cout << "Probably LED matrix run. Processing terminated!" << std::endl;
+				break;
+			}
 		}
 	}
 	cout << endl;

@@ -149,6 +149,7 @@ extern int gCausFriendCut;
 extern double gQCutChi2;
 extern double gTCutTimeWindowNs;
 extern double gTCutQThreshold;
+extern double gTCutDistance;
 extern int gNCutT;
 extern int gNCutDiff;
 extern double gTCutChi2;

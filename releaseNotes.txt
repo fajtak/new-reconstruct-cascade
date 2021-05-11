@@ -1,4 +1,9 @@
-06.05.2021 - git commit
+11.05.2021 - git commit
+	* h_TFilterHitDistance added to estimate a good cut for noise hits
+	* new LED matrix run identification based on the positions of the reconstructed cascades implemented
+	* new cut TCutDistance can be used to set maximal limit on the hit distance from the cascade in TFilter
+
+06.05.2021 - git commit 45ce38df3679e17aab4ed42462d8cce6f3d64c67
 	* new cut TCutQThreshold can be used to set lower limit on charge of pulses in TFilter
 
 12.04.2021 - git commit 821934379a34b2ba1895a3f2b57816173a7ce078
