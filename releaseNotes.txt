@@ -1,4 +1,7 @@
 17.05.2021 - git commit ---
+	* recoHits info added to the TTree - OMID, Q, Origin, TimeRes, likelihood
+
+17.05.2021 - git commit 8576af49e68302637f4292f43ce22d648300140c
 	* added new flag -k that takes a double as an argument for additional noise rate (in kHz) for atmospheric MC datasamples
 
 11.05.2021 - git commit c817cbabe7b9f3c08f38bcf41651d0f9a5e41373

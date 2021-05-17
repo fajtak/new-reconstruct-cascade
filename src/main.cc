@@ -4,6 +4,7 @@
 //system headers
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 //ROOT dependencies
 #include "TTree.h"
@@ -33,6 +34,9 @@
 #include "BSource.h"
 #include "BGeomTelMC.h"
 
+#ifdef __MAKECINT__
+#pragma link C++ class vector<UnifiedHit>+;
+#endif
 
 using namespace BARS;
 using namespace std;
@@ -1717,6 +1721,8 @@ bool OMIDAlreadyInGPulses(UnifiedHit &pulse)
 				gPulses[k].expectedCharge = pulse.expectedCharge;
 				gPulses[k].noise = pulse.noise;
 				gPulses[k].MCflag = pulse.MCflag;
+				gPulsesQ[k] = pulse.charge;
+				gPulsesOrigin[k] = pulse.MCflag;
 			}
 			OMIDAlreadyIn = true;
 			break;
@@ -1766,6 +1772,9 @@ int CaussalityFilter(UnifiedEvent &event)
 int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
 {
 	gPulses.clear();
+	gPulsesOMID.clear();
+	gPulsesQ.clear();
+	gPulsesOrigin.clear();
 	int nPulses = 0;
 
 	for(int i = 0; i < event.nHits; i++)
@@ -1782,6 +1791,9 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
         		// continue;
         	h_OMIDinReco->Fill(event.hits[i].OMID);
         	gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
+        	gPulsesOMID.push_back(event.hits[i].OMID);
+        	gPulsesQ.push_back(event.hits[i].charge);
+        	gPulsesOrigin.push_back(event.hits[i].MCflag);
         	nPulses++;
         }
 	}
@@ -3181,6 +3193,18 @@ int CloseHits(UnifiedEvent &event)
 	return closeHits;
 }
 
+int FillHitsTTree(UnifiedEvent &event)
+{
+	gPulsesTimeRes.clear();
+	gPulsesLikelihood.clear();
+	for (unsigned int i = 0; i < gPulses.size(); ++i)
+	{
+		gPulsesTimeRes.push_back(gPulses[i].time-ExpectedTime(event.position,event.time,gPulses[i].OMID));
+		gPulsesLikelihood.push_back(TMath::Log10(TMath::Poisson(gPulses[i].charge,gPulses[i].expectedCharge)));
+	}
+	return 0;
+}
+
 int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 {
 	if (!NFilterPassed(event))
@@ -3207,6 +3231,8 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nQFilterChi2++;
 
 	event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
+	// event.chi2AfterTFilter = FitCascPos(event.position,event.time);
+	// event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
 
 	event.nStringsAfterTFilter = GetNStrings();
 	event.mcNTrackHitsAfterTFilter = GetNTrackHits(event);
@@ -3219,6 +3245,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nTFilter++;
 
 	event.chi2AfterTFilter = FitCascPos(event.position,event.time);
+
 	// cout<<"TFilterChi2 "<<event.chi2AfterTFilter<<endl;
 	h_chi2TFilter->Fill(event.chi2AfterTFilter);
 	if (event.chi2AfterTFilter > gTCutChi2)
@@ -3278,6 +3305,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		ScanLogLikelihoodDirectionCircular(i,event);
 		ScanLogLikelihoodDirection(i,event);
 	}
+	FillHitsTTree(event);
 
 	if (gSaveServiceInfo)
 	{
@@ -3334,6 +3362,11 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("qEarly",&event.qEarly);
 	outputTree->Branch("closeHits",&event.closeHits);
 	outputTree->Branch("chargeCloseHits",&event.chargeCloseHits);
+	outputTree->Branch("recoHitsOMID",&(gPulsesOMID));
+	outputTree->Branch("recoHitsQ",&(gPulsesQ));
+	outputTree->Branch("recoHitsOrigin",&(gPulsesOrigin));
+	outputTree->Branch("recoHitsTimeRes",&(gPulsesTimeRes));
+	outputTree->Branch("recoHitsLikelihood",&(gPulsesLikelihood));
 }
 
 bool CheckTreeAndBranches(TTree* tree)

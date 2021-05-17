@@ -127,6 +127,11 @@ extern std::vector<TVector3> gOMpositions;
 extern std::vector<double> gOMtimeCal;
 extern std::vector<double> gOMqCal;
 extern std::vector<UnifiedHit> gPulses; //global vector of PulsesVariables
+extern std::vector<int> gPulsesOMID; //global vector of PulsesVariables
+extern std::vector<float> gPulsesQ; //global vector of PulsesVariables
+extern std::vector<int> gPulsesOrigin; //global vector of PulsesVariables
+extern std::vector<float> gPulsesTimeRes; //global vector of PulsesVariables
+extern std::vector<float> gPulsesLikelihood; //global vector of PulsesVariables
 extern int gVerbose;
 extern TVector3 gReferencePosition;
 extern const double gRecCinWater;
