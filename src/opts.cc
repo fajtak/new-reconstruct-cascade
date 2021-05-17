@@ -36,6 +36,7 @@ TRandom2 gRanGen;
 double gMCMuTimeConstant = 3900; // seconds per MC file
 double gMCNuTimeConstant = 4.4e9;
 double gMCNoiseRateInkHz = 50; // in kHz
+double gAdditionalMCNoiseRateInkHz = -1;
 int gLikelihoodThetaSteps = 4; //
 int gLikelihoodPhiSteps = 6;
 int gLikelihoodEnergySteps = 4;
@@ -247,8 +248,19 @@ static const struct App::ProgramOption_t options_list[]{
 		{
 			"generateMCTimeCal", 'j',
 			required_argument,
-			"set sigma for MC Time Calibrations",
-			[](char* argv) {gSigmaMCTimeCal = atoi(argv);},
+			"Set sigma for MC Time Calibrations",
+			[](char* argv) {gSigmaMCTimeCal = atof(argv);},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"generateAddiditonalMCNoiseRate", 'k',
+			required_argument,
+			"Add noise hits to atmospheric MC datasets based on the set noise rate in kHz",
+			[](char* argv) {gAdditionalMCNoiseRateInkHz = atof(argv);},
 			[]() {;}
 		},
 

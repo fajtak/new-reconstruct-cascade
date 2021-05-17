@@ -1,4 +1,7 @@
-11.05.2021 - git commit
+17.05.2021 - git commit ---
+	* added new flag -k that takes a double as an argument for additional noise rate (in kHz) for atmospheric MC datasamples
+
+11.05.2021 - git commit c817cbabe7b9f3c08f38bcf41651d0f9a5e41373
 	* h_TFilterHitDistance added to estimate a good cut for noise hits
 	* new LED matrix run identification based on the positions of the reconstructed cascades implemented
 	* new cut TCutDistance can be used to set maximal limit on the hit distance from the cascade in TFilter

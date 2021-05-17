@@ -136,6 +136,7 @@ extern TRandom2 gRanGen;
 extern double gMCMuTimeConstant;
 extern double gMCNuTimeConstant;
 extern double gMCNoiseRateInkHz;
+extern double gAdditionalMCNoiseRateInkHz;
 extern int gLikelihoodThetaSteps; //
 extern int gLikelihoodPhiSteps;
 extern int gLikelihoodEnergySteps;

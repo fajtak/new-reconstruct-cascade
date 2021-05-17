@@ -336,12 +336,14 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	unifiedEvent.mcFlagID = 1;
 }
 
-int GenerateNoise(UnifiedEvent &event)
+int GenerateNoise(UnifiedEvent &event, double noiseRate = 0)
 {
 	int nGeneratedNoiseHits = 0;
+	noiseRate = noiseRate==0?gMCNoiseRateInkHz:noiseRate;
+
 	for (int i = 0; i < gNOMs; ++i)
 	{
-		int noisePulses = gRanGen.Poisson(gMCNoiseRateInkHz/200.0);
+		int noisePulses = gRanGen.Poisson(noiseRate/200.0);
 		// cout << "OMID: " << i << " nNoisePulses: " << noisePulses << endl;
 		for (int j = 0; j < noisePulses; ++j)
 		{
@@ -3760,6 +3762,8 @@ int ProcessMCData()
 			cout << mcFiles->GetFile()->GetName() << " " << jointHeader->GetEventID() << endl;
 		unifiedEvent.eventID = i;
 		TransformToUnifiedEvent(event,mcEvent,eventMask,unifiedEvent);
+		if (gAdditionalMCNoiseRateInkHz != -1)
+			GenerateNoise(unifiedEvent,gAdditionalMCNoiseRateInkHz);
 		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
 		if (status == 0)
 			t_RecCasc->Fill();
