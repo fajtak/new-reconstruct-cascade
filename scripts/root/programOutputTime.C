@@ -106,6 +106,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	int nNotBranchesRuns = 0;
 	int nNotTtreeRuns = 0;
 	int nNoCalibFileRuns = 0;
+	int nLEDMatrixRuns = 0;
 	int nErrorRuns = 0;
 	int recentRun = 0;
 	int nEvents = 0;
@@ -166,7 +167,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 			fileIn >> recentRun;
 			// cout << recentRun << endl;
 			fileIn >> oneLine >> nEvents >> measTimeHours >> measTimeDays;
-			// cout << nEvents << " " << measTimeDays << endl;
+			// cout << recentRun << " " << nEvents << " " << measTimeDays << endl;
 			bool fiter = false;
 
 			if (measTimeDays > 0 && measTimeDays < 5)
@@ -204,6 +205,12 @@ int programOutputTime(int year, int cluster, TString folderPath)
 				if (oneLine == "Welcome")
 				{
 					cout << "Unfinished Run: " << recentRun << endl;
+					break;
+				}
+				if (oneLine == "LED")
+				{
+					nLEDMatrixRuns++;
+					cout << "LED Matrix Run: " << recentRun << endl;
 					break;
 				}
 				if (oneLine == "NFilter:")
@@ -285,6 +292,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 	cout << "\tNumber of runs without joint.events.root: " << nNotJointRuns << endl;
 	cout << "\tNumber of runs without branches: " << nNotBranchesRuns << endl;
 	cout << "\tNumber of runs without TTree: " << nNotTtreeRuns << endl;
+	cout << "\tNumber of LED Matrix Runs: " << nLEDMatrixRuns << endl;
 	// cout << "Number of Reconstructed Cascades: " << nRecCascTotal << endl;
 
 	// h_procSpeed->Draw();

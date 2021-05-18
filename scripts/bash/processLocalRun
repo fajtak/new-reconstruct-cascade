@@ -1,10 +1,11 @@
 #!/bin/bash
 # download a run from eos a process it
-# arguments: year(16,17,18,19), cluster(from zero/0), run(from one/1), processingTag
+# arguments: year(16,17,18,19), cluster(from zero/0), run(from one/1), processingTag, temporaryFolder
 
 [ -z $1 ] && echo "Season info missing" && exit
 [ -z $2 ] && echo "Cluster info missing" && exit
 [ -z $3 ] && echo "Run info missing" && exit
+[ -z $4 ] && echo "Tmp folder path missing" && exit
 
 fullRunID=$(printf "%04d" $3)
 copyClusterID=$(printf "%d" $(($2+1)))
@@ -25,21 +26,21 @@ if [ "$1" -ge "19" ];
 		processingTag=v1.3
 fi
 
-mkdir /home/fajtak/tmp/s$1_c$2_r$3/
+mkdir $4/s$1_c$2_r$3/
 
 echo $processingTag
 
 if (("$1" < "19"));
 	then
-		eos cp /eos/baikalgvd/exp$1_$processingTag/cluster$2/$fullRunID/*.qcalib /home/fajtak/tmp/s$1_c$2_r$3/
-		eos cp /eos/baikalgvd/exp$1_$processingTag/cluster$2/$fullRunID/*.section.mask.root /home/fajtak/tmp/s$1_c$2_r$3/
-		eos cp /eos/baikalgvd/exp$1_$processingTag/cluster$2/$fullRunID/*.joint.events.root /home/fajtak/tmp/s$1_c$2_r$3/
-		(time ./new-reconstruct-cascade -s 20$1 -c $2 -r $3 -i /home/fajtak/tmp/s$1_c$2_r$3/ -o /home/fajtak/data/ -q -g -x ../configs/s$1_c$2.rc) 2>&1 | tee ../logs/programOutput_$1_$2_$3.log
+		eos cp /eos/baikalgvd/exp$1_$processingTag/cluster$2/$fullRunID/*.qcalib $4/s$1_c$2_r$3/
+		eos cp /eos/baikalgvd/exp$1_$processingTag/cluster$2/$fullRunID/*.section.mask.root $4/s$1_c$2_r$3/
+		eos cp /eos/baikalgvd/exp$1_$processingTag/cluster$2/$fullRunID/*.joint.events.root $4/s$1_c$2_r$3/
+		(time ./new-reconstruct-cascade -s 20$1 -c $2 -r $3 -i $4/s$1_c$2_r$3/ -o /home/fajtak/data/ -q -g -x ../configs/s$1_c$2.rc) 2>&1 | tee ../logs/programOutput_$1_$2_$3.log
 	else
-		eos cp /eos/baikalgvd/processed/20$1/cluster$copyClusterID/exp/dqm/$processingTag/$fullRunID/*.qcalib /home/fajtak/tmp/s$1_c$2_r$3/
-		eos cp /eos/baikalgvd/processed/20$1/cluster$copyClusterID/exp/section/$processingTag/$fullRunID/*.section.mask.root /home/fajtak/tmp/s$1_c$2_r$3/
-		eos cp /eos/baikalgvd/processed/20$1/cluster$copyClusterID/exp/joint/$processingTag/$fullRunID/*.joint.events.marked.root /home/fajtak/tmp/s$1_c$2_r$3/
-		(time ./new-reconstruct-cascade -s 20$1 -c $2 -r $3 -i /home/fajtak/tmp/s$1_c$2_r$3/ -o /home/fajtak/data/ -q -g -l -x ../configs/s$1_c$2.rc) 2>&1 | tee ../logs/programOutput_$1_$2_$3.log
+		eos cp /eos/baikalgvd/processed/20$1/cluster$copyClusterID/exp/dqm/$processingTag/$fullRunID/*.qcalib $4/s$1_c$2_r$3/
+		eos cp /eos/baikalgvd/processed/20$1/cluster$copyClusterID/exp/section/$processingTag/$fullRunID/*.section.mask.root $4/s$1_c$2_r$3/
+		eos cp /eos/baikalgvd/processed/20$1/cluster$copyClusterID/exp/joint/$processingTag/$fullRunID/*.joint.events.marked.root $4/s$1_c$2_r$3/
+		(time ./new-reconstruct-cascade -s 20$1 -c $2 -r $3 -i $4/s$1_c$2_r$3/ -o /home/fajtak/data/ -q -g -l -x ../configs/s$1_c$2.rc) 2>&1 | tee ../logs/programOutput_$1_$2_$3.log
 	fi
 
-rm -rf /home/fajtak/tmp/s$1_c$2_r$3/
+rm -rf $4/s$1_c$2_r$3/

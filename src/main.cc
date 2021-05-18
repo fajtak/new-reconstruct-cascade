@@ -3231,8 +3231,8 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nQFilterChi2++;
 
 	event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
-	// event.chi2AfterTFilter = FitCascPos(event.position,event.time);
-	// event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
+	event.chi2AfterTFilter = FitCascPos(event.position,event.time);
+	event.nHitsAfterTFilter = TFilter(event,event.position,event.time);
 
 	event.nStringsAfterTFilter = GetNStrings();
 	event.mcNTrackHitsAfterTFilter = GetNTrackHits(event);

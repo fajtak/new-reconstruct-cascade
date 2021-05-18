@@ -1,4 +1,9 @@
-17.05.2021 - git commit ---
+18.05.2021 - git commit ---
+	* TFilter applied twice to remove hits with Tres >< 50
+	* processLocalRun tmp folder can be now specified
+	* programOutputTime now identifies LED matrix runs
+
+17.05.2021 - git commit 2d90247ef37045e9fa35dc32fd1b18a33e096303
 	* recoHits info added to the TTree - OMID, Q, Origin, TimeRes, likelihood
 
 17.05.2021 - git commit 8576af49e68302637f4292f43ce22d648300140c

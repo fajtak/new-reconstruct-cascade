@@ -1,15 +1,16 @@
 #!/bin/bash
 # process all joint.event.root files for given year from all clusters
-# arguments: year(16,17,18,19), number of clusters in the given year
+# arguments: year(16,17,18,19), number of clusters in the given year, temp folder
 
 [ -z $1 ] && echo "Season info missing" && exit
 [ -z $2 ] && echo "Number of clusters missing" && exit
+[ -z $3 ] && echo "Tmp folder path missing" && exit
 
 rm ../logs/programOutput_$1_$2_*.log
 rm ../logs/processingTime_$1_$2.log
 
 date >> ../logs/processingTime_$1_$2.log
 
-	parallel ../scripts/bash/processLocalRun $1 {1} {2} ::: $(seq 0 $(($2-1))) ::: {1..999}
+	parallel ../scripts/bash/processLocalRun $1 {1} {2} $3 ::: $(seq 0 $(($2-1))) ::: {1..999}
 
 date >> ../logs/processingTime_$1_$2.log
