@@ -14,7 +14,14 @@ TGraph* g_realProcSpeed = new TGraph();
 TGraph* g_realProcTime = new TGraph();
 TGraph* g_realVsUserTime = new TGraph();
 TGraph* g_nRecCasc = new TGraph();
+TGraph* g_nRecCascPerDay = new TGraph();
 TGraph* g_ratioNFilterNEvents = new TGraph();
+TGraph* g_ratioSixThreeFilterNEvents = new TGraph();
+TGraph* g_ratioQFilterChi2NEvents = new TGraph();
+TGraph* g_ratioQFilterChi2NSixThree = new TGraph();
+TGraph* g_ratioTFilterNEvents = new TGraph();
+TGraph* g_ratioTFilterChi2NEvents = new TGraph();
+TGraph* g_ratioLFilterNEvents = new TGraph();
 
 int DrawResults()
 {
@@ -81,12 +88,61 @@ int DrawResults()
 	g_nRecCasc->SetLineWidth(4);
 	g_nRecCasc->SetMarkerColor(4);
 
+	TCanvas* c_nRecCascPerDay = new TCanvas("c_nRecCascPerDay","NumberReconstructedCascadesPerDay",800,600);
+	g_nRecCascPerDay->Draw("AP");
+	g_nRecCascPerDay->SetTitle("Number of Reconstructed Cascades Per Day ;RunID [#]; N_{casc}/Time [#/Day]");
+	g_nRecCascPerDay->SetMarkerStyle(5);
+	g_nRecCascPerDay->SetLineWidth(4);
+	g_nRecCascPerDay->SetMarkerColor(4);
+
 	TCanvas* c_ratioNFilterNEvents = new TCanvas("c_ratioNFilterNEvents","RatioNFilterNEvents",800,600);
 	g_ratioNFilterNEvents->Draw("AP");
 	g_ratioNFilterNEvents->SetTitle("Ratio of NFilter and NEvents ;RunID [#]; Ratio [%]");
 	g_ratioNFilterNEvents->SetMarkerStyle(5);
 	g_ratioNFilterNEvents->SetLineWidth(4);
 	g_ratioNFilterNEvents->SetMarkerColor(6);
+
+	TCanvas* c_ratioSixThreeFilterNEvents = new TCanvas("c_ratioSixThreeFilterNEvents","RatioSixThreeFilterNEvents",800,600);
+	g_ratioSixThreeFilterNEvents->Draw("AP");
+	g_ratioSixThreeFilterNEvents->SetTitle("Ratio of SixThreeFilter and NEvents ;RunID [#]; Ratio [%]");
+	g_ratioSixThreeFilterNEvents->SetMarkerStyle(5);
+	g_ratioSixThreeFilterNEvents->SetLineWidth(4);
+	g_ratioSixThreeFilterNEvents->SetMarkerColor(6);
+
+	TCanvas* c_ratioQFilterChi2NEvents = new TCanvas("c_ratioQFilterChi2NEvents","RatioQFilterChi2NEvents",800,600);
+	g_ratioQFilterChi2NEvents->Draw("AP");
+	g_ratioQFilterChi2NEvents->SetTitle("Ratio of QFilterChi2 and NEvents ;RunID [#]; Ratio [%]");
+	g_ratioQFilterChi2NEvents->SetMarkerStyle(5);
+	g_ratioQFilterChi2NEvents->SetLineWidth(4);
+	g_ratioQFilterChi2NEvents->SetMarkerColor(6);
+
+	TCanvas* c_ratioQFilterChi2NSixThree = new TCanvas("c_ratioQFilterChi2NSixThree","RatioQFilterChi2NSixThree",800,600);
+	g_ratioQFilterChi2NSixThree->Draw("AP");
+	g_ratioQFilterChi2NSixThree->SetTitle("Ratio of QFilterChi2 and NSixThree ;RunID [#]; Ratio [%]");
+	g_ratioQFilterChi2NSixThree->SetMarkerStyle(5);
+	g_ratioQFilterChi2NSixThree->SetLineWidth(4);
+	g_ratioQFilterChi2NSixThree->SetMarkerColor(6);
+
+	TCanvas* c_ratioTFilterNEvents = new TCanvas("c_ratioTFilterNEvents","RatioTFilterNEvents",800,600);
+	g_ratioTFilterNEvents->Draw("AP");
+	g_ratioTFilterNEvents->SetTitle("Ratio of TFilter and NEvents ;RunID [#]; Ratio [%]");
+	g_ratioTFilterNEvents->SetMarkerStyle(5);
+	g_ratioTFilterNEvents->SetLineWidth(4);
+	g_ratioTFilterNEvents->SetMarkerColor(6);
+
+	TCanvas* c_ratioTFilterChi2NEvents = new TCanvas("c_ratioTFilterChi2NEvents","RatioTFilterChi2NEvents",800,600);
+	g_ratioTFilterChi2NEvents->Draw("AP");
+	g_ratioTFilterChi2NEvents->SetTitle("Ratio of NFilter and NEvents ;RunID [#]; Ratio [%]");
+	g_ratioTFilterChi2NEvents->SetMarkerStyle(5);
+	g_ratioTFilterChi2NEvents->SetLineWidth(4);
+	g_ratioTFilterChi2NEvents->SetMarkerColor(6);
+
+	TCanvas* c_ratioLFilterNEvents = new TCanvas("c_ratioLFilterNEvents","RatioLFilterNEvents",800,600);
+	g_ratioLFilterNEvents->Draw("AP");
+	g_ratioLFilterNEvents->SetTitle("Ratio of LFilter and NEvents ;RunID [#]; Ratio [%]");
+	g_ratioLFilterNEvents->SetMarkerStyle(5);
+	g_ratioLFilterNEvents->SetLineWidth(4);
+	g_ratioLFilterNEvents->SetMarkerColor(6);
 
 	return 0;
 }
@@ -258,6 +314,7 @@ int programOutputTime(int year, int cluster, TString folderPath)
 			if (!runEnded)
 				continue;
 
+			// cout << "Recent RUn: " << recentRun << endl;
 			nEventsTotal += nEvents;
 			measTimeDaysTotal += measTimeDays;
 
@@ -273,13 +330,21 @@ int programOutputTime(int year, int cluster, TString folderPath)
 			g_realVsUserTime->SetPoint(nProcessedRuns,recentRun,(realTimeMin*60+realTimeSec)/(userTimeMin*60+userTimeSec));
 			g_realProcTime->SetPoint(nProcessedRuns,recentRun,(realTimeMin*60+realTimeSec)/60);
 			g_nRecCasc->SetPoint(nProcessedRuns,recentRun,likelihoodFiter);
+			g_nRecCascPerDay->SetPoint(nProcessedRuns,recentRun,likelihoodFiter/measTimeDays);
 			g_ratioNFilterNEvents->SetPoint(nProcessedRuns,recentRun,(double)nFilter/nEvents*100);
+			g_ratioSixThreeFilterNEvents->SetPoint(nProcessedRuns,recentRun,(double)SixThreeFilter/nEvents*100);
+			g_ratioQFilterChi2NEvents->SetPoint(nProcessedRuns,recentRun,(double)QFilterChi2/nEvents*100);
+			g_ratioQFilterChi2NSixThree->SetPoint(nProcessedRuns,recentRun,(double)QFilterChi2/SixThreeFilter*100);
+			g_ratioTFilterNEvents->SetPoint(nProcessedRuns,recentRun,(double)TFilter/nEvents*100);
+			g_ratioTFilterChi2NEvents->SetPoint(nProcessedRuns,recentRun,(double)TFilterChi2/nEvents*100);
+			g_ratioLFilterNEvents->SetPoint(nProcessedRuns,recentRun,(double)likelihoodFiter/nEvents*100);
+
 		}
 	}
 
 	cout << "Number of Processed Runs: " << nProcessedRuns << " Number of Events [M#]: " << nEventsTotal/1000000 << " Measurement Time [days] : " << measTimeDaysTotal << endl;
 	cout << "Real time processing [hours]: " << realTimeMinSum/60 << " User time processing [hours]: " << userTimeMinSum/60 << endl;
-	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns + nNotTtreeRuns + nNoCalibFileRuns + nErrorRuns << endl;
+	cout << "Number of all runs: " << nProcessedRuns + nShorterRuns + nNotJointRuns + nNotBranchesRuns + nNotTtreeRuns + nNoCalibFileRuns + nErrorRuns+nLEDMatrixRuns << endl;
 	cout << "\tNumber of Processed runs: " << nProcessedRuns << endl;
 	cout << "\tNumber of runs shorter than 2 hours: " << nShorterRuns << endl;
 	// for (int i = 0; i < v_shorterRunID.size(); ++i)

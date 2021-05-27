@@ -383,11 +383,11 @@ void PrintEventStats(EventStats* es)
 	cout << "After QFilterChi2: \t" << es->nQFilterChi2 << "\t(" << es->nQFilterChi2/(double)es->nEntries*100 << "%)" << endl;
 	cout << "After TFilter: \t" << es->nTFilter << "\t(" << es->nTFilter/(double)es->nEntries*100 << "%)" << endl;
 	cout << "After TFilterChi2: \t" << es->nTFilterChi2 << "\t(" << es->nTFilterChi2/(double)es->nEntries*100 << "%)" << endl;
-	// cout << "After ZFilter: \t" << es->nZFilter << endl;
+	cout << "After ZFilter: \t" << es->nZFilter << endl;
 	// cout << "After TDelayFilter: \t" << es->nTDelayFilter << endl;
 	// cout << "After QRatioFilter: \t" << es->nQRatioFilter << endl;
 	// cout << "After BranchFilter: \t" << es->nBranchFilter << endl;
-	// cout << "After CloseHitsFilter: \t" << es->nCloseHitsFilter << endl;
+	cout << "After CloseHitsFilter: \t" << es->nCloseHitsFilter << endl;
 	cout << "After LikelihoodFiter: \t" << es->nLikelihoodFilter  << "\t(" << es->nLikelihoodFilter/(double)es->nEntries*100 << "%)" << endl;
 	std::cout << std::string(81,'*') << std::endl;
 }
@@ -2469,6 +2469,153 @@ int EventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, doub
 	}
 	return 0;
 }
+
+int NewEventVisualization(int eventID, UnifiedEvent &event, TVector3& cascPos, double& cascTime)
+{
+	int nHitsPerString[8]{0};
+	int nNoiseHitsPerString[8]{0};
+	int nTrackHitsPerString[8]{0};
+	TGraph* g_hits[gNStrings];
+	TGraph* g_noiseHits[gNStrings];
+	TGraph* g_trackHits[gNStrings];
+	TGraph* g_lowerLimit[gNStrings];
+	TGraph* g_upperLimit[gNStrings];
+	TGraph* g_trackLimit[gNStrings];
+	TMultiGraph* mg_hitsMatrix[gNStrings];
+	TGraph* g_ledMatrix[gNStrings];
+	TGraph* g_QvsL = new TGraph(gPulses.size());
+	g_QvsL->SetMarkerStyle(20);
+
+	int nOMsPerString = gNOMs/gNStrings;
+
+	for(int k = 0; k < event.nHits; k++)
+	{
+		// PrintPulse(event.hits[k]);
+		if (event.hits[k].noise)
+			nNoiseHitsPerString[event.hits[k].OMID/36]++;
+		else{
+			if (event.hits[k].MCflag != event.mcFlagID)
+				nTrackHitsPerString[event.hits[k].OMID/36]++;
+			else
+				nHitsPerString[event.hits[k].OMID/36]++;
+		}
+	}
+	for (int i = 0; i < gNStrings; ++i)
+	{
+		g_hits[i] = new TGraph(nHitsPerString[i]);
+		g_noiseHits[i] = new TGraph(nNoiseHitsPerString[i]);
+		g_trackHits[i] = new TGraph(nTrackHitsPerString[i]);
+		g_lowerLimit[i] = new TGraph(nOMsPerString);
+		g_upperLimit[i] = new TGraph(nOMsPerString);
+		g_trackLimit[i] = new TGraph();
+		mg_hitsMatrix[i] = new TMultiGraph(Form("mg_%d",i),Form("String_%d;Calibrated time [ns]; OM Z position [m]",i+1));
+		nHitsPerString[i] = 0;
+		nNoiseHitsPerString[i] = 0;
+		nTrackHitsPerString[i] = 0;
+		g_ledMatrix[i] = new TGraph(1);
+		g_ledMatrix[i]->SetPoint(0,cascTime,cascPos.Z());
+	}
+	for(int k = 0; k < event.nHits; k++)
+	{
+		int stringID = event.hits[k].OMID/36;
+		double distanceToCascade = (cascPos - gOMpositions[event.hits[k].OMID]).Mag();
+	    double expectedTime = cascTime + distanceToCascade*gRecCinWater;
+
+		if (event.hits[k].noise)
+		{
+			g_noiseHits[stringID]->SetPoint(nNoiseHitsPerString[stringID],event.hits[k].time,gOMpositions[event.hits[k].OMID].Z());
+			nNoiseHitsPerString[stringID]++;
+		}
+		else{
+			if (event.hits[k].MCflag != event.mcFlagID)
+			{
+				g_trackHits[stringID]->SetPoint(nTrackHitsPerString[stringID],event.hits[k].time,gOMpositions[event.hits[k].OMID].Z());
+				nTrackHitsPerString[stringID]++;
+			}
+			else
+			{
+				g_hits[stringID]->SetPoint(nHitsPerString[stringID],event.hits[k].time-expectedTime,gOMpositions[event.hits[k].OMID].Z());
+				nHitsPerString[stringID]++;
+			}
+		}
+
+		// g_hits[stringID]->SetPoint(nHitsPerString[stringID],event.hits[k].time,gOMpositions[event.hits[k].OMID].Z());
+		// nHitsPerString[stringID]++;
+	}
+
+	TVector3 cascDir(0,0,1);
+	cascDir.SetTheta(event.trackTheta);
+	cascDir.SetPhi(event.trackPhi);
+	int nPoints = 0;
+
+	for (int j = 0; j < gNOMs; ++j)
+	{
+		if (j%36 == 0)
+			nPoints = 0;
+		double distanceToCascade = (cascPos - gOMpositions[j]).Mag();
+	    double expectedTime = cascTime + distanceToCascade*gRecCinWater;
+		g_lowerLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,-gTCutTimeWindowNs,gOMpositions[j].Z());
+		g_upperLimit[j/nOMsPerString]->SetPoint(j%nOMsPerString,+gTCutTimeWindowNs,gOMpositions[j].Z());
+
+		// if ((gOMpositions[j]-cascPos).Mag() > 100)
+			// continue;
+		double sPerp = (gOMpositions[j]-cascPos).Perp(cascDir);
+		double sLong = (gOMpositions[j]-cascPos)*(cascDir);
+		double lLong = sPerp/TMath::Tan(0.719887);
+		double expTime = cascTime + (sLong-lLong)*gRecC + TMath::Sqrt(TMath::Power(sPerp,2)+TMath::Power(lLong,2))*gRecCinWater;
+
+		g_trackLimit[j/nOMsPerString]->SetPoint(nPoints,expTime,gOMpositions[j].Z());
+		nPoints++;
+	}
+	for (int i = 0; i < gPulses.size(); ++i)
+	{
+		double distanceToCascade = (cascPos - gOMpositions[gPulses[i].OMID]).Mag();
+		g_QvsL->SetPoint(i,distanceToCascade,gPulses[i].charge);
+	}
+
+	TCanvas *cEvent = new TCanvas(Form("cEventNew_%d",eventID),Form("cEvent_%d",eventID),200,10,600,400);
+	cEvent->Divide(3,3);
+	for (int i = 0; i < gNStrings; ++i)
+	{
+		cEvent->cd(i+1);
+		mg_hitsMatrix[i]->Add(g_hits[i],"P");
+		mg_hitsMatrix[i]->Add(g_noiseHits[i],"P");
+		mg_hitsMatrix[i]->Add(g_trackHits[i],"P");
+		mg_hitsMatrix[i]->Add(g_ledMatrix[i],"P");
+		mg_hitsMatrix[i]->Add(g_lowerLimit[i],"L");
+		mg_hitsMatrix[i]->Add(g_upperLimit[i],"L");
+		// mg_hitsMatrix[i]->Add(g_trackLimit[i],"L");
+		mg_hitsMatrix[i]->Draw("AP");
+		// mg_hitsMatrix[i]->SetBit(kCanDelete);
+		g_hits[i]->SetMarkerStyle(20);
+		g_trackHits[i]->SetMarkerStyle(20);
+		g_trackHits[i]->SetMarkerColor(kBlue);
+		g_noiseHits[i]->SetMarkerStyle(20);
+		g_noiseHits[i]->SetMarkerColor(kMagenta);
+		g_ledMatrix[i]->SetMarkerStyle(20);
+		g_ledMatrix[i]->SetMarkerColor(kRed);
+		g_lowerLimit[i]->SetLineColor(kGreen);
+		g_lowerLimit[i]->SetLineWidth(3);
+		g_upperLimit[i]->SetLineColor(kGreen);
+		g_upperLimit[i]->SetLineWidth(3);
+		g_trackLimit[i]->SetLineColor(kOrange);
+		g_trackLimit[i]->SetLineWidth(3);
+	}
+	cEvent->cd(9);
+	g_QvsL->Draw("AP");
+	g_QvsL->SetTitle("Charge vs. Distance;Distance from cascade [m]; Charge [p.e.]");
+	cEvent->Write();
+
+	delete cEvent;
+	delete g_QvsL;
+
+	for (int i = 0; i < gNStrings; ++i)
+	{
+		delete mg_hitsMatrix[i];
+	}
+	return 0;
+}
+
 int EventVisualizationXZ(int eventID, UnifiedEvent &event, TVector3& cascPos)
 {
 	TMultiGraph* mg_eventXZ;
@@ -2774,6 +2921,7 @@ void ScanLogLikelihoodDirectionCircular(int eventID, UnifiedEvent &event)
 	double cascadeParameters[7];
 	int iflag = 0;
 	double degInRad = 0.001745;
+	event.directionSigma = -1;
 
 
 	cascadeParameters[0] = event.position.X();
@@ -2810,6 +2958,10 @@ void ScanLogLikelihoodDirectionCircular(int eventID, UnifiedEvent &event)
 			// if (likelihoodValue-event.likelihood*gPulses.size() < 0.5)
 			{
 				g_positionLikelihoodScan->SetPoint(pointID,cascadeParameters[5]/TMath::Pi()*180,cascadeParameters[6]/TMath::Pi()*180,(likelihoodValue-event.likelihood)*gPulses.size());
+				if ((likelihoodValue-event.likelihood)*gPulses.size() < 0.5 && TMath::Abs(event.theta - cascadeParameters[5]) > event.directionSigma)
+				{
+					event.directionSigma = TMath::Abs(event.theta - cascadeParameters[5]);
+				}
 				pointID++;
 			}
 		}
@@ -3254,6 +3406,12 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 
 	if (event.position.Z() > gZCut)
 		return -6;
+	eventStats->nZFilter++;
+
+	event.closeHits = CloseHits(event);
+	if (event.closeHits < 10)
+		return -8;
+	eventStats->nCloseHitsFilter++;
 
 	h_nHitsTrack->Fill(TrackFilter(event,event.position,event.time));
 
@@ -3290,14 +3448,15 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	event.branchRatio = BranchRatio(event);
 	event.qRatio = QRatio(event);
 	event.qEarly = QEarly(event);
-	event.closeHits = CloseHits(event);
+	// event.closeHits = CloseHits(event);
 	event.correctedEnergy = GetCorrectedEnergy(event.energy);
-	event.directionSigma = CalculateDirectionError(event);
+	// event.directionSigma = CalculateDirectionError(event);
 	CalculateEquatorialCoor(event);
 
 	if (!gLaserRun)
 	{
 		EventVisualization(i,event,event.position,event.time);
+		// NewEventVisualization(i,event,event.position,event.time);
 		EventVisualizationXZ(i,event,event.position);
 		ChargeVisualization(i,event.position,event.energy,event.theta,event.phi);
 		SaveCascadeJSON(i,event);

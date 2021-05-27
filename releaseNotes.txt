@@ -1,3 +1,12 @@
+27.05.2121 - git commit ---
+	* all recently removed or changed cuts are now set as default (no need for config file)
+	* TFilterNCut lowered from 20 to 5
+	* nCloseHitsFilter added with default value 10
+	* TFilterTimeWindow lowered from 50 to 20 ns
+	* new calculation of directionSigma (now theta only)
+
+18.05.2021 - tag v1.3
+
 18.05.2021 - git commit ---
 	* TFilter applied twice to remove hits with Tres >< 50
 	* processLocalRun tmp folder can be now specified
@@ -53,6 +62,8 @@
 	* program command line output changed to work more easily with programOutputTime.C
 	* when -i flag is used, the run is processed from the given folder (for the local processing on VM)
 	* programOutputTime.C improved to work with processing errors from VM as well
+
+18.03.2021 - tag v1.2
 
 17.03.2021 - git commit 3ee7f5317ec2f4d42e8263afbbb5ca89b826edc2
 	* BranchRatio changed to count only layers of OMs

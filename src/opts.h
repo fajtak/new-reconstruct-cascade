@@ -20,11 +20,11 @@ struct EventStats
 	int nQFilterChi2 = 0;
 	int nTFilter = 0;
 	int nTFilterChi2 = 0;
-	// int nZFilter = 0;
+	int nZFilter = 0;
 	// int nTDelayFilter = 0;
 	// int nQRatioFilter = 0;
 	// int nBranchFilter = 0;
-	// int nCloseHitsFilter = 0;
+	int nCloseHitsFilter = 0;
 	int nLikelihoodFilter = 0;
 };
 

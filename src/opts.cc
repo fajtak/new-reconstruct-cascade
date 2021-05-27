@@ -285,17 +285,22 @@ void readRC(const char* rcpath)
 		exit(1);
 	}
 
-	gNCut = env.GetValue("NCut", 50);
-	gQTotalCut = env.GetValue("QTotalCut", 200.0);
+	// gNCut = env.GetValue("NCut", 50);
+	gNCut = env.GetValue("NCut", 0);
+	// gQTotalCut = env.GetValue("QTotalCut", 200.0);
+	gQTotalCut = env.GetValue("QTotalCut", 0.0);
 	gQCut = env.GetValue("QCut", 100.0);
 	gCausQCut = env.GetValue("CausQCut", 1.5);
 	gCausFriendCut = env.GetValue("CausFriendCut", 2);
-	gTCutTimeWindowNs = env.GetValue("TCutTimeWindow", 50.0);
+	// gTCutTimeWindowNs = env.GetValue("TCutTimeWindow", 50.0);
+	gTCutTimeWindowNs = env.GetValue("TCutTimeWindow", 20.0);
 	gTCutQThreshold = env.GetValue("TCutQThreshold",0.0);
-	gTCutDistance = env.GetValue("TCutDistance",1000.0);
+	// gTCutDistance = env.GetValue("TCutDistance",1000.0);
+	gTCutDistance = env.GetValue("TCutDistance",250.0);
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
-	gNCutT = env.GetValue("NCutT", 20);
+	// gNCutT = env.GetValue("NCutT", 20);
+	gNCutT = env.GetValue("NCutT", 5);
 	gNCutDiff = env.GetValue("NCutDiff",0);
 	gZCut = env.GetValue("ZCut",250.0);
 	gLikelihoodCut = env.GetValue("LikelihoodCut",3.0); //value 1 is used for the Non-hit and Noise-hit likelihood term
