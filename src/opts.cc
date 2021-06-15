@@ -301,7 +301,7 @@ void readRC(const char* rcpath)
 	gQCutChi2 = env.GetValue("QCutChi2", 100.0);
 	gTCutChi2 = env.GetValue("TCutChi2", 20.0);
 	// gNCutT = env.GetValue("NCutT", 20);
-	gNCutT = env.GetValue("NCutT", 5);
+	gNCutT = env.GetValue("NCutT", 12);
 	gNCutDiff = env.GetValue("NCutDiff",0);
 	gZCut = env.GetValue("ZCut",250.0);
 	gLikelihoodCut = env.GetValue("LikelihoodCut",3.0); //value 1 is used for the Non-hit and Noise-hit likelihood term

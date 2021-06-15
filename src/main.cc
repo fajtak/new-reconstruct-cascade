@@ -1027,7 +1027,7 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 	for (int i = 0; i < bgeom->GetNumOMs(); ++i)
 	{
-		gReferencePosition = (bgeom->At(270)->GetPosition() + bgeom->At(271)->GetPosition());
+		gReferencePosition = (bgeom->At(269)->GetPosition() + bgeom->At(270)->GetPosition());
 		gReferencePosition *= 0.5;
 		if (bgeom->At(i)->HasData())
 		{

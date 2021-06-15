@@ -1,6 +1,15 @@
 15.06.2021 - git commit ---
+	* fixed real geometry offset (15 meters)
+	* TFilterNCut used again with value 12
+	* findOverlap.C script searching for coincidences between ours and Zhan's cascades
+
+15.06.2021 - git commit be2097d2538f085b0ff502364b0f6d5721b23b2f
 	* new function BroadPulses() - number of hits with great FWHM (> 6 FADC) is calculated
-27.05.2121 - git commit 557b1bb5b0175c20d4ca08f1543c60a962b85d7f
+	* info about pulse width saved to the recoHits
+
+27.05.2021 - tag v1.4
+
+27.05.2021 - git commit 557b1bb5b0175c20d4ca08f1543c60a962b85d7f
 	* all recently removed or changed cuts are now set as default (no need for config file)
 	* TFilterNCut lowered from 20 to 5
 	* nCloseHitsFilter added with default value 10
