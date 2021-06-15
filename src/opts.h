@@ -41,6 +41,7 @@ struct UnifiedHit
 {
   int OMID;
   double time;
+  double FWHM;
   double charge;
   double expectedCharge;
   bool noise;
@@ -107,6 +108,7 @@ struct UnifiedEvent
 	double qEarly = -1;
 	int closeHits = -1;
 	double chargeCloseHits = -1;
+	int nBroadPulses = -1;
 };
 
 extern int gNEventsProcessed;
@@ -132,6 +134,7 @@ extern std::vector<float> gPulsesQ; //global vector of PulsesVariables
 extern std::vector<int> gPulsesOrigin; //global vector of PulsesVariables
 extern std::vector<float> gPulsesTimeRes; //global vector of PulsesVariables
 extern std::vector<float> gPulsesLikelihood; //global vector of PulsesVariables
+extern std::vector<float> gPulsesFWHM; //global vector of PulsesVariables
 extern int gVerbose;
 extern TVector3 gReferencePosition;
 extern const double gRecCinWater;

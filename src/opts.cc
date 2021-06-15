@@ -32,6 +32,7 @@ std::vector<float> gPulsesQ;
 std::vector<int> gPulsesOrigin;
 std::vector<float> gPulsesTimeRes;
 std::vector<float> gPulsesLikelihood;
+std::vector<float> gPulsesFWHM;
 int gVerbose = 0;
 TVector3 gReferencePosition;
 const double gRecCinWater = 4.57;

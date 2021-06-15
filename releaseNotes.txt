@@ -1,4 +1,6 @@
-27.05.2121 - git commit ---
+15.06.2021 - git commit ---
+	* new function BroadPulses() - number of hits with great FWHM (> 6 FADC) is calculated
+27.05.2121 - git commit 557b1bb5b0175c20d4ca08f1543c60a962b85d7f
 	* all recently removed or changed cuts are now set as default (no need for config file)
 	* TFilterNCut lowered from 20 to 5
 	* nCloseHitsFilter added with default value 10

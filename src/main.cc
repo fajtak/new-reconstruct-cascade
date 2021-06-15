@@ -204,6 +204,8 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 
 	for (int i = 0; i < impulseTel->GetNimpulse(); ++i)
 	{
+    	BExtractedImpulse* impulse = impulseTel->At(i);
+
 		int OMID = impulseTel->GetNch(i);
 		// cout << "\t" << i << " " << OMID << " " << impulseTel->GetQ(i) << " " << impulseTel->GetQ(i)/gOMqCal[OMID] << endl;
 		if (IsActiveChannel(OMID) && impulseTel->GetQ(i) > 0)
@@ -222,7 +224,7 @@ void TransformToUnifiedEvent(BExtractedImpulseTel* impulseTel, UnifiedEvent &uni
 
 			unifiedEvent.nHits++;
 			unifiedEvent.qTotal += hitCharge;
-			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],hitCharge,-1,false,-1});
+			unifiedEvent.hits.push_back(UnifiedHit{impulseTel->GetNch(i),5*(impulseTel->GetT(i)-512)-gOMtimeCal[OMID],impulse->GetTFWHM(),hitCharge,-1,false,-1});
 		}
 	}
 }
@@ -292,13 +294,13 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 			{
 				nNoiseHits++;
 				OMID = event->HitChannel(i);
-				unifiedEvent.hits.push_back(UnifiedHit{OMID,event->T(i) - gOMtimeCal[OMID],event->Q(i),-1,true,0});
+				unifiedEvent.hits.push_back(UnifiedHit{OMID,event->T(i) - gOMtimeCal[OMID],-1,event->Q(i),-1,true,0});
 			}else
 			{
 				if (gExcludeTrackHits && eventMask->GetFlag(i) < 0)
 					continue;
 				OMID = event->HitChannel(i);
-				unifiedEvent.hits.push_back(UnifiedHit{OMID,event->T(i) - gOMtimeCal[OMID],event->Q(i),-1,false,eventMask->GetFlag(i)});
+				unifiedEvent.hits.push_back(UnifiedHit{OMID,event->T(i) - gOMtimeCal[OMID],-1,event->Q(i),-1,false,eventMask->GetFlag(i)});
 			}
 			nHits++;
 			unifiedEvent.qTotal += event->Q(i);
@@ -320,7 +322,7 @@ void TransformToUnifiedEvent(mcCascade* cascade, UnifiedEvent &unifiedEvent)
 	for (int i = 0; i < cascade->nHits; ++i)
 	{
 		nHits++;
-		unifiedEvent.hits.push_back(UnifiedHit{cascade->chID[i]-1,cascade->time[cascade->chID[i]-1] - gOMtimeCal[cascade->chID[i]-1],cascade->charge[cascade->chID[i]-1],-1,false,1});
+		unifiedEvent.hits.push_back(UnifiedHit{cascade->chID[i]-1,cascade->time[cascade->chID[i]-1] - gOMtimeCal[cascade->chID[i]-1],-1,cascade->charge[cascade->chID[i]-1],-1,false,1});
 		unifiedEvent.qTotal += cascade->charge[cascade->chID[i]-1];
 	}
 
@@ -1764,7 +1766,7 @@ int CaussalityFilter(UnifiedEvent &event)
 			}
 		}
 		if (addPulse && friendFound && !OMIDAlreadyInGPulses(event.hits[i]))
-			gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
+			gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].FWHM,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
 	}
 	return 0;
 }
@@ -1790,7 +1792,7 @@ int TFilter(UnifiedEvent &event, TVector3& cascPos, double& cascTime)
         	// if (gOMpositions[cascade->chID[i]-1].Z()-cascPos.Z() < -140 || gOMpositions[cascade->chID[i]-1].Z()-cascPos.Z() > 180)
         		// continue;
         	h_OMIDinReco->Fill(event.hits[i].OMID);
-        	gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
+        	gPulses.push_back(UnifiedHit{event.hits[i].OMID,event.hits[i].time,event.hits[i].FWHM,event.hits[i].charge,0,event.hits[i].noise,event.hits[i].MCflag});
         	gPulsesOMID.push_back(event.hits[i].OMID);
         	gPulsesQ.push_back(event.hits[i].charge);
         	gPulsesOrigin.push_back(event.hits[i].MCflag);
@@ -3345,14 +3347,30 @@ int CloseHits(UnifiedEvent &event)
 	return closeHits;
 }
 
+int BroadPulses(UnifiedEvent &event)
+{
+	int nBroadHits = 0;
+	event.nBroadPulses = 0;
+
+	for (int i = 0; i < gPulses.size(); ++i)
+	{
+		if (gPulses[i].charge < 60 && gPulses[i].FWHM > 6) //charge of recoHit < 60 p.e. (cut out saturated pulses)
+			nBroadHits++;		
+	}
+
+	return nBroadHits;
+}
+
 int FillHitsTTree(UnifiedEvent &event)
 {
 	gPulsesTimeRes.clear();
 	gPulsesLikelihood.clear();
+	gPulsesFWHM.clear();
 	for (unsigned int i = 0; i < gPulses.size(); ++i)
 	{
 		gPulsesTimeRes.push_back(gPulses[i].time-ExpectedTime(event.position,event.time,gPulses[i].OMID));
 		gPulsesLikelihood.push_back(TMath::Log10(TMath::Poisson(gPulses[i].charge,gPulses[i].expectedCharge)));
+		gPulsesFWHM.push_back(gPulses[i].FWHM);
 	}
 	return 0;
 }
@@ -3448,6 +3466,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	event.branchRatio = BranchRatio(event);
 	event.qRatio = QRatio(event);
 	event.qEarly = QEarly(event);
+	event.nBroadPulses = BroadPulses(event);
 	// event.closeHits = CloseHits(event);
 	event.correctedEnergy = GetCorrectedEnergy(event.energy);
 	// event.directionSigma = CalculateDirectionError(event);
@@ -3521,11 +3540,13 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("qEarly",&event.qEarly);
 	outputTree->Branch("closeHits",&event.closeHits);
 	outputTree->Branch("chargeCloseHits",&event.chargeCloseHits);
+	outputTree->Branch("nBroadPulses",&event.nBroadPulses);
 	outputTree->Branch("recoHitsOMID",&(gPulsesOMID));
 	outputTree->Branch("recoHitsQ",&(gPulsesQ));
 	outputTree->Branch("recoHitsOrigin",&(gPulsesOrigin));
 	outputTree->Branch("recoHitsTimeRes",&(gPulsesTimeRes));
 	outputTree->Branch("recoHitsLikelihood",&(gPulsesLikelihood));
+	outputTree->Branch("recoHitsFWHM",&(gPulsesFWHM));
 }
 
 bool CheckTreeAndBranches(TTree* tree)
