@@ -26,6 +26,11 @@ if [ "$1" -ge "19" ];
 		processingTag=v1.3
 fi
 
+
+if [ -f "/home/fajtak/data/exp20$1/cluster$2/$fullRunID/recCascResults.root" ]; then
+	exit
+fi
+
 mkdir $4/s$1_c$2_r$3/
 
 if (("$1" < "19"));

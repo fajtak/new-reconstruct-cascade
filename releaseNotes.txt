@@ -1,4 +1,9 @@
-15.06.2021 - git commit ---
+21.06.2021 - git commit ---
+	* processOnlyNewLocalRun bash script added to be able to process only unprocessed runs
+
+15.06.2021 - tag v1.5
+
+15.06.2021 - git commit aec680a9c085b02bf2cc5b9680ed1e0681acc53c
 	* fixed real geometry offset (15 meters)
 	* TFilterNCut used again with value 12
 	* findOverlap.C script searching for coincidences between ours and Zhan's cascades
