@@ -364,7 +364,7 @@ int GenerateNoise(UnifiedEvent &event, double noiseRate = 0)
 				}
 			}
 			double noiseTime = gRanGen.Uniform(5120)-2560;
-			event.hits.push_back(UnifiedHit{i,noiseTime,noiseCharge,-1,true,0});
+			event.hits.push_back(UnifiedHit{i,noiseTime,-1,noiseCharge,-1,true,0});
 			nGeneratedNoiseHits++;
 			// cout << "\t" << j << " " << noiseTime << " " << noiseCharge << endl;
 		}
@@ -1048,12 +1048,12 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
-	const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
+	// const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 
 	// if (BARS::App::Season != 2020)
 		// geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 	// else
-		// geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
+		const char*  geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
 
 	TTree* geometryTree = nullptr;
 	TFile* geomFile = new TFile(geometryFileName,"READ");
@@ -3269,8 +3269,9 @@ double QEarly(UnifiedEvent &event)
 	{
 		timeRes = event.hits[i].time - ExpectedTime(event.position, event.time, event.hits[i].OMID);
 
-		if(timeRes > -1000 && timeRes < -40)
+		if(timeRes > -1000 && timeRes < -40){
 			earlyCharge += event.hits[i].charge;
+		}
 	}
 
 	return earlyCharge;
