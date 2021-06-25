@@ -1048,12 +1048,12 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
-	// const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
+	const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 
 	// if (BARS::App::Season != 2020)
 		// geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 	// else
-		const char*  geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
+		// geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
 
 	TTree* geometryTree = nullptr;
 	TFile* geomFile = new TFile(geometryFileName,"READ");
