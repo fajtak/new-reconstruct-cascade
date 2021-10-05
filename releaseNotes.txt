@@ -1,5 +1,10 @@
 05.10.2021 - git commit ---
 	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
+	* visualizations were causing segmentation (removed)
+	* fixed multicluster json production
+
+05.10.2021 - git commit a453ba6a7efc5c9f6c60d876074bba8e1e929ec2
+	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
 	* bug fix
 
 05.10.2021 - git commit 0c2e78e7b0280e584b866feea662b81e1586d9d9
