@@ -189,6 +189,87 @@ int SaveCascadeJSON(int eventID, UnifiedEvent& event)
 	return 0;
 }
 
+int SaveCascadeJSONMulti(int eventID, UnifiedEvent& event)
+{
+	if (gInputType != 0)
+		return 1;
+
+	TString outputFileName;
+	if (gInputType == 0)
+	{
+		if (App::Output == "" || App::Output == "a")
+			outputFileName = BARS::Data::Directory(BARS::Data::JOINT, BARS::App::Season, BARS::App::Cluster, BARS::App::Run, gProductionID.c_str());
+		else
+			outputFileName = Form("%s/exp%d/cluster%d/%04d/",App::Output.Data(),BARS::App::Season,BARS::App::Cluster,BARS::App::Run);
+	}else
+	{
+		if (App::Output == "")
+			outputFileName = gFileInputFolder;
+		else
+			outputFileName = App::Output.Data();
+	}
+	char fname[100];
+	std::sprintf(fname,"/cascade_season%d_cluster%d_run%d_evt%d.json",BARS::App::Season, BARS::App::Cluster, BARS::App::Run, eventID);
+	outputFileName += fname;
+	std::ofstream fOutputFile;
+	fOutputFile.open(outputFileName);
+	fOutputFile<<"{"<<std::endl;
+	fOutputFile<<"\t\"eventID\": "<<eventID<<","<<std::endl;
+	fOutputFile<<"\t\"season\": "<<BARS::App::Season<<","<<std::endl;
+	fOutputFile<<"\t\"cluster\": "<<BARS::App::Cluster<<","<<std::endl;
+	fOutputFile<<"\t\"run\": "<<BARS::App::Run<<","<<std::endl;
+	fOutputFile<<"\t\"pulses\": {"<<std::endl;
+
+	Int_t nImpulse = gPulses.size();
+	for (int i = 0; i < nImpulse-1; i++)
+	{
+		fOutputFile<<"\t\t\"" << i << "\": \{ \"mask\": "<< 1 <<
+		  ", \"amplitude\": "<< gPulses[i].charge <<
+		  ", \"charge\": "<< gPulses[i].charge <<
+		  ", \"time\": "<< gPulses[i].time <<
+		  ", \"channelID\": "<< gPulses[i].OMID <<
+		  " },"<<std::endl;
+	}
+	fOutputFile<<"\t\t\"" << nImpulse-1 << "\": \{ \"mask\": "<< 1 <<
+	  ", \"amplitude\": "<< gPulses[nImpulse-1].charge <<
+	  ", \"charge\": "<< gPulses[nImpulse-1].charge <<
+	  ", \"time\": "<< gPulses[nImpulse-1].time <<
+	  ", \"channelID\": "<< gPulses[nImpulse-1].OMID <<
+	  " }"<<std::endl;
+	fOutputFile<<"\t},"<<std::endl;
+	fOutputFile<<"\t\"geometry\": ["<<std::endl;
+	for (int i=0; i<gNOMsMulti-1; i++){
+	 fOutputFile<<"\t\t{\"channelID\": "<<i<<
+	            ", \"x\": "<<gOMpositions[i].X()<<
+	            ", \"y\": "<<gOMpositions[i].Y()<<
+	            ", \"z\": "<<gOMpositions[i].Z()<<"},"<<std::endl;
+	}
+	fOutputFile<<"\t\t{\"channelID\": "<<gNOMsMulti-1<<
+	            ", \"x\": "<<gOMpositions[gNOMsMulti-1].X()<<
+	            ", \"y\": "<<gOMpositions[gNOMsMulti-1].Y()<<
+	            ", \"z\": "<<gOMpositions[gNOMsMulti-1].Z()<<"}"<<std::endl;
+	fOutputFile<<"\t],"<<std::endl;
+	fOutputFile<<"\t\"origins\": {"<<std::endl;
+	fOutputFile<<"\t\t\"cascades\": [{"<<std::endl;
+	fOutputFile<<"\t\t\t\"mc\": false,"<<std::endl;
+	fOutputFile<<"\t\t\t\"title\": \"cascadeFit\","<<std::endl;
+	fOutputFile<<"\t\t\t\"direction\": {"<<std::endl;
+	fOutputFile<<"\t\t\t\t\"theta\": "<<std::right<<event.theta<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"phi\": "<<std::right<<event.phi<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"x\": "<<std::right<<event.position.X()<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"y\": "<<std::right<<event.position.Y()<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"z\": "<<std::right<<event.position.Z()<<","<<std::endl;
+	fOutputFile<<"\t\t\t\t\"time\": "<<std::right<<event.time<<""<<std::endl;
+	// fOutputFile<<"\t\t\t\t\"time\": "<<std::right<<time<<std::endl;
+	fOutputFile<<"\t\t\t}"<<std::endl;
+	fOutputFile<<"\t\t}]"<<std::endl;
+	fOutputFile<<"\t}"<<std::endl;
+	fOutputFile<<"}"<<std::endl;
+	fOutputFile.close();
+
+	return 0;
+}
+
 bool IsActiveChannel(int OMID)
 {
 	return (TMath::Abs(gOMqCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMqCal[OMID] - (0)) > 0.0001 && TMath::Abs(gOMtimeCal[OMID] - (-1)) > 0.0001 && TMath::Abs(gOMpositions[OMID].Mag()) > 0.00001 && (gSectionMask?gSectionMask->GetChannelStatus(OMID):true));
@@ -450,6 +531,7 @@ bool PrintRunInfo(TTree* tree, BExtractedHeader* header)
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "Experimental Data" << endl;
 	cout << "Season: " << BARS::App::Season << " Cluster: " << BARS::App::Cluster << " Run: " <<  BARS::App::Run << endl;
+	cout << "Run start time: " << startTime << " Run end time: " << endTime << endl;
 	cout << "! " << tree->GetEntries() << " " << (endTime-startTime)/3600.0 << " " << (endTime-startTime)/3600.0/24.0 << endl;
 	std::cout << std::string(81,'*') << std::endl;
 
@@ -484,6 +566,17 @@ void PrintRunInfo(const char* filePath, TChain* events)
 	double timeConstant = (gInputType == 2)?gMCNuTimeConstant:gMCMuTimeConstant;
 	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
 	cout << "MC Data: up-going single muons (" << (gInputType == 2 ? 1 : 0) << ") down-going muon bundles (" << (gInputType == 3 ? 1 : 0) << ")" << endl;
+	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  timeConstant << endl;
+    cout << "! " << events->GetEntries() << " " << (events->GetListOfFiles()->GetEntries()*timeConstant)/3600.0 << "  " << (events->GetListOfFiles()->GetEntries()*timeConstant)/3600.0/24.0 << endl;
+
+	std::cout << std::string(81,'*') << std::endl;
+}
+
+void PrintRunInfoMulticluster(const char* filePath, TChain* events)
+{
+	double timeConstant = gMCMultiTimeConstant;
+	cout << "RunInfo (Number of entries, RunTime [hours], runTime [days])" << endl;
+	cout << "MC Multicluster Data" << endl;
 	cout << "Files: " << filePath << " Number of files: " << events->GetListOfFiles()->GetEntries() << " Time constant: " <<  timeConstant << endl;
     cout << "! " << events->GetEntries() << " " << (events->GetListOfFiles()->GetEntries()*timeConstant)/3600.0 << "  " << (events->GetListOfFiles()->GetEntries()*timeConstant)/3600.0/24.0 << endl;
 
@@ -1003,11 +1096,11 @@ bool CheckInputParamsMCData()
     	return false;
     }
 
-    if (BARS::App::Cluster == -1)
-    {
-    	std::cout << "Set cluster with -c" << std::endl;
-    	return false;
-    }
+    // if (BARS::App::Cluster == -1)
+    // {
+    // 	std::cout << "Set cluster with -c" << std::endl;
+    // 	return false;
+    // }
 	if (gFileInputFolder == "")
 	{
 		std::cout << "Set MC input folder with -f" << std::endl;
@@ -1144,13 +1237,48 @@ int ReadGeometryMC(TChain* event)
 	return nOKOMs;
 }
 
-int ReadDeadOMs()
+int ReadGeometryMCMulticluster(TChain* event)
+{
+	TString fileName = "../inputFiles/multiclusterGeometry.txt";
+
+	ifstream inputFile;
+   inputFile.open(fileName);
+
+   if (!inputFile)
+   {
+    	cerr << "Geometry file for MC multicluster: " << fileName << " was NOT found. Program termination!" << endl;
+    	return -1;
+  	}
+
+	double x,y,z;
+
+	for (int i = 0; i < gNOMsMulti; ++i)
+	{
+		inputFile >> x >> y >> z;
+		if (i < gOMpositions.size())
+		{
+			gOMpositions[i] = TVector3(x,y,z);
+			gOMqCal[i] = 1;
+		}
+		else
+		{
+			gOMpositions.push_back(TVector3(x,y,z));
+			gOMqCal.push_back(1);
+			gOMtimeCal.push_back(0);
+		}
+	}
+	inputFile.close();
+
+	return gNOMsMulti;
+}
+
+int ReadDeadOMs(int clusterID, int offset = 0)
 {
 	std::vector<int> deadOMs;
 	switch (BARS::App::Season)
 	{
 		case 2016:
-			switch (BARS::App::Cluster)
+			switch (clusterID)
 			{
 				case 0:
 					deadOMs = {36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,72,73,74,75,76,77,78,79,80,81,82,83,130,131,245,246,247,256};
@@ -1161,7 +1289,7 @@ int ReadDeadOMs()
 			}
 			break;
 		case 2019:
-			switch (BARS::App::Cluster)
+			switch (clusterID)
 			{
 				case 0:
 					deadOMs = {192,193,194,195,196,197,198,199,200,201,202,203,211,212,213,214,215,155};
@@ -1190,7 +1318,7 @@ int ReadDeadOMs()
 
 	for (int i = 0; i < deadOMs.size(); ++i)
 	{
-		gOMqCal[deadOMs[i]] = -1;
+		gOMqCal[deadOMs[i]+offset] = -1;
 	}
 	// BARS::App::Cluster
 	return 0;
@@ -1663,11 +1791,52 @@ int ReadInputParamFiles(TChain* events)
 	cout << "DONE!" << endl;
 	cout << "Reading Dead OMs ... ";
 	cout << std::flush;
-    if (ReadDeadOMs() == -1)
+    if (ReadDeadOMs(BARS::App::Cluster) == -1)
 	{
 		std::cout << "Problem with Dead OMs!" << std::endl;
 		return -1;
 	}
+	cout << "DONE!" << endl;
+    return 0;
+}
+
+int ReadInputParamFilesMulticluster(TChain* events)
+{
+	cout << "Reading Geometry ... ";
+	cout << std::flush;
+    if (ReadGeometryMCMulticluster(events) == -1)
+	{
+		std::cout << "Problem with geometry file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Log Table ... ";
+	cout << std::flush;
+	if (ReadLogTable() == -1)
+	{
+		std::cout << "Problem with 4D LogLikelihood file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Noise Probability File ... ";
+	cout << std::flush;
+    if (ReadNoiseProbability() == -1)
+	{
+		std::cout << "Problem with NoiseProbability File file!" << std::endl;
+		return -1;
+	}
+	cout << "DONE!" << endl;
+	cout << "Reading Dead OMs ... ";
+	cout << std::flush;
+	for (int i = 0; i < gNClustersMulti; ++i)
+	{
+	   if (ReadDeadOMs(i,gNOMs*i) == -1)
+		{
+			std::cout << "Problem with Dead OMs!" << std::endl;
+			return -1;
+		}
+	}
+
 	cout << "DONE!" << endl;
     return 0;
 }
@@ -1823,14 +1992,14 @@ int TrackFilter(UnifiedEvent &event, TVector3 cascPos, double cascTime)
 int GetNStrings()
 {
 	int nHitStrings = 0;
-	int hitStrings[8]{0};
+	int hitStrings[gNOMs/gNOMsPerCluster*gNStrings]{0};
 
 	for (unsigned int i = 0; i < gPulses.size(); ++i)
 	{
 		hitStrings[(gPulses[i].OMID)/36] = 1;
 	}
 
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < gNOMs/gNOMsPerCluster*gNStrings; ++i)
 	{
 		nHitStrings += hitStrings[i];
 	}
@@ -3385,6 +3554,7 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nNFilter++;
 	CaussalityFilter(event);
 
+
 	event.nHitsAfterCaus = gPulses.size();
 	event.nStringsAfterCaus = GetNStrings();
 
@@ -3993,6 +4163,105 @@ int ProcessMCData()
 	return 0;
 }
 
+int ProcessMCMulticluster()
+{
+	cout << "Processing MC Multicluster" << endl ;
+
+	if (!CheckInputParamsMCData()) // Check input parameters
+	{
+		return -1;
+	}
+
+	const char* filePath = " ";
+	filePath = Form("%s/n_cors_n2m_cl2016_x*.root",gFileInputFolder.c_str());
+
+	TChain* mcFiles = new TChain("Events");
+	mcFiles->Add(filePath);
+	if (mcFiles->GetEntries() == 0)
+	{
+		std::cout << "Files: " << filePath << " were not found!" << endl;
+    	return -2;
+	}
+
+	// Sets necessary pointers to access data through TChain
+	BEvent* event = NULL;
+    mcFiles->SetBranchAddress("BEvent.",&event);
+    BEventMaskMC* eventMask = NULL;
+    mcFiles->SetBranchAddress("MCEventMask.",&eventMask);
+    BExtractedHeader* jointHeader = NULL;
+    mcFiles->SetBranchAddress("BJointHeader.",&jointHeader);
+    // BSourceEAS* sourceEAS = NULL;
+    // mcFiles->SetBranchAddress("MCEventSource.",&sourceEAS);
+    BMCEvent* mcEvent = NULL;
+    mcFiles->SetBranchAddress("BMCEvent.",&mcEvent);
+
+    PrintRunInfoMulticluster(filePath,mcFiles);
+
+    if (ReadInputParamFilesMulticluster(mcFiles) == -1)
+		return -3;
+
+	// if(gSigmaMCTimeCal != -1)
+	// 	GenerateMCTimeCal();
+
+	TString outputFileName = "";
+	if (App::Output == "")
+		outputFileName = gFileInputFolder;
+	else
+		outputFileName = App::Output.Data();
+
+	if (gEventID == -1)
+		outputFileName += "/recMultiCascResults.root";
+	else
+		outputFileName += Form("/singleMultiRecCasc_%d.root",gEventID);
+
+	TFile* outputFile = new TFile(outputFileName,"RECREATE");
+	TDirectory *cdTree = outputFile->mkdir("Tree");
+	UnifiedEvent unifiedEvent;
+	TTree* t_RecCasc = new TTree("t_RecCasc","Reconstructed Cascades");
+	InitializeOutputTTree(t_RecCasc,unifiedEvent);
+	TDirectory *cdHist = outputFile->mkdir("Histograms");
+	TDirectory *cdVis = outputFile->mkdir("Visualizations");
+   	cdVis->cd();
+
+	EventStats* eventStats = new EventStats();
+	eventStats->nEntries = (gNEventsProcessed == -1)?mcFiles->GetEntries():gNEventsProcessed;
+
+	int startEventID = (gEventID == -1)?0:gEventID;
+	int endEventID = (gEventID == -1)?eventStats->nEntries:gEventID+1;
+	if (gEventID != -1) eventStats->nEntries = 1;
+
+	for (int i = startEventID; i < endEventID; ++i)
+	{
+		cout << i << endl;
+		// if (eventStats->nEntries > 10 && i%(eventStats->nEntries/10) == 0)
+		// {
+		// 	cout << round((double)(i)/eventStats->nEntries*100) << "% ";
+		// 	cout << std::flush;
+		// }
+		mcFiles->GetEntry(i);
+		if (gEventID != -1)
+			cout << mcFiles->GetFile()->GetName() << " " << jointHeader->GetEventID() << endl;
+		unifiedEvent.eventID = i;
+		TransformToUnifiedEvent(event,mcEvent,eventMask,unifiedEvent);
+		PrintUnifiedEvent(unifiedEvent);
+		if (gAdditionalMCNoiseRateInkHz != -1)
+			GenerateNoise(unifiedEvent,gAdditionalMCNoiseRateInkHz);
+		int status = DoTheMagicUnified(i,unifiedEvent,eventStats);
+		if (status == 0)
+			t_RecCasc->Fill();
+		h_exitStatus->Fill(status);
+	}
+	cout << endl;
+
+	PrintEventStats(eventStats);
+	cdHist->cd();
+	SaveHistograms();
+	cdTree->cd();
+	t_RecCasc->Write();
+	outputFile->Close();
+	return 0;
+}
+
 // Fitter setting
 void SetFitter(void)
 {
@@ -4032,6 +4301,9 @@ int main(int argc, char** argv)
     	case 2:
     	case 3:
     		ProcessMCData();
+    		break;
+    	case 4:
+    		ProcessMCMulticluster();
     		break;
     	default:
     		break;

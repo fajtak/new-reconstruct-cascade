@@ -21,7 +21,11 @@ TTree* gSectionMaskTree = nullptr;
 double gLogTable4D[200][351][21][21]{0};
 std::vector<double> gNoiseTable;
 std::vector<double> gNoiseProbability;
-const int gNOMs = 288;
+const int gNOMsPerCluster = 288;
+// const int gNOMs = 288;
+const int gNOMs = 1440;
+const int gNClustersMulti = 5;
+const int gNOMsMulti = gNOMs*gNClustersMulti;
 const int gNStrings = 8;
 std::vector<TVector3> gOMpositions(gNOMs);
 std::vector<double> gOMtimeCal(gNOMs,0);
@@ -39,6 +43,7 @@ const double gRecCinWater = 4.57;
 const double gRecC = 3.336;
 TVirtualFitter* gMinuit;
 TRandom2 gRanGen;
+double gMCMultiTimeConstant = 623; // seconds per MC file
 double gMCMuTimeConstant = 3900; // seconds per MC file
 double gMCNuTimeConstant = 4.4e9;
 double gMCNoiseRateInkHz = 50; // in kHz
@@ -267,6 +272,17 @@ static const struct App::ProgramOption_t options_list[]{
 			required_argument,
 			"Add noise hits to atmospheric MC datasets based on the set noise rate in kHz",
 			[](char* argv) {gAdditionalMCNoiseRateInkHz = atof(argv);},
+			[]() {;}
+		},
+
+		NOT_REQUIRED
+	},
+	{
+		{
+			"mcMulticluster", 'y',
+			no_argument,
+			"use MC multicluster data as input for the program",
+			[](char* argv) {gInputType = 4;},
 			[]() {;}
 		},
 
