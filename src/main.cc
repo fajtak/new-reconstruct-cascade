@@ -1141,7 +1141,7 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
-	const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
+	const char* geometryFileName = Form("%s",BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR));
 
 	// if (BARS::App::Season != 2020)
 		// geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);

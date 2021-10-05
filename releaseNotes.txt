@@ -1,5 +1,12 @@
 05.10.2021 - git commit ---
 	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
+	* bug fix
+
+05.10.2021 - git commit 0c2e78e7b0280e584b866feea662b81e1586d9d9
+	* merging conflicts
+
+05.10.2021 - git commit d1c86020a49220eccbcc5c3b278df149f73758e9
+	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
 
 25.06.2021 - git commit ba99077caadb934d119e1c6dbcf9b3f58c2c81f7
 	* bug fixed - FHWM added also in GenerateNoise()
