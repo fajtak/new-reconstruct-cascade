@@ -1,6 +1,9 @@
 05.10.2021 - git commit ---
 	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
 
+25.06.2021 - git commit ba99077caadb934d119e1c6dbcf9b3f58c2c81f7
+	* bug fixed - FHWM added also in GenerateNoise()
+
 21.06.2021 - git commit 6a42f9656fbe341128e16d56a6124694973403f7
 	* processOnlyNewLocalRun bash script added to be able to process only unprocessed runs
 

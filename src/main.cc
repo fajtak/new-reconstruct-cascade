@@ -445,7 +445,7 @@ int GenerateNoise(UnifiedEvent &event, double noiseRate = 0)
 				}
 			}
 			double noiseTime = gRanGen.Uniform(5120)-2560;
-			event.hits.push_back(UnifiedHit{i,noiseTime,noiseCharge,-1,true,0});
+			event.hits.push_back(UnifiedHit{i,noiseTime,-1,noiseCharge,-1,true,0});
 			nGeneratedNoiseHits++;
 			// cout << "\t" << j << " " << noiseTime << " " << noiseCharge << endl;
 		}
@@ -3438,8 +3438,9 @@ double QEarly(UnifiedEvent &event)
 	{
 		timeRes = event.hits[i].time - ExpectedTime(event.position, event.time, event.hits[i].OMID);
 
-		if(timeRes > -1000 && timeRes < -40)
+		if(timeRes > -1000 && timeRes < -40){
 			earlyCharge += event.hits[i].charge;
+		}
 	}
 
 	return earlyCharge;
