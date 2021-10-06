@@ -3573,6 +3573,8 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nNFilter++;
 	CaussalityFilter(event);
 
+	// event.mcPosition.Print();
+	// PrintGPulses();
 
 	event.nHitsAfterCaus = gPulses.size();
 	event.nStringsAfterCaus = GetNStrings();
@@ -3582,8 +3584,10 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nSixThrees++;
 
 	EstimateInitialPosMatrix(event.position,event.time);
+	// event.position.Print();
 
 	event.chi2AfterCaus = FitCascPos(event.position,event.time);
+	// cout << event.chi2AfterCaus << endl;
 	h_chi2Caus->Fill(event.chi2AfterCaus);
 	if (event.chi2AfterCaus > gQCutChi2)
 		return -3;
@@ -3603,6 +3607,9 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -4;
 	eventStats->nTFilter++;
 
+	// PrintGPulses();
+	// event.position.Print();
+
 	event.chi2AfterTFilter = FitCascPos(event.position,event.time);
 
 	// cout<<"TFilterChi2 "<<event.chi2AfterTFilter<<endl;
@@ -3615,9 +3622,9 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 		return -6;
 	eventStats->nZFilter++;
 
-	event.closeHits = CloseHits(event);
-	if (event.closeHits < 10)
-		return -8;
+	// event.closeHits = CloseHits(event);
+	// if (event.closeHits < 10)
+		// return -8;
 	eventStats->nCloseHitsFilter++;
 
 	h_nHitsTrack->Fill(TrackFilter(event,event.position,event.time));

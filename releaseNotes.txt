@@ -1,4 +1,8 @@
-05.10.2021 - git commit ---
+06.10.2021 - git commit ---
+	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
+	* CloseHits cut removed for multicluster
+
+05.10.2021 - git commit b3c5952308bbad865112c5ab0bdc48a397722918
 	* !!! testing MC multicluster data. DO NOT USE THIS COMMIT for single cluster analysis
 	* visualizations were causing segmentation (removed)
 	* fixed multicluster json production
