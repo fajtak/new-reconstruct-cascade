@@ -88,7 +88,7 @@ using namespace BARS;
 
 // At the end of list you should add 'App::opt_NULL' element
 static const struct App::ProgramOption_t options_list[]{
-  // --help and --config options will be added automaticly
+  // --help and --config options will be added automaticaly
 	{App::opt_Verbose, NOT_REQUIRED},
 	{App::opt_Input,   NOT_REQUIRED},
 	{App::opt_Output,  NOT_REQUIRED},
@@ -175,6 +175,16 @@ static const struct App::ProgramOption_t options_list[]{
 			no_argument,
 			"use mc cascade data from Zhan-Arys as the input for the program",
 			[](char* argv) {gInputType = 1;},
+			[]() {;}
+		},
+		NOT_REQUIRED
+	},
+	{
+		{
+			"mcCasc", 'L',
+			no_argument,
+			"use mc cascade data from Zhan-Arys Magisevich with Rastislav's format",
+			[](char* argv) {gInputType = 5;},
 			[]() {;}
 		},
 		NOT_REQUIRED

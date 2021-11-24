@@ -1159,12 +1159,12 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
-	const char* geometryFileName = Form("%s",BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR));
+	// const char* geometryFileName = Form("%s",BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR));
 
 	// if (BARS::App::Season != 2020)
 		// geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 	// else
-		// geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
+		const char* geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
 
 	TTree* geometryTree = nullptr;
 	TFile* geomFile = new TFile(geometryFileName,"READ");
@@ -4192,6 +4192,99 @@ int ProcessMCData()
 	return 0;
 }
 
+int ProcessMCsingleCasc()
+{
+  const char* inputFile = "";
+  inputFile = Form("%s",gFileInputFolder.c_str());
+  if (!BARS::App::FileExists(inputFile))
+  {
+  	std::cout << "File: " << inputFile << " was not found!" << endl;
+  	return -1;
+  }
+  
+  // first check whether the input file is present.
+  // subsequent opening of the file for reading.
+  ifstream readFile;
+  readFile.open(inputFile);
+
+  // declaration of working variables
+  int Nev,nFlag,jch1=0,Npmt,counter=0;
+  double tre1,are1;
+  double weight=0,Ezero=0,Ein=0,cost=-2,fi=-5,V1x=0,V1y=0,V1z=0,E1sh=0;
+  string holder;
+  TVector3 vertex;
+  std::vector<UnifiedHit> pulses;
+  UnifiedEvent UniEvt;
+  EventStats* eventStats = new EventStats();
+
+  //loop for reading data till the end
+  while(readFile>>Nev){
+  	 counter++;
+    readFile>>weight>>nFlag>>Ezero>>Ein;
+    getline(readFile,holder);
+    readFile>>jch1>>cost>>fi>>V1x>>V1y>>V1z>>E1sh;
+    getline(readFile,holder);
+    UniEvt.eventID=Nev;
+    UniEvt.mcWeight=weight;
+    UniEvt.mcFlagID=nFlag+20; //labeling needs to be discussed in near future
+    UniEvt.mcEnergy=E1sh*1E-3; //mcEnergy in TeV units
+    // direction needs to be reverted to opposite 180 degrees
+    UniEvt.mcTheta=TMath::Pi()-TMath::ACos(cost);
+    fi+=TMath::Pi();
+    if(fi>2*TMath::Pi()){
+      fi-=2*TMath::Pi();
+    }
+    UniEvt.mcPhi=fi;
+    vertex.SetXYZ(V1x,V1y,V1z);
+    UniEvt.mcPosition=vertex;
+    // initializing remaining uninitialized variables in UnifiedEvent structure
+    vertex.SetXYZ(0,0,0);
+    UniEvt.position=vertex;
+    UniEvt.eventTime=1;
+    // reading impulses parameters
+    for(int ii=0; ii<jch1; ++ii){
+      readFile>>Npmt;// geometry numbers of hit OMs
+      pulses.push_back(UnifiedHit());
+      pulses.back().OMID=Npmt;
+      pulses.back().time=-1;
+      pulses.back().FWHM=-1;
+      pulses.back().charge=-1;
+      pulses.back().expectedCharge=-1;
+      pulses.back().noise=false;
+      pulses.back().MCflag=nFlag+20; 
+    }
+    getline(readFile,holder);
+    
+    for(int ii=0; ii<jch1; ++ii){
+      readFile>>tre1;// times of hit OMs
+      pulses[ii].time=tre1;
+    }
+    getline(readFile,holder);
+
+    for(int ii=0; ii<jch1; ++ii){
+      readFile>>are1;// times of hit OMs
+      pulses[ii].charge=are1;
+    }
+    getline(readFile,holder);
+    holder.clear();
+    UniEvt.hits=pulses;// pluging the vector with data of impulses
+    pulses.clear();    // clearing the vector for another event
+    // the end of reading event data stored in the "unified event" structure
+    
+    //int nCheck=DoTheMagicUnified(Nev, UniEvt, eventStats);
+   }
+  // the loop is over, therefore, file will be closed.
+  readFile.close();
+  
+
+  // ********************************************
+  // If everything around seems dark, look again,
+  // you may be the light. (Rumi)
+  // ********************************************
+  return 0;
+}
+
+
 int ProcessMCMulticluster()
 {
 	cout << "Processing MC Multicluster" << endl ;
@@ -4307,7 +4400,7 @@ void SetFitter(void)
 int main(int argc, char** argv)
 {
 	clock_t begin = clock();
-    // Init should be called at the beggining of all BARS programms
+    // Init should be called at the beginning of all BARS programms
     App::Init(argc, argv, 0, parseOpts, readRC, checkParams);
 
     PrintHeader();
@@ -4333,6 +4426,9 @@ int main(int argc, char** argv)
     	case 4:
     		ProcessMCMulticluster();
     		break;
+    	case 5:
+    	   ProcessMCsingleCasc();
+         break;	
     	default:
     		break;
     }
