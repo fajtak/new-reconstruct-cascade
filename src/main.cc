@@ -4243,44 +4243,29 @@ int ProcessMCsingleCasc()
     UniEvt.eventTime=1;
     // reading impulses parameters
     for(int ii=0; ii<jch1; ++ii){
-      readFile>>Npmt;// geometry numbers of hit OMs
+      readFile>>Npmt>>tre1>>are1;// geometry numbers, times, and charges of hit OMs
       pulses.push_back(UnifiedHit());
       pulses.back().OMID=Npmt;
-      pulses.back().time=-1;
+      pulses.back().time=tre1;
       pulses.back().FWHM=-1;
-      pulses.back().charge=-1;
+      pulses.back().charge=are1;
       pulses.back().expectedCharge=-1;
       pulses.back().noise=false;
       pulses.back().MCflag=nFlag+20; 
     }
     getline(readFile,holder);
     
-    for(int ii=0; ii<jch1; ++ii){
-      readFile>>tre1;// times of hit OMs
-      pulses[ii].time=tre1;
-    }
-    getline(readFile,holder);
-
-    for(int ii=0; ii<jch1; ++ii){
-      readFile>>are1;// times of hit OMs
-      pulses[ii].charge=are1;
-    }
-    getline(readFile,holder);
     holder.clear();
     UniEvt.hits=pulses;// pluging the vector with data of impulses
     pulses.clear();    // clearing the vector for another event
-    // the end of reading event data stored in the "unified event" structure
-    
-    //int nCheck=DoTheMagicUnified(Nev, UniEvt, eventStats);
    }
   // the loop is over, therefore, file will be closed.
   readFile.close();
-  
 
-  // ********************************************
-  // If everything around seems dark, look again,
-  // you may be the light. (Rumi)
-  // ********************************************
+  // You are the light of the world. 
+  // Shine, and darkness will disappear.
+  // Paulo Coelho 
+
   return 0;
 }
 
