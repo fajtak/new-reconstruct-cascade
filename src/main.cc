@@ -4210,7 +4210,7 @@ int ProcessMCsingleCasc()
   // declaration of working variables
   int Nev,nFlag,jch1=0,Npmt,counter=0;
   double tre1,are1;
-  double weight=0,Ezero=0,Ein=0,cost=-2,fi=-5,V1x=0,V1y=0,V1z=0,E1sh=0;
+  double weight=0,Ezero=0,Ein=0,cost=-2,fi=-5,V1x=0,V1y=0,V1z=0,E1sh=0,cummCharge;
   string holder;
   TVector3 vertex;
   std::vector<UnifiedHit> pulses;
@@ -4220,13 +4220,16 @@ int ProcessMCsingleCasc()
   //loop for reading data till the end
   while(readFile>>Nev){
   	 counter++;
+  	 cummCharge=0;
     readFile>>weight>>nFlag>>Ezero>>Ein;
     getline(readFile,holder);
     readFile>>jch1>>cost>>fi>>V1x>>V1y>>V1z>>E1sh;
     getline(readFile,holder);
     UniEvt.eventID=Nev;
     UniEvt.mcWeight=weight;
-    UniEvt.mcFlagID=nFlag+20; //labeling needs to be discussed in near future
+    UniEvt.mcFlagID=nFlag+20; //labeling: 21,22 - electron neutrino CC,NC interactions, respectively
+                              //labeling: 23,24 - muon neutrino CC,NC interactions, respectively
+                              // 20 - unknown - most likely something wrong happened 
     UniEvt.mcEnergy=E1sh*1E-3; //mcEnergy in TeV units
     // direction needs to be reverted to opposite 180 degrees
     UniEvt.mcTheta=TMath::Pi()-TMath::ACos(cost);
@@ -4249,22 +4252,24 @@ int ProcessMCsingleCasc()
       pulses.back().time=tre1;
       pulses.back().FWHM=-1;
       pulses.back().charge=are1;
+      if(are1>0){ 
+      	cummCharge+=are1; 
+      }
       pulses.back().expectedCharge=-1;
       pulses.back().noise=false;
       pulses.back().MCflag=nFlag+20; 
     }
     getline(readFile,holder);
-    
+    UniEvt.qTotal=cummCharge;
+    // When one eye is fixed upon your destination,
+    // there is only one eye left with which to find the Way.
+    // Joe Hyams
     holder.clear();
     UniEvt.hits=pulses;// pluging the vector with data of impulses
     pulses.clear();    // clearing the vector for another event
    }
   // the loop is over, therefore, file will be closed.
   readFile.close();
-
-  // You are the light of the world. 
-  // Shine, and darkness will disappear.
-  // Paulo Coelho 
 
   return 0;
 }
