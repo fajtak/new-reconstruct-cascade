@@ -39,7 +39,7 @@ struct mcCascade
 // structure holding unified hit
 struct UnifiedHit
 {
-  int OMID;
+  int OMID; // starting from 0 to 287 for a Baikal-GVD cluster
   double time;
   double FWHM;
   double charge;

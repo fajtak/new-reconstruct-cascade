@@ -4248,7 +4248,7 @@ int ProcessMCsingleCasc()
     for(int ii=0; ii<jch1; ++ii){
       readFile>>Npmt>>tre1>>are1;// geometry numbers, times, and charges of hit OMs
       pulses.push_back(UnifiedHit());
-      pulses.back().OMID=Npmt;
+      pulses.back().OMID=Npmt-1; //counting OMID from 0 to 287.
       pulses.back().time=tre1;
       pulses.back().FWHM=-1;
       pulses.back().charge=are1;
