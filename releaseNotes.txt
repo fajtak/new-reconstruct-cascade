@@ -1,3 +1,8 @@
+10.02.2022 - git commit ---
+	* v1.4 version with Rastislav's ProcessMCsingleCasc() function + closeHits filter is turned off
+	* CloseHitsAlongOneString() added
+
+
 27.05.2121 - git commit ---
 	* all recently removed or changed cuts are now set as default (no need for config file)
 	* TFilterNCut lowered from 20 to 5

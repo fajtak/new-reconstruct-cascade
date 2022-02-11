@@ -107,6 +107,10 @@ struct UnifiedEvent
 	double qEarly = -1;
 	int closeHits = -1;
 	double chargeCloseHits = -1;
+	int closeHitsAlongOneString = -1;
+	int closeHitsAlongOneStringAbove = -1;
+	int closeHitsAlongOneStringBelow = -1;
+	double chargeCloseHitsAlongOneString = -1;
 };
 
 extern int gNEventsProcessed;

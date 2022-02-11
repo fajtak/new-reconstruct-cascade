@@ -175,6 +175,16 @@ static const struct App::ProgramOption_t options_list[]{
 	},
 	{
 		{
+			"mcCasc", 'L',
+			no_argument,
+			"use mc cascade data from Zhan-Arys with Rastislav's format",
+			[](char* argv) {gInputType = 5;},
+			[]() {;}
+		},
+		NOT_REQUIRED
+	},
+	{
+		{
 			"mcInputFolder", 'f',
 			required_argument,
 			"set input folder with MC data",

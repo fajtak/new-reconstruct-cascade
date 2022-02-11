@@ -232,7 +232,9 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 
 	// unifiedEvent.mcTheta = mcEvent->GetMuonTrack(0)->GetPolarAngle();
 	unifiedEvent.mcTheta = mcEvent->GetPrimaryParticlePolar()/180*TMath::Pi();
+	// unifiedEvent.mcTheta = mcEvent->GetPrimaryParticleTheta()/180*TMath::Pi();
 	// unifiedEvent.mcPhi = mcEvent->GetMuonTrack(0)->GetAzimuthAngle();
+	// unifiedEvent.mcPhi = mcEvent->GetPrimaryParticlePhi()/180*TMath::Pi();
 	unifiedEvent.mcPhi = mcEvent->GetPrimaryParticleAzimuth()/180*TMath::Pi();
 	unifiedEvent.mcWeight = mcEvent->GetEventWeight();
 
@@ -274,7 +276,7 @@ void TransformToUnifiedEvent(BEvent* event, BMCEvent* mcEvent, BEventMaskMC* eve
 		unifiedEvent.mcPosition.SetX(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetX());
 		unifiedEvent.mcPosition.SetY(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetY());
 		unifiedEvent.mcPosition.SetZ(mcEvent->GetTrack(muonID)->GetInteraction(cascadeID)->GetZ());
-		unifiedEvent.mcFlagID = (cascadeID+1)*1000+(muonID+1);
+		unifiedEvent.mcFlagID = (cascadeID+1)*1000+(muonID+1); //for Kostya "UHE" the factor 1000 needs to be changed to 1000 000
 		// cout << muonID << " " << cascadeID << " " << unifiedEvent.mcEnergy << " " << unifiedEvent.mcPosition.X() << " " << unifiedEvent.mcPosition.Y() << " " << unifiedEvent.mcPosition.Z() << endl;
 	}
 	unifiedEvent.hits.clear();
@@ -387,7 +389,7 @@ void PrintEventStats(EventStats* es)
 	// cout << "After TDelayFilter: \t" << es->nTDelayFilter << endl;
 	// cout << "After QRatioFilter: \t" << es->nQRatioFilter << endl;
 	// cout << "After BranchFilter: \t" << es->nBranchFilter << endl;
-	cout << "After CloseHitsFilter: \t" << es->nCloseHitsFilter << endl;
+	// cout << "After CloseHitsFilter: \t" << es->nCloseHitsFilter << endl;
 	cout << "After LikelihoodFiter: \t" << es->nLikelihoodFilter  << "\t(" << es->nLikelihoodFilter/(double)es->nEntries*100 << "%)" << endl;
 	std::cout << std::string(81,'*') << std::endl;
 }
@@ -1046,12 +1048,14 @@ int SetOMsDynamic(BGeomTel* bgeom) //dynamic posiions
 
 int ReadGeometry(TTree* tree, double startTime) // read dynamic geometry
 {
-	const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
+	// const char* geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 
 	// if (BARS::App::Season != 2020)
 		// geometryFileName = BARS::Geom::File(BARS::App::Cluster, BARS::App::Season, BARS::Geom::OM_EXPORT_LINEAR);
 	// else
-		// geometryFileName = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
+
+	cout << "SET GEOMETRY FILE"<<endl;
+	const char* geometryFileName  = Form("/home/fajtak/geometry-tmp/2019/cluster%d/geometry.export-linear.root",BARS::App::Cluster);
 
 	TTree* geometryTree = nullptr;
 	TFile* geomFile = new TFile(geometryFileName,"READ");
@@ -3345,6 +3349,66 @@ int CloseHits(UnifiedEvent &event)
 	return closeHits;
 }
 
+int CloseHitsAlongOneString(UnifiedEvent &event)
+{
+	int closeHitsAlongOneString = 0;
+	double chargeCloseHitsAlongOneString = 0;
+	int closeHitsAbove = 0;
+	int closeHitsBelow = 0;
+	event.closeHitsAlongOneString = 0;
+	event.chargeCloseHitsAlongOneString = 0;
+	event.closeHitsAlongOneStringAbove = 0;
+	event.closeHitsAlongOneStringBelow = 0;
+	vector<OMIDdistance> vOMIDdistance;
+	vOMIDdistance.clear();	
+
+	vector<double> vDistanceCascadeString;
+	vDistanceCascadeString.clear();
+	double distanceToCascade = 0;
+	for(int i = 0; i < gNStrings; i++)
+	{
+		distanceToCascade = sqrt(pow(event.position.X() - gOMpositions[17+i*36].X(),2) + pow(event.position.Y() - gOMpositions[17+i*36].Y(),2));
+		vDistanceCascadeString.push_back(distanceToCascade);
+	}	
+	double minElement = *std::min_element(vDistanceCascadeString.begin(), vDistanceCascadeString.end());
+	int minElementIndex = std::min_element(vDistanceCascadeString.begin(),vDistanceCascadeString.end()) - vDistanceCascadeString.begin();
+
+	for (int i = 0; i < 36; ++i)
+	{
+		if (IsActiveChannel(minElementIndex*36+i))
+		{
+			double OMdistance = (event.position - gOMpositions[minElementIndex*36+i]).Mag();
+			vOMIDdistance.push_back(OMIDdistance{minElementIndex*36+i,OMdistance});
+		}
+	}
+	sort(vOMIDdistance.begin(),vOMIDdistance.end(),compareEntries);
+	
+
+	for (int i = 0; i < 15; ++i)
+	{
+		for (int j = 0; j < gPulses.size(); ++j)
+		{
+			if (gPulses[j].OMID == vOMIDdistance[i].OMID)
+			{
+				chargeCloseHitsAlongOneString += gPulses[j].charge;
+				if(gOMpositions[gPulses[j].OMID].Z() > event.position.Z())
+					closeHitsAbove++;
+
+				if(gOMpositions[gPulses[j].OMID].Z() < event.position.Z())
+					closeHitsBelow++;
+
+				closeHitsAlongOneString++;
+				break;
+			}
+		}
+	}
+	event.chargeCloseHitsAlongOneString = chargeCloseHitsAlongOneString;
+	event.closeHitsAlongOneStringAbove = closeHitsAbove;
+	event.closeHitsAlongOneStringBelow = closeHitsBelow;
+
+	return closeHitsAlongOneString;
+}
+
 int FillHitsTTree(UnifiedEvent &event)
 {
 	gPulsesTimeRes.clear();
@@ -3409,9 +3473,10 @@ int DoTheMagicUnified(int i, UnifiedEvent &event, EventStats* eventStats)
 	eventStats->nZFilter++;
 
 	event.closeHits = CloseHits(event);
-	if (event.closeHits < 10)
-		return -8;
+	/*if (event.closeHits < 10)
+		return -8;*/
 	eventStats->nCloseHitsFilter++;
+	event.closeHitsAlongOneString = CloseHitsAlongOneString(event);
 
 	h_nHitsTrack->Fill(TrackFilter(event,event.position,event.time));
 
@@ -3489,6 +3554,7 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("nStringsAfterTFilter",&event.nStringsAfterTFilter);
 	outputTree->Branch("chi2AfterTFilter",&event.chi2AfterTFilter);
 	outputTree->Branch("energy",&event.energy);
+	outputTree->Branch("mcFlagID",&event.mcFlagID);
 	outputTree->Branch("energySigma",&event.energySigma);
 	outputTree->Branch("correctedEnergy",&event.correctedEnergy);
 	outputTree->Branch("theta",&event.theta);
@@ -3520,6 +3586,10 @@ void InitializeOutputTTree(TTree* outputTree, UnifiedEvent &event)
 	outputTree->Branch("qRecoHits",&event.qRecoHits);
 	outputTree->Branch("qEarly",&event.qEarly);
 	outputTree->Branch("closeHits",&event.closeHits);
+	outputTree->Branch("closeHitsAlongOneString",&event.closeHitsAlongOneString);
+	outputTree->Branch("closeHitsAlongOneStringAbove",&event.closeHitsAlongOneStringAbove);
+	outputTree->Branch("closeHitsAlongOneStringBelow",&event.closeHitsAlongOneStringBelow);
+	outputTree->Branch("chargeCloseHitsAlongOneString",&event.chargeCloseHitsAlongOneString);	
 	outputTree->Branch("chargeCloseHits",&event.chargeCloseHits);
 	outputTree->Branch("recoHitsOMID",&(gPulsesOMID));
 	outputTree->Branch("recoHitsQ",&(gPulsesQ));
@@ -3972,6 +4042,152 @@ int ProcessMCData()
 	return 0;
 }
 
+int ProcessMCsingleCasc()
+{
+	const char* inputFile = "";
+  	inputFile = Form("%s",gFileInputFolder.c_str());
+  	if (!BARS::App::FileExists(inputFile))
+  	{
+  		std::cout << "File: " << inputFile << " was not found!" << endl;
+  		return -1;
+  	}
+  	// cout<<endl<<" reading is completed "<<endl;
+
+  if (ReadInputParamFiles() == -1)
+	return -3;
+
+  if(gSigmaMCTimeCal != -1)
+	GenerateMCTimeCal();
+
+
+	TString outputFileName = "";
+	if (App::Output == "")
+   	outputFileName = gFileInputFolder;
+   else
+    	outputFileName =  App::Output.Data();
+
+	outputFileName += "/recCascResults.root";
+	TFile* outputFile = new TFile(outputFileName,"RECREATE");
+	TDirectory *cdTree = outputFile->mkdir("Tree");
+	UnifiedEvent UniEvt;
+	TTree* t_RecCasc = new TTree("t_RecCasc","Reconstructed Cascades");
+	InitializeOutputTTree(t_RecCasc,UniEvt);
+	TDirectory *cdHist = outputFile->mkdir("Histograms");
+	TDirectory *cdVis = outputFile->mkdir("Visualizations");
+    cdVis->cd();
+
+  // first check whether the input file is present.
+  // subsequent opening of the file for reading.
+  ifstream readFile;
+  readFile.open(inputFile);
+
+  // declaration of working variables
+  int Nev,nFlag,jch1=0,Npmt,counter=0;
+  double tre1,are1;
+  double weight=0,Ezero=0,Ein=0,cost=-2,fi=-5,V1x=0,V1y=0,V1z=0,E1sh=0, cummCharge;
+  string holder;
+  TVector3 vertex;
+  std::vector<UnifiedHit> pulses;
+  // UnifiedEvent UniEvt;
+  EventStats* eventStats = new EventStats();
+
+  //loop for reading data till the end
+	while(readFile>>Nev){
+  		counter++;
+   	cummCharge=0;
+
+   	readFile>>weight>>nFlag>>Ezero>>Ein;
+   	getline(readFile,holder);
+   	readFile>>jch1>>cost>>fi>>V1x>>V1y>>V1z>>E1sh;
+   	getline(readFile,holder);
+   	UniEvt.eventID=Nev;
+   	UniEvt.mcWeight=weight;
+   	UniEvt.mcFlagID=nFlag+20; //labeling needs to be discussed in near future
+   	UniEvt.mcEnergy=E1sh*1E-3; //mcEnergy in TeV units
+   	// direction needs to be reverted to opposite 180 degrees
+   	UniEvt.mcTheta=TMath::Pi()-TMath::ACos(cost);
+   	fi+=TMath::Pi();
+   	if(fi>2*TMath::Pi()){
+     		fi-=2*TMath::Pi();
+   	}
+   	UniEvt.mcPhi=fi;
+   	vertex.SetXYZ(V1x,V1y,V1z);
+   	UniEvt.mcPosition=vertex;
+   	// initializing remaining uninitialized variables in UnifiedEvent structure
+   	vertex.SetXYZ(0,0,0);
+   	UniEvt.position=vertex;
+   	UniEvt.eventTime=1;
+   	UniEvt.qTotal = 0;
+   	UniEvt.nHits = 0;
+   	UniEvt.nNoiseHits = 0;
+   	UniEvt.nHits = jch1;
+   	UniEvt.nOMs = 0;
+   	UniEvt.nSignalHits = UniEvt.nHits - UniEvt.nNoiseHits;
+   	UniEvt.hits.clear();
+
+    // reading impulses parameters
+   	for(int ii=0; ii<jch1; ++ii){
+   		readFile>>Npmt>>tre1>>are1;// geometry numbers of hit OMs
+      // cout << "IsActiveChannel "<<IsActiveChannel(Npmt-1)<<endl;
+      // if(!IsActiveChannel(Npmt-1));
+      // continue;
+
+
+      	pulses.push_back(UnifiedHit());
+	
+     		pulses.back().OMID=Npmt-1; //counting OMID from 0 to 287.
+      	pulses.back().time=tre1 - gOMtimeCal[Npmt - 1];
+      	// pulses.back().FWHM=-1;
+      	pulses.back().charge=are1;
+      	if(are1>0){ 
+      		cummCharge+=are1; 
+      	}
+      	pulses.back().expectedCharge=-1;
+      	pulses.back().noise=false;
+      	pulses.back().MCflag=nFlag+20; 
+    	}
+    	getline(readFile,holder);
+    	UniEvt.qTotal=cummCharge; 
+   
+   
+    	holder.clear();
+    	UniEvt.hits=pulses;// pluging the vector with data of impulses
+    	pulses.clear();    // clearing the vector for another event
+    // the end of reading event data stored in the "unified event" structure
+
+   	GenerateNoise(UniEvt);    
+   	int status = DoTheMagicUnified(Nev, UniEvt, eventStats);
+   	if (status == 0)
+			t_RecCasc->Fill();
+		h_exitStatus->Fill(status);
+   }
+
+
+  // the loop is over, therefore, file will be closed.
+  readFile.close();
+ 
+  // the analysis part
+  // cout << "counter " << counter << endl;
+  	eventStats->nEntries = counter;
+  	PrintEventStats(eventStats);  
+
+	cdHist->cd();
+	SaveHistograms();
+	cdTree->cd();
+	t_RecCasc->Write();
+	outputFile->Close();
+
+   
+
+
+  // ********************************************
+  // If everything around seems dark, look again,
+  // you may be the light. (Rumi)
+  // ********************************************
+
+  return 0;
+}
+
 // Fitter setting
 void SetFitter(void)
 {
@@ -4012,6 +4228,9 @@ int main(int argc, char** argv)
     	case 3:
     		ProcessMCData();
     		break;
+    	case 5:
+    	   ProcessMCsingleCasc();
+         break;	
     	default:
     		break;
     }
